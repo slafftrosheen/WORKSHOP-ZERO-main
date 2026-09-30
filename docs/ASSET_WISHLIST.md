@@ -28,10 +28,12 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ## Priority 0 Asset Queue (Core Experience)
 
-### P0-01 Rubber Duck
-
+### P0-01 Rubber Duck [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/duck_rubber_01/`
+- **Blender Source**: `assets/source/blender/duck_rubber_01.blend`
+- **Roblox Export**: `assets/export/roblox/duck_rubber_01.glb`
 - **Purpose**: The star and payload of Workshop Zero. Transported by player machines to trigger the goal.
-- **Approximate Roblox Size**: `2.5 × 2.0 × 3.0` studs (matches payload volume).
+- **Roblox Size**: `2.5 × 2.0 × 3.0` studs (matches payload volume).
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Payloads.Duck`
 - **Visual Requirements**: Recognisably yellow, rounded exaggerated silhouette, friendly simple face, oversized head, clean broad surfaces, slightly handmade workshop-toy character.
 - **What NOT to Model**: Do NOT model collision meshes, interior hollows, or stands/pedestals. Physics is handled entirely by the authoritative invisible/primitive payload collider.
@@ -55,10 +57,12 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ---
 
-### P0-02 Giant Red Goal Button
-
+### P0-02 Giant Red Goal Button [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/button_goal_red_01/`
+- **Blender Source**: `assets/source/blender/button_goal_red_01.blend`
+- **Roblox Export**: `assets/export/roblox/button_goal_red_01.glb`
 - **Purpose**: Level objective target. Depressed when the duck contacts it to complete the experiment.
-- **Approximate Roblox Size**: `4.0 × 1.8 × 4.0` studs base with `3.2 × 0.8 × 3.2` studs plunger cap.
+- **Roblox Size**: `4.0 × 1.8 × 4.0` studs base with `3.2 × 0.8 × 3.2` studs plunger cap.
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Goals.GoalButton`
 - **Visual Requirements**: Oversized comical red mechanical push button. Huge readable red cap, chunky metal base, visible oversized bolts, rounded toy-industrial forms, friendly rather than dangerous, strong silhouette.
 - **What NOT to Model**: Do NOT model trigger physics or moving constraint mechanics. The server-owned invisible `GoalTrigger` part remains authoritative for contact detection.
@@ -79,10 +83,12 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ---
 
-### P0-03 Powered Motor
-
+### P0-03 Powered Motor [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/motor_electric_01/`
+- **Blender Source**: `assets/source/blender/motor_electric_01.blend`
+- **Roblox Export**: `assets/export/roblox/motor_electric_01.glb` (3,500 tris)
 - **Purpose**: Electric actuator power plant converting energy into rotation. Mounts rigidly to planks/blocks and drives wheels or fans on powered axles.
-- **Approximate Roblox Size**: `2.0 × 2.0 × 2.0` studs (matches `ComponentDefinitions.luau` Motor).
+- **Roblox Size**: `2.0 × 2.0 × 2.0` studs (matches `ComponentDefinitions.luau` Motor).
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Motor`
 - **Visual Requirements**: Chunky toy motor housing, vibrant industrial color (e.g. bold electric blue or construction orange casing), distinct metallic drive shaft/hub on the front (+X), rigid mounting flange on the back (-X), and a visible indicator lens socket on top (+Y). Friendly, stylized maker-workshop character with a strong silhouette.
 - **What NOT to Model**: Do NOT model internal coils, wires, power cords, or separate spinning rotors. The server manages physical `HingeConstraint` actuators and neon LED indicator state authoritatively.
@@ -103,10 +109,12 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ## Priority 1 Asset Queue (Construction Components)
 
-### P1-01 Workshop Wheel
-
+### P1-01 Workshop Wheel [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/wheel_rubber_01/`
+- **Blender Source**: `assets/source/blender/wheel_rubber_01.blend`
+- **Roblox Export**: `assets/export/roblox/wheel_rubber_01.glb` (3,000 tris)
 - **Purpose**: Rotational component attached to axles for rolling vehicles and kinetic contraptions.
-- **Approximate Roblox Size**: `0.4 × 2.4 × 2.4` studs (`Cylinder` matching `ComponentDefinitions.luau`).
+- **Roblox Size**: `0.4 × 2.4 × 2.4` studs (`Cylinder` matching `ComponentDefinitions.luau`).
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Wheel`
 - **Visual Requirements**: Chunky workshop construction wheel. Thick rubber tire, simple metal hub, large obvious round axle opening, toy-like mechanical proportions, clean circular silhouette from every angle.
 - **Hyper3D Prompt**:
@@ -121,10 +129,12 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ---
 
-### P1-02 Structural Plank
-
+### P1-02 Structural Plank [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/plank_beam_01/`
+- **Blender Source**: `assets/source/blender/plank_beam_01.blend`
+- **Roblox Export**: `assets/export/roblox/plank_beam_01.glb` (2,500 tris)
 - **Purpose**: Primary structural beam for building ramps, bridges, levers, and chassis.
-- **Approximate Roblox Size**: `8.0 × 0.6 × 2.0` studs (matches `ComponentDefinitions.luau` Plank).
+- **Roblox Size**: `8.0 × 0.6 × 2.0` studs (matches `ComponentDefinitions.luau` Plank).
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Plank`
 - **Visual Requirements**: Chunky rectangular wooden beam, soft bevels, subtle wear, obvious mounting areas at both ends, simple handmade workshop character, broad readable surfaces.
 - **Hyper3D Prompt**:
@@ -139,10 +149,12 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ---
 
-### P1-03 Construction Block
-
+### P1-03 Construction Block [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/block_cube_01/`
+- **Blender Source**: `assets/source/blender/block_cube_01.blend`
+- **Roblox Export**: `assets/export/roblox/block_cube_01.glb` (2,000 tris)
 - **Purpose**: Heavy structural anchor, weight, spacer, and multi-socket connector block.
-- **Approximate Roblox Size**: `2.0 × 2.0 × 2.0` studs (matches `ComponentDefinitions.luau` Block).
+- **Roblox Size**: `2.0 × 2.0 × 2.0` studs (matches `ComponentDefinitions.luau` Block).
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Block`
 - **Visual Requirements**: Chunky multipurpose construction block, durable toy-workshop form, soft bevels, slightly industrial painted workshop material, broad mounting faces, simple silhouette.
 - **Hyper3D Prompt**:
@@ -205,12 +217,26 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ## Priority 2 Asset Queue (Environment & Dressing)
 
-### P2-01 Maker Workbench
+### P2-01 Maker Workbench [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/workbench_maker_01/`
+- **Blender Source**: `assets/source/blender/workbench_maker_01.blend`
+- **Roblox Export**: `assets/export/roblox/workbench_maker_01.glb` (12,000 tris)
 - **Purpose**: Level staging and dressing background prop.
-- **Approximate Size**: `12.0 × 3.5 × 5.0` studs.
+- **Roblox Size**: `12.0 × 3.5 × 5.0` studs.
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.Workbench`
 
-### P2-02 Tool Storage Rack
+### P2-02 Tool Storage Rack [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/rack_tool_01/`
+- **Blender Source**: `assets/source/blender/rack_tool_01.blend`
+- **Roblox Export**: `assets/export/roblox/rack_tool_01.glb` (10,000 tris)
 - **Purpose**: Component rack holding unused building parts.
-- **Approximate Size**: `10.0 × 4.0 × 4.0` studs.
+- **Roblox Size**: `10.0 × 4.0 × 4.0` studs.
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.ToolRack`
+
+### P2-03 Workshop Wall Panel [STATUS: EXPORTED]
+- **Source**: `assets/source/hyper3d/wall_panel_01/`
+- **Blender Source**: `assets/source/blender/wall_panel_01.blend`
+- **Roblox Export**: `assets/export/roblox/wall_panel_01.glb` (8,000 tris)
+- **Purpose**: Modular workshop back wall panel.
+- **Roblox Size**: `8.0 × 12.0 × 1.0` studs.
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.WallPanel`
