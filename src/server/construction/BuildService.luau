@@ -464,6 +464,10 @@ function BuildService.RequestReturnToRack(player: Player, payload: unknown): boo
 		return false
 	end
 
+	if model:GetAttribute("WZ_StaticAnchor") == true then
+		return false
+	end
+
 	-- 1. Disconnect all joints
 	ConnectorService.Disconnect(componentId)
 

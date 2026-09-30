@@ -529,6 +529,10 @@ end
 
 function ComponentFactory.SetDraggingEnabled(enabled: boolean)
 	for _, model in ComponentFactory.GetComponents() do
+		if model:GetAttribute("WZ_StaticAnchor") == true then
+			continue
+		end
+
 		local dragDetector = ComponentFactory.GetDragDetector(model)
 		if dragDetector ~= nil then
 			dragDetector.Enabled = enabled
@@ -541,6 +545,14 @@ end
 -- Components with internal mechanics (like Spring) handle internal moving parts appropriately.
 function ComponentFactory.SetComponentsAnchored(anchored: boolean)
 	for _, model in ComponentFactory.GetComponents() do
+		if model:GetAttribute("WZ_StaticAnchor") == true then
+			local primary = model.PrimaryPart
+			if primary ~= nil then
+				primary.Anchored = true
+			end
+			continue
+		end
+
 		local compType = model:GetAttribute(Config.AttributeComponentType)
 		if compType == "Spring" then
 			SpringBuilder.SetAnchored(model, anchored)

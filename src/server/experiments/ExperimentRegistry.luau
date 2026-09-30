@@ -18,12 +18,14 @@ local SaveTheDuckExperiment = require(script.Parent.SaveTheDuckExperiment)
 local UphillDeliveryExperiment = require(script.Parent.UphillDeliveryExperiment)
 local OverTheWallExperiment = require(script.Parent.OverTheWallExperiment)
 local WindyBusinessExperiment = require(script.Parent.WindyBusinessExperiment)
+local LiftOffExperiment = require(script.Parent.LiftOffExperiment)
 
 local registry: { [string]: ExperimentTypes.ExperimentModule } = {
 	save_the_duck = SaveTheDuckExperiment,
 	uphill_delivery = UphillDeliveryExperiment,
 	over_the_wall = OverTheWallExperiment,
 	windy_business = WindyBusinessExperiment,
+	lift_off = LiftOffExperiment,
 }
 
 local ExperimentRegistry = {}

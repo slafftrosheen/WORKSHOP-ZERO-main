@@ -422,11 +422,105 @@ local WINDY_BUSINESS: ExperimentTypes.ExperimentDefinition = {
 
 ExperimentDefinitions.WindyBusiness = WINDY_BUSINESS
 
+local LIFT_OFF: ExperimentTypes.ExperimentDefinition = {
+	Id = "lift_off",
+	Number = 5,
+	Name = "LIFT OFF",
+	Objective = "Get the duck onto the high platform.",
+
+	IntroTitle = "EXPERIMENT 005",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "THE DUCK MADE IT.",
+	RestartButton = "TRY AGAIN",
+
+	DiscoveryTitle = "TENSION",
+	DiscoveryBody = "A rope can pull a load, but it cannot push one.",
+
+	Inventory = {
+		{ ComponentType = "Plank", Count = 3 },
+		{ ComponentType = "Block", Count = 4 },
+		{ ComponentType = "Wheel", Count = 2 },
+		{ ComponentType = "Hook", Count = 3 },
+		{ ComponentType = "Winch", Count = 2 },
+		{ ComponentType = "Motor", Count = 1 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.6,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		StartPadSize = Vector3.new(22, 0.6, 18),
+		StartPadCenter = Vector3.new(0, 0.3, -16),
+
+		GoalPadSize = Vector3.new(18, 0.8, 16),
+		GoalPadCenter = Vector3.new(0, 14.4, 14),
+
+		DuckSpawn = Vector3.new(0, 1.5, -12),
+		ButtonPosition = Vector3.new(0, 14.8, 14),
+
+		BackWallSize = Vector3.new(120, 36, 2),
+		BackWallCenter = Vector3.new(0, 18, -42),
+
+		PlayerSpawn = Vector3.new(-16, 0.5, -16),
+
+		BuildBoundsSize = Vector3.new(64, 40, 72),
+		BuildBoundsCenter = Vector3.new(0, 16, 0),
+
+		StagingRows = { -22, -19.5, -17, -14.5, -12 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		PitY = 0,
+		AwayDistance = 75,
+		FastSpeed = 45,
+		HighY = 48,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 65,
+	},
+
+	FailureMessages = {
+		DuckDown = {
+			"DUCK DOWN.",
+			"ROPE HAS OPINIONS.",
+			"GRAVITY REMAINS EMPLOYED.",
+		},
+		DuckDeparture = {
+			"LOAD TEST: INTERESTING.",
+			"DUCK ELEVATOR: TEMPORARILY OUT OF SERVICE.",
+		},
+		BallisticDuck = {
+			"THAT IS TECHNICALLY A CRANE.",
+			"BALLISTIC DUCK.",
+		},
+		SpaceProgram = {
+			"SPACE PROGRAM STARTED.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+		},
+	},
+}
+
+ExperimentDefinitions.LiftOff = LIFT_OFF
+
 local orderedList: { ExperimentTypes.ExperimentDefinition } = {
 	SAVE_THE_DUCK,
 	UPHILL_DELIVERY,
 	OVER_THE_WALL,
 	WINDY_BUSINESS,
+	LIFT_OFF,
 }
 
 local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
@@ -434,6 +528,7 @@ local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
 	[UPHILL_DELIVERY.Id] = UPHILL_DELIVERY,
 	[OVER_THE_WALL.Id] = OVER_THE_WALL,
 	[WINDY_BUSINESS.Id] = WINDY_BUSINESS,
+	[LIFT_OFF.Id] = LIFT_OFF,
 }
 
 function ExperimentDefinitions.Get(id: string): ExperimentTypes.ExperimentDefinition?
