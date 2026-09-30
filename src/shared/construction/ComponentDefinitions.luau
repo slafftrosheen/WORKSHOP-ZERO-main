@@ -155,19 +155,25 @@ local definitions: { [string]: ConstructionTypes.ComponentDefinition } = {
 		Type = "Motor",
 		DisplayName = "Motor",
 		Shape = Enum.PartType.Block,
-		Size = Vector3.new(1.5, 1.5, 1.5),
+		Size = Vector3.new(2, 2, 2),
 		Color = Color3.fromRGB(196, 88, 66),
 		Material = Enum.Material.Metal,
 		Density = 1,
 		Friction = 0.5,
 		Elasticity = 0.1,
-		Spawnable = false,
+		Spawnable = true,
 		Connectors = {
-			{ Name = "Rigid_A", Type = RIGID, Offset = CFrame.new(0.75, 0, 0) },
+			-- Rigid mounting face on the back (-X).
+			{
+				Name = "Rigid_A",
+				Type = RIGID,
+				Offset = CFrame.new(-1, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+			-- Powered axle connector on the front (+X), offset by half a wheel thickness.
 			{
 				Name = "Axle_A",
 				Type = AXLE,
-				Offset = CFrame.new(0, 0, -0.75) * CFrame.Angles(0, QUARTER_TURN, 0),
+				Offset = CFrame.new(1.2, 0, 0),
 			},
 		},
 	},

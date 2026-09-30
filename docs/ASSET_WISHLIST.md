@@ -139,6 +139,28 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ---
 
+### P0-06 Powered Motor
+
+- **Purpose**: Electric actuator power plant converting energy into rotation. Mounts rigidly to planks/blocks and drives wheels on powered axles.
+- **Approximate Roblox Size**: `2.0 × 2.0 × 2.0` studs (matches `ComponentDefinitions.luau` Motor).
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Motor`
+- **Visual Requirements**: Chunky toy motor housing, vibrant industrial color (e.g. bold electric blue or construction orange casing), distinct metallic drive shaft/hub on the front (+X), rigid mounting flange on the back (-X), and a visible indicator lens socket on top (+Y). Friendly, stylized maker-workshop character with a strong silhouette.
+- **What NOT to Model**: Do NOT model internal coils, wires, power cords, or separate spinning rotors. The server manages physical `HingeConstraint` actuators and neon LED indicator state authoritatively.
+- **Hyper3D Prompt**:
+  ```text
+  Chunky toy electric motor component for a playful maker workshop Roblox game. Bold colorful casing, cylindrical drive shaft hub on one end, rigid flat mounting plate on back, rounded indicator lens on top, friendly toy-like industrial proportions, clean silhouette, no wires, no text, isolated single object.
+
+  Low-poly game asset.
+  PBR materials.
+  No internal geometry.
+  ```
+- **Blender Cleanup Notes**:
+  - Center origin at `(0, 0, 0)` matching the 2×2×2 stud bounding box.
+  - Ensure drive shaft faces +X and mounting plate faces -X to align with socket attachment frames.
+  - Keep poly count under 2,500 tris.
+
+---
+
 ## Priority 1 Asset Queue (Environment & Dressing)
 
 ### P1-01 Maker Workbench

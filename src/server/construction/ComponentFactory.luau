@@ -367,6 +367,31 @@ function ComponentFactory.Create(
 	dragDetector.Enabled = true
 	dragDetector.Parent = root
 
+	-- Indicator for Motor components so powered status is visually readable in TEST.
+	if definition.Type == "Motor" then
+		local indicator = Instance.new("Part")
+		indicator.Name = "WZ_MotorIndicator"
+		indicator.Shape = Enum.PartType.Cylinder
+		indicator.Size = Vector3.new(0.18, 0.7, 0.7)
+		indicator.CFrame = root.CFrame * CFrame.new(0, 1.01, 0) * CFrame.Angles(0, 0, math.rad(90))
+		indicator.Color = Color3.fromRGB(50, 55, 65)
+		indicator.Material = Enum.Material.SmoothPlastic
+		indicator.Anchored = false
+		indicator.CanCollide = false
+		indicator.CanQuery = false
+		indicator.CanTouch = false
+		indicator.CastShadow = false
+		indicator.Massless = true
+		indicator.CollisionGroup = Config.CollisionGroupComponents
+		indicator.Parent = model
+
+		local weld = Instance.new("WeldConstraint")
+		weld.Name = "WZ_IndicatorWeld"
+		weld.Part0 = root
+		weld.Part1 = indicator
+		weld.Parent = indicator
+	end
+
 	model:PivotTo(pivot)
 	model.Parent = componentsContainer
 
@@ -417,6 +442,17 @@ function ComponentFactory.SetConnectorMarkersVisible(visible: boolean)
 			end
 		end
 	end
+end
+
+-- Clears the component registry and destroys any remaining components.
+-- Used when transitioning between experiments.
+function ComponentFactory.Clear()
+	for _, model in registry do
+		if model.Parent ~= nil then
+			model:Destroy()
+		end
+	end
+	table.clear(registry)
 end
 
 return table.freeze(ComponentFactory)

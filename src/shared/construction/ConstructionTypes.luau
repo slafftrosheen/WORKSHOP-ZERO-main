@@ -58,6 +58,7 @@ export type ConnectionRecord = {
 	ComponentB: string,
 	ConnectorB: string,
 	Constraint: Constraint,
+	PoweredBy: string?,
 }
 
 -- A connector pair the kernel is willing to join.

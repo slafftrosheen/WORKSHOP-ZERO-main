@@ -1,11 +1,11 @@
 # Workshop Zero - Game Design
 
-Status: **WZ-002**. This document is a compass, not a spec.
+Status: **WZ-003**. This document is a compass, not a spec.
 
 The construction kernel (BUILD / TEST / RESET) exists as infrastructure, and
-the first experiment is now playable on top of it. Everything after Experiment
-001 is still undesigned - the kernel is there so that the next experiment can
-also be about a duck-level idea rather than about plumbing.
+two experiments are now playable on top of it:
+- **Experiment 001 - Save the Duck**: kinetic bridge/gap traversal.
+- **Experiment 002 - Uphill Delivery**: powered motion, torque, and traction.
 
 ## Core fantasy
 
@@ -37,28 +37,75 @@ Failure is celebrated rather than punished. A machine that collapses in a
 spectacular new way is progress. Nothing should take a component away from a
 player as a punishment.
 
-## First playable: Experiment 001 - Save the Duck
+## Playable experiments
 
-Implemented in WZ-002 with Roblox primitives only.
+### Experiment 001: Save the Duck
 
 ```text
 A duck. A trench. A giant red button across the gap.
 2 planks, 2 blocks, 4 wheels. Build anything. TEST. Physics decides.
 ```
 
-### Rules
+- **Inventory**: 2 Planks, 2 Blocks, 4 Wheels.
+- **Problem**: 14-stud gap separating start pad and goal pad.
+- **Concept**: Structure, spans, gravity, unpowered rolling.
 
-- The player receives exactly 2 Planks, 2 Blocks, 4 Wheels, staged on a rack
-  inside the build area.
-- Any physically valid solution wins. There is no hidden solution and no
-  scripted expected machine. A bridge, a cart, a ramp, a catapult-shaped
-  accident and a collapsing tower are all equally valid.
-- Only the duck activates the goal. The server validates payload identity, not
-  names, and never trusts a client claim.
-- The level is readable and exaggerated: pads a step high, a 14-stud trench,
-  everything at ground level so nobody gets stranded.
+---
 
-### The experiment lifecycle
+### Experiment 002: Uphill Delivery
+
+```text
+                    🔴 GOAL
+                 ┌─────────────┐
+                /              │
+               /  RAMP         │
+              /   (incline)    │
+   START     /                 │
+┌───────────┘                  │
+```
+
+```text
+Get the duck up the ramp to the button.
+4 planks, 4 blocks, 6 wheels, 2 motors.
+```
+
+#### Educational concept
+
+The learning progression happens strictly through mechanical feedback:
+
+```text
+rotation
+  -> torque
+  -> traction
+  -> mass
+  -> center of gravity
+  -> powered motion
+```
+
+No tutorial popups explain gear ratios or normal forces. Instead:
+- **Torque & Incline**: A single-motor cart might stall or spin if it lacks sufficient torque to climb the 10-stud incline. Adding a second motor doubles available drive torque.
+- **Traction & Slip**: Wheels without enough downward load will spin freely against the ramp surface (`FULL THROTTLE, NO TRACTION`).
+- **Mass & Stability**: Placing the duck high or too far back causes wheelies and flips (`BACKFLIP ATTEMPT!`). Building a wider, lower-center-of-gravity chassis climbs stably.
+- **Symmetry**: Placing motors on both sides of a cart causes their axles to point in opposite outward directions. The actuator system cooperatively coordinates rotation signs so both wheels roll forward together.
+
+#### Inventory
+
+- 4 Planks
+- 4 Blocks
+- 6 Wheels
+- 2 Motors
+
+#### Failure is content (flavour lines)
+
+- **Low travel / Stall**: `SPINNING IN PLACE.` / `GRAVITY DISAGREES.` / `ENGINE RUNNING, CAR ASLEEP.`
+- **Backward movement**: `WRONG WAY, DUCK.` / `REVERSE DISCOVERY.`
+- **Rollback**: `UNPLANNED ROLLBACK.` / `WHAT GOES UP COMES DOWN.`
+- **Vehicle flip**: `BACKFLIP ATTEMPT!` / `WHEELS UP, DUCK DOWN.`
+- **High RPM / Burnout**: `FULL THROTTLE, NO TRACTION.` / `SMOKE DETECTED (METAPHORICALLY).`
+
+---
+
+## The experiment lifecycle
 
 ```text
 Loading -> Build -> Testing -> Success
@@ -67,6 +114,9 @@ Loading -> Build -> Testing -> Success
 
 TRY AGAIN = full restart (Build): joints removed, parts re-racked,
 attempts zeroed, duck and button restored
+
+NEXT EXPERIMENT = in-place transition to the next experiment definition
+without place reloading
 ```
 
 `ExperimentState` (challenge lifecycle) is deliberately separate from
@@ -79,39 +129,24 @@ even appears.
 This distinction is a core Workshop Zero principle:
 
 - **RESET** (after a failed test) restores the machine exactly as built. Parts
-  stay where the player put them. The loop is build -> test -> fail ->
-  change one thing -> test again.
+  stay where the player put them. Actuators are disabled first before snapshot
+  transforms are restored. The loop is build -> test -> fail -> change one thing
+  -> test again.
 - **TRY AGAIN** (`RestartExperiment`) removes every connection, returns every
   part to its rack position, restores rotation, duck, button and attempts.
-  It exists only on the success panel.
-
-### Failure is content
-
-> Failure is part of gameplay. Never automatically reset a funny failure unless
-> continuing would break the runtime.
-
-The FailureObserver surfaces short flavour lines at most once per event per
-attempt: DUCK DOWN. / UNSCHEDULED DUCK DEPARTURE. / BALLISTIC DUCK. / SPACE
-PROGRAM STARTED. / STRUCTURAL OPTIMISM DETECTED. It never ends an attempt and
-never judges the player - the laugh is aimed at the machine. The only automatic
-intervention is freezing a payload that falls below the cleanup threshold, so
-physics cannot grind forever; the player still chooses RESET.
-
-> Do not tell the player how to solve an experiment if the physics can teach
-> them.
-
-The intro card is three short lines. No tutorial wall, no solution hints, no
-quiz.
+  It exists on the success panel.
+- **NEXT EXPERIMENT** (`NextExperiment`) tears down the completed workshop, clears
+  the connector and actuator registries, and builds the next level in-place.
 
 ## Components
 
-| Component | State                                        |
-| --------- | -------------------------------------------- |
-| Plank     | in Experiment 001 inventory (2 available)     |
-| Block     | in Experiment 001 inventory (2 available)     |
-| Wheel     | in Experiment 001 inventory (4 available)     |
-| Spring    | placeholder - defined, refused by the factory |
-| Motor     | placeholder - defined, refused by the factory |
+| Component | State                                                  |
+| --------- | ------------------------------------------------------ |
+| Plank     | Active (Exp 001: 2 available, Exp 002: 4 available)    |
+| Block     | Active (Exp 001: 2 available, Exp 002: 4 available)    |
+| Wheel     | Active (Exp 001: 4 available, Exp 002: 6 available)    |
+| Motor     | Active in Exp 002 (2 available, 1 rigid mount, 1 axle) |
+| Spring    | Placeholder - defined, refused by the factory          |
 
 Spring and Motor exist in the catalogue as placeholders and MUST NOT appear in
 any playable inventory until they actually do something.

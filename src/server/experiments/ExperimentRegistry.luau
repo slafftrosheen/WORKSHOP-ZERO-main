@@ -15,9 +15,11 @@ local Shared = ReplicatedStorage.Shared
 local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local SaveTheDuckExperiment = require(script.Parent.SaveTheDuckExperiment)
+local UphillDeliveryExperiment = require(script.Parent.UphillDeliveryExperiment)
 
 local registry: { [string]: ExperimentTypes.ExperimentModule } = {
 	save_the_duck = SaveTheDuckExperiment,
+	uphill_delivery = UphillDeliveryExperiment,
 }
 
 local ExperimentRegistry = {}

@@ -42,6 +42,7 @@ local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 local BuildService = require(script.Parent.Parent.construction.BuildService)
 local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
 local ConnectorService = require(script.Parent.Parent.construction.ConnectorService)
+local ActuatorService = require(script.Parent.Parent.construction.ActuatorService)
 local SimulationService = require(script.Parent.Parent.construction.SimulationService)
 local ExperimentRegistry = require(script.Parent.ExperimentRegistry)
 
@@ -409,6 +410,7 @@ function ExperimentService.LoadExperiment(targetId: string, player: Player?): bo
 
 	stopSampler()
 	ConnectorService.DisconnectAll()
+	ActuatorService.Clear()
 	ComponentFactory.Clear()
 
 	if experiment ~= nil then

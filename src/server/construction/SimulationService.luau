@@ -25,6 +25,7 @@ local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 
 local ComponentFactory = require(script.Parent.ComponentFactory)
 local ConnectorService = require(script.Parent.ConnectorService)
+local ActuatorService = require(script.Parent.ActuatorService)
 
 local SimulationService = {}
 
@@ -161,12 +162,16 @@ function SimulationService.StartTest(player: Player): boolean
 	ComponentFactory.SetDraggingEnabled(false)
 	ComponentFactory.SetComponentsAnchored(false)
 	ComponentFactory.SetConnectorMarkersVisible(false)
-	zeroVelocities() -- The joint count is printed on purpose: "no duplicate constraints" is an
+	zeroVelocities()
+	ActuatorService.EnableActuators()
+
+	-- The joint count is printed on purpose: "no duplicate constraints" is an
 	-- acceptance condition, and this is the cheapest way for a human to watch it.
+	local playerName = if player ~= nil then player.Name else "Server"
 	log(
 		string.format(
 			"%s started a test: %d component(s), %d joint(s)",
-			player.Name,
+			playerName,
 			#ComponentFactory.GetComponents(),
 			ConnectorService.GetCount()
 		)
@@ -185,12 +190,14 @@ end
 	Constraints are never recreated, so repeated TEST/RESET cannot accumulate
 	joints.
 ]]
-function SimulationService.ResetToBuild(player: Player): boolean
+function SimulationService.ResetToBuild(player: Player?): boolean
 	if state ~= "Testing" then
 		return false
 	end
 
 	setState("Resetting")
+	-- Disable actuators FIRST before anchoring or moving geometry
+	ActuatorService.DisableActuators()
 	ComponentFactory.SetComponentsAnchored(true)
 	zeroVelocities()
 	restoreSnapshot()
@@ -205,10 +212,11 @@ function SimulationService.ResetToBuild(player: Player): boolean
 	ComponentFactory.SetConnectorMarkersVisible(true)
 	setState("Build")
 
+	local playerName = if player ~= nil then player.Name else "Server"
 	log(
 		string.format(
 			"%s reset the machine: %d joint(s) still intact",
-			player.Name,
+			playerName,
 			ConnectorService.GetCount()
 		)
 	)

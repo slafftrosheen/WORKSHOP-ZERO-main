@@ -30,6 +30,7 @@ local ConstructionConfig = require(Shared.construction.ConstructionConfig)
 local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 
 local ComponentFactory = require(script.Parent.ComponentFactory)
+local ActuatorService = require(script.Parent.ActuatorService)
 
 local Config = ConstructionConfig
 
@@ -274,6 +275,17 @@ function ConnectorService.Snap(
 	ComponentFactory.SetConnectorOccupied(targetConnector, true)
 	ComponentFactory.SetConnectorOccupied(movingConnector, true)
 
+	local poweredBy: string? = nil
+	if connectorType == "Axle" then
+		local typeA = ComponentFactory.GetComponentType(targetModel)
+		local typeB = ComponentFactory.GetComponentType(movingModel)
+		if typeA == "Motor" then
+			poweredBy = componentA
+		elseif typeB == "Motor" then
+			poweredBy = componentB
+		end
+	end
+
 	local record: ConstructionTypes.ConnectionRecord = {
 		Id = connectionId,
 		Type = connectorType,
@@ -282,18 +294,24 @@ function ConnectorService.Snap(
 		ComponentB = componentB,
 		ConnectorB = connectorBName,
 		Constraint = constraint,
+		PoweredBy = poweredBy,
 	}
 
 	connections[connectionId] = record
 
+	if poweredBy ~= nil then
+		ActuatorService.Register(record)
+	end
+
 	log(
 		string.format(
-			"Connected %s.%s -> %s.%s (%s)",
+			"Connected %s.%s -> %s.%s (%s%s)",
 			displayName(componentA),
 			connectorAName,
 			displayName(componentB),
 			connectorBName,
-			connectorType
+			connectorType,
+			if poweredBy ~= nil then " [Powered]" else ""
 		)
 	)
 
@@ -320,6 +338,7 @@ local function removeConnection(connectionId: string): boolean
 		return false
 	end
 
+	ActuatorService.Unregister(connectionId)
 	record.Constraint:Destroy()
 	releaseConnector(record.ComponentA, record.ConnectorA)
 	releaseConnector(record.ComponentB, record.ConnectorB)
@@ -381,6 +400,8 @@ function ConnectorService.DisconnectAll(): number
 			removed += 1
 		end
 	end
+
+	ActuatorService.Clear()
 
 	if removed > 0 then
 		log(string.format("Disconnected every joint (%d)", removed))
