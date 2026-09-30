@@ -23,6 +23,7 @@ local ConstructionTypes = require(script.Parent.ConstructionTypes)
 
 local RIGID: ConstructionTypes.ConnectorType = "Rigid"
 local AXLE: ConstructionTypes.ConnectorType = "Axle"
+local ROPE: ConstructionTypes.ConnectorType = "Rope"
 
 local HALF_TURN = math.pi
 local QUARTER_TURN = math.rad(90)
@@ -201,6 +202,72 @@ local definitions: { [string]: ConstructionTypes.ComponentDefinition } = {
 				Name = "Rigid_Base",
 				Type = RIGID,
 				Offset = CFrame.new(0, -1.6, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+		},
+	},
+
+	Hook = {
+		Type = "Hook",
+		DisplayName = "Hook",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(1.4, 2.0, 1.2),
+		Color = Color3.fromRGB(75, 80, 92),
+		Material = Enum.Material.Metal,
+		Density = 1.0,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			-- Rigid mounting base on the bottom (-Y).
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.0, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			-- Rope eyelet loop on the top (+Y).
+			{
+				Name = "Rope_Eyelet",
+				Type = ROPE,
+				Offset = CFrame.new(0, 1.0, 0) * CFrame.Angles(0, 0, QUARTER_TURN),
+			},
+		},
+	},
+
+	Winch = {
+		Type = "Winch",
+		DisplayName = "Winch",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(2.4, 2.0, 2.4),
+		Color = Color3.fromRGB(220, 145, 45),
+		Material = Enum.Material.Metal,
+		Density = 1.2,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			-- Rigid mounting base on the bottom (-Y).
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.0, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			-- Rigid mounting face on the back (-X).
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.2, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+			-- Rope connector on the spool face (+X).
+			{
+				Name = "Rope_Spool",
+				Type = ROPE,
+				Offset = CFrame.new(1.2, 0, 0),
+			},
+			-- Axle input on the side (-Z).
+			{
+				Name = "Axle_Input",
+				Type = AXLE,
+				Offset = CFrame.new(0, 0, -1.2) * CFrame.Angles(0, QUARTER_TURN, 0),
 			},
 		},
 	},

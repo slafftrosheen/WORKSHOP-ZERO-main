@@ -78,6 +78,7 @@ end
 local requestSimulationAction = waitForRemoteEvent(remotesFolder, Config.RemoteSimulationAction)
 local requestRotation = waitForRemoteEvent(remotesFolder, Config.RemoteRotation)
 local requestDisconnect = waitForRemoteEvent(remotesFolder, Config.RemoteDisconnect)
+local requestReturnToRack = waitForRemoteEvent(remotesFolder, Config.RemoteReturnToRack)
 local dragStateChanged = waitForRemoteEvent(remotesFolder, Config.RemoteDragState)
 local requestExperimentAction = waitForRemoteEvent(remotesFolder, Config.RemoteExperimentAction)
 local failureToast = waitForRemoteEvent(remotesFolder, Config.RemoteFailureToast)
@@ -93,6 +94,7 @@ if
 	requestSimulationAction == nil
 	or requestRotation == nil
 	or requestDisconnect == nil
+	or requestReturnToRack == nil
 	or dragStateChanged == nil
 	or requestExperimentAction == nil
 	or failureToast == nil
@@ -110,6 +112,7 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 	RequestSimulationAction = requestSimulationAction,
 	RequestRotation = requestRotation,
 	RequestDisconnect = requestDisconnect,
+	RequestReturnToRack = requestReturnToRack,
 	DragStateChanged = dragStateChanged,
 	SimulationState = simulationState,
 
@@ -133,6 +136,9 @@ local controls = PrototypeControls.Create({
 	end,
 	OnDisconnect = function()
 		BuildController.RequestDisconnect()
+	end,
+	OnReturnToRack = function()
+		BuildController.RequestReturnToRack()
 	end,
 })
 

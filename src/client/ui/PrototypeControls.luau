@@ -34,6 +34,7 @@ export type Config = {
 	OnAction: (action: ConstructionTypes.SimulationAction) -> (),
 	OnRotate: (operation: ConstructionTypes.RotationOperation) -> (),
 	OnDisconnect: () -> (),
+	OnReturnToRack: (() -> ())?,
 }
 
 export type Handle = {
@@ -44,7 +45,7 @@ export type Handle = {
 }
 
 local BUILD_HINT = "Tap a part to grab it"
-local DESKTOP_HINT = "Q / E   ROTATE\nR       FLIP\nX       DISCONNECT"
+local DESKTOP_HINT = "Q / E   ROTATE\nR       FLIP\nX       DISCONNECT\nBACKSPACE RETURN"
 local TOUCH_HINT = "Use the buttons below"
 local TESTING_HINT = "Physics is in charge."
 local SUCCESS_HINT = "The duck made it."
@@ -165,7 +166,7 @@ function PrototypeControls.Create(config: Config): Handle
 	-- Touch equivalents of Q / E / R / X, created only where they can be used.
 	local isTouch = not hasKeyboard()
 	local rotateRow: Frame? = nil
-	local disconnectButton: TextButton? = nil
+	local actionRow: Frame? = nil
 
 	if isTouch then
 		local row = Instance.new("Frame")
@@ -202,14 +203,37 @@ function PrototypeControls.Create(config: Config): Handle
 
 		rotateRow = row
 
-		-- DISCONNECT is placed in its own row, away from rotation buttons,
-		-- so it cannot be hit accidentally.
-		disconnectButton =
-			createTouchButton("Disconnect", "DISCONNECT", 4, UDim2.new(1, 0, 0, 44), panel)
-		disconnectButton.Visible = false
-		disconnectButton.Activated:Connect(function()
+		-- DISCONNECT and RETURN are placed in their own row, away from rotation buttons,
+		-- so they cannot be hit accidentally.
+		local actionsRow = Instance.new("Frame")
+		actionsRow.Name = "ActionsRow"
+		actionsRow.LayoutOrder = 4
+		actionsRow.Size = UDim2.new(1, 0, 0, 44)
+		actionsRow.BackgroundTransparency = 1
+		actionsRow.Visible = false
+		actionsRow.Parent = panel
+
+		local actionsLayout = Instance.new("UIListLayout")
+		actionsLayout.FillDirection = Enum.FillDirection.Horizontal
+		actionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		actionsLayout.Padding = UDim.new(0, 6)
+		actionsLayout.Parent = actionsRow
+
+		local half = UDim2.new(0.5, -3, 1, 0)
+		local disconnectBtn = createTouchButton("Disconnect", "DISCONNECT", 1, half, actionsRow)
+		disconnectBtn.Activated:Connect(function()
 			config.OnDisconnect()
 		end)
+
+		local returnBtn = createTouchButton("ReturnToRack", "RETURN", 2, half, actionsRow)
+		returnBtn.BackgroundColor3 = Color3.fromRGB(64, 52, 44)
+		returnBtn.Activated:Connect(function()
+			if config.OnReturnToRack ~= nil then
+				config.OnReturnToRack()
+			end
+		end)
+
+		actionRow = actionsRow
 	end
 
 	local button = Instance.new("TextButton")
@@ -319,8 +343,8 @@ function PrototypeControls.Create(config: Config): Handle
 			rotateRow.Visible = visible
 		end
 
-		if disconnectButton ~= nil then
-			disconnectButton.Visible = visible
+		if actionRow ~= nil then
+			actionRow.Visible = visible
 		end
 	end
 

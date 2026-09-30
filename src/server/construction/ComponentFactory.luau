@@ -79,12 +79,19 @@ local function createConnectorMarker(
 	end
 
 	local isRigid = ConnectorTypes.IsRigid(connectorType)
+	local isRope = connectorType == "Rope"
 
 	local marker = Instance.new("Part")
 	marker.Name = string.format("%s_%s", Config.ConnectorMarkerName, attachment.Name)
 	marker.Shape = if isRigid then Enum.PartType.Block else Enum.PartType.Cylinder
-	marker.Size = if isRigid then Config.RigidMarkerSize else Config.AxleMarkerSize
-	marker.Color = if isRigid then Color3.fromRGB(120, 138, 158) else Color3.fromRGB(78, 84, 98)
+	marker.Size = if isRigid
+		then Config.RigidMarkerSize
+		elseif isRope then Config.RopeMarkerSize
+		else Config.AxleMarkerSize
+	marker.Color = if isRigid
+		then Color3.fromRGB(120, 138, 158)
+		elseif isRope then Color3.fromRGB(195, 205, 220)
+		else Color3.fromRGB(78, 84, 98)
 	marker.Material = if isRigid then Enum.Material.SmoothPlastic else Enum.Material.Metal
 	marker.Anchored = false
 	marker.CanCollide = false
@@ -95,12 +102,14 @@ local function createConnectorMarker(
 	marker.CollisionGroup = Config.CollisionGroupComponents
 
 	-- A flat plate is thin along its own Y axis, so roll it onto the connector's
-	-- X axis. A cylinder already spins around X, which is the axle direction.
+	-- X axis. A cylinder already spins around X, which is the axle/rope direction.
 	local markerCFrame = if isRigid
 		then attachment.WorldCFrame * CFrame.Angles(0, 0, math.rad(-90))
 		else attachment.WorldCFrame
 
 	marker.CFrame = markerCFrame
+	marker:SetAttribute("WZ_ConnectorMarker", true)
+	marker:SetAttribute(Config.AttributeConnectorType, connectorType)
 	marker.Parent = root.Parent or root
 
 	local weld = Instance.new("WeldConstraint")
@@ -108,6 +117,35 @@ local function createConnectorMarker(
 	weld.Part0 = root
 	weld.Part1 = marker
 	weld.Parent = marker
+
+	-- For rope, add a contrasting center hole so it visually reads as an eyelet loop
+	if isRope then
+		local hole = Instance.new("Part")
+		hole.Name = "Hole"
+		hole.Shape = Enum.PartType.Cylinder
+		hole.Size = Vector3.new(
+			Config.RopeMarkerSize.X + 0.05,
+			Config.RopeMarkerSize.Y * 0.45,
+			Config.RopeMarkerSize.Z * 0.45
+		)
+		hole.Color = Color3.fromRGB(42, 45, 52)
+		hole.Material = Enum.Material.Metal
+		hole.Anchored = false
+		hole.CanCollide = false
+		hole.CanQuery = false
+		hole.CanTouch = false
+		hole.CastShadow = false
+		hole.Massless = true
+		hole.CollisionGroup = Config.CollisionGroupComponents
+		hole.CFrame = markerCFrame
+		hole.Parent = marker
+
+		local holeWeld = Instance.new("WeldConstraint")
+		holeWeld.Name = "WZ_HoleWeld"
+		holeWeld.Part0 = marker
+		holeWeld.Part1 = hole
+		holeWeld.Parent = hole
+	end
 end
 
 local function ensureFolder(parent: Instance, name: string): Instance
@@ -297,6 +335,7 @@ function ComponentFactory.Create(
 	model:SetAttribute(Config.AttributeComponent, true)
 	model:SetAttribute(Config.AttributeComponentId, componentId)
 	model:SetAttribute(Config.AttributeComponentType, definition.Type)
+	model:SetAttribute("WZ_SpawnPivot", pivot)
 
 	local root: Part
 	if definition.Type == "Spring" then
@@ -354,6 +393,74 @@ function ComponentFactory.Create(
 		end
 		visual.Parent = model
 		root.Transparency = 1
+	else
+		-- Procedural accents when custom visual is not present
+		if definition.Type == "Hook" then
+			local hookClaw = Instance.new("Part")
+			hookClaw.Name = "HookClaw"
+			hookClaw.Shape = Enum.PartType.Wedge
+			hookClaw.Size = Vector3.new(0.6, 1.2, 0.8)
+			hookClaw.Color = Color3.fromRGB(65, 70, 80)
+			hookClaw.Material = Enum.Material.Metal
+			hookClaw.CFrame = root.CFrame
+				* CFrame.new(0, -0.2, 0.7)
+				* CFrame.Angles(math.rad(180), 0, 0)
+			hookClaw.Anchored = false
+			hookClaw.CanCollide = false
+			hookClaw.CanQuery = false
+			hookClaw.CanTouch = false
+			hookClaw.Massless = true
+			hookClaw.CollisionGroup = Config.CollisionGroupComponents
+			hookClaw.Parent = model
+
+			local clawWeld = Instance.new("WeldConstraint")
+			clawWeld.Name = "WZ_HookWeld"
+			clawWeld.Part0 = root
+			clawWeld.Part1 = hookClaw
+			clawWeld.Parent = hookClaw
+		elseif definition.Type == "Winch" then
+			local drum = Instance.new("Part")
+			drum.Name = "SpoolDrum"
+			drum.Shape = Enum.PartType.Cylinder
+			drum.Size = Vector3.new(1.0, 1.6, 1.6)
+			drum.Color = Color3.fromRGB(50, 54, 62)
+			drum.Material = Enum.Material.Metal
+			drum.CFrame = root.CFrame * CFrame.new(0.6, 0, 0)
+			drum.Anchored = false
+			drum.CanCollide = false
+			drum.CanQuery = false
+			drum.CanTouch = false
+			drum.Massless = true
+			drum.CollisionGroup = Config.CollisionGroupComponents
+			drum.Parent = model
+
+			local drumWeld = Instance.new("WeldConstraint")
+			drumWeld.Name = "WZ_DrumWeld"
+			drumWeld.Part0 = root
+			drumWeld.Part1 = drum
+			drumWeld.Parent = drum
+
+			local led = Instance.new("Part")
+			led.Name = "WZ_WinchIndicator"
+			led.Shape = Enum.PartType.Cylinder
+			led.Size = Vector3.new(0.2, 0.5, 0.5)
+			led.Color = Color3.fromRGB(50, 55, 65)
+			led.Material = Enum.Material.SmoothPlastic
+			led.CFrame = root.CFrame * CFrame.new(0, 1.05, 0) * CFrame.Angles(0, 0, math.rad(90))
+			led.Anchored = false
+			led.CanCollide = false
+			led.CanQuery = false
+			led.CanTouch = false
+			led.Massless = true
+			led.CollisionGroup = Config.CollisionGroupComponents
+			led.Parent = model
+
+			local ledWeld = Instance.new("WeldConstraint")
+			ledWeld.Name = "WZ_IndicatorWeld"
+			ledWeld.Part0 = root
+			ledWeld.Part1 = led
+			ledWeld.Parent = led
+		end
 	end
 
 	-- Markers need the model's parts in place first, so they are created after

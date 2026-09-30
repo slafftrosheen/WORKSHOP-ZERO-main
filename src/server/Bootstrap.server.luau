@@ -109,6 +109,7 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 	RequestSimulationAction = ensureRemoteEvent(remotesFolder, Config.RemoteSimulationAction),
 	RequestRotation = ensureRemoteEvent(remotesFolder, Config.RemoteRotation),
 	RequestDisconnect = ensureRemoteEvent(remotesFolder, Config.RemoteDisconnect),
+	RequestReturnToRack = ensureRemoteEvent(remotesFolder, Config.RemoteReturnToRack),
 	DragStateChanged = ensureRemoteEvent(remotesFolder, Config.RemoteDragState),
 	SimulationState = ensureStringValue(remotesFolder, Config.StateValueName),
 
@@ -141,6 +142,10 @@ end)
 
 remotes.RequestDisconnect.OnServerEvent:Connect(function(player: Player, payload: unknown)
 	BuildService.RequestDisconnect(player, payload)
+end)
+
+remotes.RequestReturnToRack.OnServerEvent:Connect(function(player: Player, payload: unknown)
+	BuildService.RequestReturnToRack(player, payload)
 end)
 
 remotes.RequestExperimentAction.OnServerEvent:Connect(function(player: Player, payload: unknown)

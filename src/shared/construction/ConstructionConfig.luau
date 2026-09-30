@@ -70,6 +70,7 @@ local ConstructionConfig = {
 	RemoteRotation = "RequestRotation",
 	RemoteDisconnect = "RequestDisconnect",
 	RemoteDragState = "DragStateChanged",
+	RemoteReturnToRack = "RequestReturnToRack",
 
 	-- Experiment layer: the challenge lifecycle and its feedback.
 	RemoteExperimentAction = "RequestExperimentAction",
@@ -104,6 +105,7 @@ local ConstructionConfig = {
 	ShowConnectorMarkers = true,
 	RigidMarkerSize = Vector3.new(1.4, 0.12, 1.4),
 	AxleMarkerSize = Vector3.new(0.35, 1.5, 1.5),
+	RopeMarkerSize = Vector3.new(0.35, 1.2, 1.2),
 	ConnectorMarkerName = "Socket",
 
 	-- Component structure -----------------------------------------------------
@@ -119,6 +121,19 @@ local ConstructionConfig = {
 	MotorAngularVelocity = 16,
 	MotorMaxTorque = 12000,
 	MotorAngularResponsiveness = 20,
+
+	-- Rope & Winch tunables ---------------------------------------------------
+
+	RopeThickness = 0.18,
+	RopeRestitution = 0.1,
+	RopeSlackMultiplier = 1.05,
+	RopeMinLength = 1.0,
+	RopeSnapDistance = 8.0,
+
+	WinchSpeed = 6,
+	WinchForce = 15000,
+	WinchResponsiveness = 10,
+	WinchTargetLength = 1.0,
 
 	-- Fan / Behaviour tunables ------------------------------------------------
 

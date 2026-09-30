@@ -174,6 +174,7 @@ export type ExperimentRemotes = {
 	RequestSimulationAction: RemoteEvent,
 	RequestRotation: RemoteEvent,
 	RequestDisconnect: RemoteEvent,
+	RequestReturnToRack: RemoteEvent,
 	DragStateChanged: RemoteEvent,
 	SimulationState: StringValue,
 	RequestExperimentAction: RemoteEvent,

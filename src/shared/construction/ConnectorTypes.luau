@@ -25,7 +25,7 @@ function ConnectorTypes.ToConnectorType(value: unknown): ConnectorType?
 		return nil
 	end
 
-	if value == "Rigid" or value == "Axle" then
+	if value == "Rigid" or value == "Axle" or value == "Rope" then
 		return value
 	end
 
@@ -38,6 +38,14 @@ end
 
 function ConnectorTypes.IsRigid(connectorType: ConnectorType): boolean
 	return connectorType == "Rigid"
+end
+
+function ConnectorTypes.IsAxle(connectorType: ConnectorType): boolean
+	return connectorType == "Axle"
+end
+
+function ConnectorTypes.IsRope(connectorType: ConnectorType): boolean
+	return connectorType == "Rope"
 end
 
 return table.freeze(ConnectorTypes)

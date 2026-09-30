@@ -43,6 +43,7 @@ export type ControlsHandle = {
 type Preview = {
 	Position: Vector3,
 	Target: Model,
+	ConnectorType: ConstructionTypes.ConnectorType,
 }
 
 local FACING_FLIP = CFrame.Angles(0, math.pi, 0)
@@ -67,6 +68,8 @@ local highlight: Highlight? = nil
 local previewHighlight: Highlight? = nil
 local movingHighlight: Highlight? = nil
 local previewSphere: Part? = nil
+local previewTooltip: BillboardGui? = nil
+local previewTooltipLabel: TextLabel? = nil
 
 -- Which connectors were already joined when the current drag started, so a
 -- pulse can celebrate a *new* joint instead of an old one.
@@ -176,7 +179,7 @@ end
 
 local function connectorTypeOf(attachment: Attachment): ConstructionTypes.ConnectorType?
 	local value = attachment:GetAttribute(Config.AttributeConnectorType)
-	if value == "Rigid" or value == "Axle" then
+	if value == "Rigid" or value == "Axle" or value == "Rope" then
 		return value
 	end
 
@@ -212,16 +215,25 @@ local function findPreview(movingModel: Model): Preview?
 								local targetPosition = target.WorldCFrame.Position
 								local distance = (moving.WorldCFrame.Position - targetPosition).Magnitude
 
-								if distance <= Config.SnapDistance then
+								local isRope = movingType == "Rope"
+								local maxDistance = if isRope
+									then Config.RopeSnapDistance
+									else Config.SnapDistance
+								if distance <= maxDistance then
 									local desired = target.WorldCFrame * FACING_FLIP
 									local alignment =
 										math.abs(desired.XVector:Dot(moving.WorldCFrame.XVector))
 
-									if alignment >= minAlignment then
-										local score = distance + (1 - alignment)
+									if isRope or alignment >= minAlignment then
+										local score = distance
+											+ (if isRope then 0 else (1 - alignment))
 										if score < bestScore then
 											bestScore = score
-											best = { Position = targetPosition, Target = component }
+											best = {
+												Position = targetPosition,
+												Target = component,
+												ConnectorType = movingType,
+											}
 										end
 									end
 								end
@@ -250,6 +262,48 @@ local function hidePreview()
 	if movingHighlight ~= nil then
 		movingHighlight.Enabled = false
 	end
+
+	if previewTooltip ~= nil then
+		previewTooltip.Enabled = false
+	end
+end
+
+local function updateGhostConnectors(draggedModel: Model?)
+	local components = getRuntimeComponents()
+	if draggedModel == nil then
+		for _, comp in components do
+			for _, desc in comp:GetDescendants() do
+				if desc:IsA("BasePart") and desc:GetAttribute("WZ_ConnectorMarker") == true then
+					desc.Transparency = 0
+				end
+			end
+		end
+		return
+	end
+
+	local compatibleTypes: { [ConstructionTypes.ConnectorType]: boolean } = {}
+	for _, moving in connectorsOf(draggedModel) do
+		local mType = connectorTypeOf(moving)
+		if mType ~= nil then
+			compatibleTypes[mType] = true
+		end
+	end
+
+	for _, comp in components do
+		if comp ~= draggedModel then
+			for _, desc in comp:GetDescendants() do
+				if desc:IsA("BasePart") and desc:GetAttribute("WZ_ConnectorMarker") == true then
+					local cType =
+						desc:GetAttribute(Config.AttributeConnectorType) :: ConstructionTypes.ConnectorType?
+					if cType ~= nil and compatibleTypes[cType] then
+						desc.Transparency = 0
+					else
+						desc.Transparency = 0.75
+					end
+				end
+			end
+		end
+	end
 end
 
 local function updatePreview()
@@ -276,6 +330,15 @@ local function updatePreview()
 	sphere.Transparency = 0.45
 	marker.Adornee = preview.Target
 	marker.Enabled = true
+
+	if previewTooltip ~= nil and previewTooltipLabel ~= nil then
+		local label = if preview.ConnectorType == "Rigid"
+			then "MOUNT"
+			elseif preview.ConnectorType == "Axle" then "AXLE"
+			else "ROPE"
+		previewTooltipLabel.Text = label
+		previewTooltip.Enabled = true
+	end
 
 	-- The part in the player's hands lights up too, so "this will connect" is
 	-- readable without looking away from the part being dragged.
@@ -335,6 +398,24 @@ end
 
 function BuildController.RequestDisconnect(): boolean
 	return requestOnSelection(nil)
+end
+
+function BuildController.RequestReturnToRack(): boolean
+	local remoteSet = remotes
+	local model = selection
+
+	if remoteSet == nil or model == nil or model.Parent == nil then
+		return false
+	end
+
+	local componentId = componentIdOf(model)
+	if componentId == nil then
+		return false
+	end
+
+	remoteSet.RequestReturnToRack:FireServer({ ComponentId = componentId })
+	setSelection(nil)
+	return true
 end
 
 local function pickComponentAt(position: Vector3): Model?
@@ -468,6 +549,32 @@ function BuildController.Start(
 	sphere.Parent = Workspace
 	previewSphere = sphere
 
+	local tooltip = Instance.new("BillboardGui")
+	tooltip.Name = "WZ_ConnectorTooltip"
+	tooltip.Size = UDim2.fromOffset(70, 24)
+	tooltip.StudsOffset = Vector3.new(0, 1.4, 0)
+	tooltip.AlwaysOnTop = true
+	tooltip.Enabled = false
+	tooltip.Adornee = sphere
+	tooltip.Parent = sphere
+	previewTooltip = tooltip
+
+	local tooltipLabel = Instance.new("TextLabel")
+	tooltipLabel.Name = "Label"
+	tooltipLabel.Size = UDim2.fromScale(1, 1)
+	tooltipLabel.BackgroundColor3 = Color3.fromRGB(24, 26, 32)
+	tooltipLabel.BackgroundTransparency = 0.2
+	tooltipLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tooltipLabel.Font = Enum.Font.GothamBold
+	tooltipLabel.TextSize = 12
+	tooltipLabel.Text = ""
+	tooltipLabel.Parent = tooltip
+	previewTooltipLabel = tooltipLabel
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = tooltipLabel
+
 	local function applyState(value: string)
 		state = ConstructionTypes.ToSimulationState(value) or "Build"
 		controlsHandle.SetState(state)
@@ -479,6 +586,7 @@ function BuildController.Start(
 		if state ~= "Build" then
 			setSelection(nil)
 			hidePreview()
+			updateGhostConnectors(nil)
 		end
 	end
 
@@ -498,10 +606,12 @@ function BuildController.Start(
 			local dragged = findComponentById(componentId :: string)
 			if dragged ~= nil then
 				rememberConnectorState(dragged)
+				updateGhostConnectors(dragged)
 			end
 		else
 			local finished = draggingComponentId
 			draggingComponentId = nil
+			updateGhostConnectors(nil)
 
 			if finished ~= nil then
 				task.delay(REPLICATION_DELAY, function()
@@ -526,6 +636,11 @@ function BuildController.Start(
 
 		if input.KeyCode == Enum.KeyCode.X then
 			requestOnSelection(nil)
+			return
+		end
+
+		if input.KeyCode == Enum.KeyCode.Backspace or input.KeyCode == Enum.KeyCode.Delete then
+			BuildController.RequestReturnToRack()
 			return
 		end
 

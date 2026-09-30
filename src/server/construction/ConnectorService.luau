@@ -138,10 +138,14 @@ function ConnectorService.FindCandidate(movingModel: Model): ConstructionTypes.S
 							and ConnectorTypes.AreCompatible(movingType, targetType)
 						then
 							local distance = (moving.WorldCFrame.Position - targetPosition).Magnitude
-							if distance <= Config.SnapDistance then
+							local isRope = movingType == "Rope"
+							local maxDistance = if isRope
+								then Config.RopeSnapDistance
+								else Config.SnapDistance
+							if distance <= maxDistance then
 								local alignment = alignmentOf(target, moving)
-								if alignment >= minAlignment then
-									local score = distance + (1 - alignment)
+								if isRope or alignment >= minAlignment then
+									local score = distance + (if isRope then 0 else (1 - alignment))
 									if score < bestScore then
 										bestScore = score
 										best = {
@@ -186,7 +190,7 @@ local function createConstraint(
 		weld.Part0 = rootA
 		weld.Part1 = rootB
 		constraint = weld
-	else
+	elseif connectorType == "Axle" then
 		local hinge = Instance.new("HingeConstraint")
 		-- Hinges spin around the connector attachments themselves, so the wheel
 		-- keeps the axle the player snapped it to.
@@ -195,6 +199,19 @@ local function createConstraint(
 		hinge.ActuatorType = Enum.ActuatorType.None
 		hinge.LimitsEnabled = false
 		constraint = hinge
+	elseif connectorType == "Rope" then
+		local rope = Instance.new("RopeConstraint")
+		rope.Attachment0 = connectorA
+		rope.Attachment1 = connectorB
+		local distance = (connectorA.WorldPosition - connectorB.WorldPosition).Magnitude
+		rope.Length = math.max(Config.RopeMinLength, distance * Config.RopeSlackMultiplier)
+		rope.Thickness = Config.RopeThickness
+		rope.Restitution = Config.RopeRestitution
+		rope.Visible = true
+		rope.WinchEnabled = false
+		constraint = rope
+	else
+		return nil
 	end
 
 	constraint.Name = string.format("WZ_%s_%s", connectorType, string.sub(connectionId, 1, 6))
@@ -254,10 +271,13 @@ function ConnectorService.Snap(
 		return nil
 	end
 
-	-- Align: the moving connector is rotated onto the target's facing frame.
-	local desiredCFrame = targetConnector.WorldCFrame * FACING_FLIP
-	local delta = desiredCFrame * movingConnector.WorldCFrame:Inverse()
-	movingModel:PivotTo(delta * movingModel:GetPivot())
+	-- Align: for Rigid and Axle, the moving connector is rotated onto the target's facing frame.
+	-- For Rope, the constraint spans across existing space so we do not collapse transforms.
+	if connectorType ~= "Rope" then
+		local desiredCFrame = targetConnector.WorldCFrame * FACING_FLIP
+		local delta = desiredCFrame * movingConnector.WorldCFrame:Inverse()
+		movingModel:PivotTo(delta * movingModel:GetPivot())
+	end
 
 	local connectionId = HttpService:GenerateGUID(false)
 	local constraint = createConstraint(
@@ -282,6 +302,14 @@ function ConnectorService.Snap(
 		if typeA == "Motor" then
 			poweredBy = componentA
 		elseif typeB == "Motor" then
+			poweredBy = componentB
+		end
+	elseif connectorType == "Rope" then
+		local typeA = ComponentFactory.GetComponentType(targetModel)
+		local typeB = ComponentFactory.GetComponentType(movingModel)
+		if typeA == "Winch" then
+			poweredBy = componentA
+		elseif typeB == "Winch" then
 			poweredBy = componentB
 		end
 	end

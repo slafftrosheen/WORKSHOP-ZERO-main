@@ -18,9 +18,17 @@ export type SimulationState = "Build" | "Testing" | "Resetting"
 
 export type SimulationAction = "Test" | "Reset"
 
-export type ConnectorType = "Rigid" | "Axle"
+export type ConnectorType = "Rigid" | "Axle" | "Rope"
 
-export type ComponentType = "Plank" | "Block" | "Wheel" | "Spring" | "Motor" | "Fan"
+export type ComponentType =
+	"Plank"
+	| "Block"
+	| "Wheel"
+	| "Spring"
+	| "Motor"
+	| "Fan"
+	| "Hook"
+	| "Winch"
 
 export type RotationOperation = "YawLeft" | "YawRight" | "Flip"
 
@@ -85,6 +93,7 @@ export type ConstructionRemotes = {
 	RequestSimulationAction: RemoteEvent,
 	RequestRotation: RemoteEvent,
 	RequestDisconnect: RemoteEvent,
+	RequestReturnToRack: RemoteEvent,
 	DragStateChanged: RemoteEvent,
 	SimulationState: StringValue,
 }
@@ -137,6 +146,10 @@ function ConstructionTypes.ToComponentType(value: unknown): ComponentType?
 	end
 
 	if value == "Spring" or value == "Motor" or value == "Fan" then
+		return value
+	end
+
+	if value == "Hook" or value == "Winch" then
 		return value
 	end
 

@@ -447,4 +447,50 @@ function BuildService.RequestDisconnect(player: Player, payload: unknown): boole
 	return true
 end
 
+-- Return to rack -------------------------------------------------------------
+
+function BuildService.RequestReturnToRack(player: Player, payload: unknown): boolean
+	if SimulationService.GetState() ~= "Build" then
+		return false
+	end
+
+	local componentId = parseComponentRequest(payload)
+	if componentId == nil then
+		return false
+	end
+
+	local model = ComponentFactory.FindComponentById(componentId)
+	if model == nil or model.Parent == nil then
+		return false
+	end
+
+	-- 1. Disconnect all joints
+	ConnectorService.Disconnect(componentId)
+
+	-- 2. Restore staging transform
+	local spawnPivot = model:GetAttribute("WZ_SpawnPivot")
+	local targetPivot: CFrame? = nil
+	if typeof(spawnPivot) == "CFrame" then
+		targetPivot = spawnPivot
+	elseif lastValidPivots[model] ~= nil then
+		targetPivot = lastValidPivots[model]
+	end
+
+	if targetPivot ~= nil then
+		model:PivotTo(targetPivot)
+		lastValidPivots[model] = targetPivot
+	end
+
+	-- 3. Clear velocities and ensure anchored in BUILD
+	local root = model.PrimaryPart
+	if root ~= nil then
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.AssemblyAngularVelocity = Vector3.zero
+		root.Anchored = true
+	end
+
+	log(string.format("%s returned %s to rack", player.Name, model.Name))
+	return true
+end
+
 return table.freeze(BuildService)
