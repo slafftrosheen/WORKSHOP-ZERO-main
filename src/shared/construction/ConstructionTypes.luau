@@ -20,7 +20,7 @@ export type SimulationAction = "Test" | "Reset"
 
 export type ConnectorType = "Rigid" | "Axle"
 
-export type ComponentType = "Plank" | "Block" | "Wheel" | "Spring" | "Motor"
+export type ComponentType = "Plank" | "Block" | "Wheel" | "Spring" | "Motor" | "Fan"
 
 export type RotationOperation = "YawLeft" | "YawRight" | "Flip"
 
@@ -136,7 +136,7 @@ function ConstructionTypes.ToComponentType(value: unknown): ComponentType?
 		return value
 	end
 
-	if value == "Spring" or value == "Motor" then
+	if value == "Spring" or value == "Motor" or value == "Fan" then
 		return value
 	end
 

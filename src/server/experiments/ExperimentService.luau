@@ -43,6 +43,7 @@ local BuildService = require(script.Parent.Parent.construction.BuildService)
 local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
 local ConnectorService = require(script.Parent.Parent.construction.ConnectorService)
 local ActuatorService = require(script.Parent.Parent.construction.ActuatorService)
+local BehaviourService = require(script.Parent.Parent.construction.BehaviourService)
 local SimulationService = require(script.Parent.Parent.construction.SimulationService)
 local ExperimentRegistry = require(script.Parent.ExperimentRegistry)
 
@@ -344,6 +345,7 @@ function ExperimentService.RestartExperiment(player: Player): boolean
 	end
 
 	ConnectorService.DisconnectAll()
+	BehaviourService.Clear()
 
 	for _, staged in active.Staged do
 		if staged.Model.Parent ~= nil then
@@ -411,6 +413,7 @@ function ExperimentService.LoadExperiment(targetId: string, player: Player?): bo
 	stopSampler()
 	ConnectorService.DisconnectAll()
 	ActuatorService.Clear()
+	BehaviourService.Clear()
 	ComponentFactory.Clear()
 
 	if experiment ~= nil then

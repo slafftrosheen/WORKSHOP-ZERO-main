@@ -330,16 +330,110 @@ local OVER_THE_WALL: ExperimentTypes.ExperimentDefinition = {
 
 ExperimentDefinitions.OverTheWall = OVER_THE_WALL
 
+local WINDY_BUSINESS: ExperimentTypes.ExperimentDefinition = {
+	Id = "windy_business",
+	Number = 4,
+	Name = "WINDY BUSINESS",
+	Objective = "Move the duck without touching it.",
+
+	IntroTitle = "EXPERIMENT 004",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "MOVED BY AIR ALONE.",
+	RestartButton = "TRY AGAIN",
+
+	DiscoveryTitle = "FORCE",
+	DiscoveryBody = "You can move something without touching it directly.",
+
+	Inventory = {
+		{ ComponentType = "Block", Count = 4 },
+		{ ComponentType = "Plank", Count = 2 },
+		{ ComponentType = "Motor", Count = 2 },
+		{ ComponentType = "Fan", Count = 2 },
+		{ ComponentType = "Wheel", Count = 2 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.05,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		StartPadSize = Vector3.new(20, 0.6, 24),
+		StartPadCenter = Vector3.new(-14, 0.3, -12),
+
+		GoalPadSize = Vector3.new(18, 0.6, 14),
+		GoalPadCenter = Vector3.new(0, 0.3, 16),
+
+		DuckSpawn = Vector3.new(0, 1.5, -14),
+		ButtonPosition = Vector3.new(0, 0.6, 16),
+
+		BackWallSize = Vector3.new(120, 30, 2),
+		BackWallCenter = Vector3.new(0, 15, -42),
+
+		PlayerSpawn = Vector3.new(-18, 0.5, -12),
+
+		BuildBoundsSize = Vector3.new(64, 34, 72),
+		BuildBoundsCenter = Vector3.new(0, 12, 0),
+
+		StagingRows = { -22, -19.5, -17, -14.5, -12 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		PitY = 0,
+		AwayDistance = 75,
+		FastSpeed = 45,
+		HighY = 40,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 65,
+	},
+
+	FailureMessages = {
+		NonTouchViolation = {
+			"THAT COUNTS AS TOUCHING.",
+			"HANDS OFF THE DUCK!",
+		},
+		DuckDown = {
+			"DUCK DOWN.",
+		},
+		DuckDeparture = {
+			"UNSCHEDULED DUCK DEPARTURE.",
+		},
+		BallisticDuck = {
+			"BALLISTIC DUCK.",
+		},
+		SpaceProgram = {
+			"SPACE PROGRAM STARTED.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+		},
+	},
+}
+
+ExperimentDefinitions.WindyBusiness = WINDY_BUSINESS
+
 local orderedList: { ExperimentTypes.ExperimentDefinition } = {
 	SAVE_THE_DUCK,
 	UPHILL_DELIVERY,
 	OVER_THE_WALL,
+	WINDY_BUSINESS,
 }
 
 local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
 	[SAVE_THE_DUCK.Id] = SAVE_THE_DUCK,
 	[UPHILL_DELIVERY.Id] = UPHILL_DELIVERY,
 	[OVER_THE_WALL.Id] = OVER_THE_WALL,
+	[WINDY_BUSINESS.Id] = WINDY_BUSINESS,
 }
 
 function ExperimentDefinitions.Get(id: string): ExperimentTypes.ExperimentDefinition?

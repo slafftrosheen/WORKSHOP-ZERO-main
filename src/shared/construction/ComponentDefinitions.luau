@@ -177,6 +177,33 @@ local definitions: { [string]: ConstructionTypes.ComponentDefinition } = {
 			},
 		},
 	},
+
+	Fan = {
+		Type = "Fan",
+		DisplayName = "Fan",
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.8, 3.2, 3.2),
+		Color = Color3.fromRGB(65, 75, 90),
+		Material = Enum.Material.SmoothPlastic,
+		Density = 0.6,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			-- Axle input on the back face (-X), matching Motor's axle output (+X).
+			{
+				Name = "Axle_Input",
+				Type = AXLE,
+				Offset = CFrame.new(-0.4, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+			-- Rigid mounting face on the bottom (-Y) if mounting to a chassis.
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.6, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+		},
+	},
 }
 
 local ComponentDefinitions = {}

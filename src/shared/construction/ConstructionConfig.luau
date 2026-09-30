@@ -115,6 +115,13 @@ local ConstructionConfig = {
 	MotorMaxTorque = 12000,
 	MotorAngularResponsiveness = 20,
 
+	-- Fan / Behaviour tunables ------------------------------------------------
+
+	FanMaxRange = 32,
+	FanConeAngleDegrees = 45,
+	FanBaseForce = 1200,
+	FanThrustForce = 500,
+
 	-- Snapping -----------------------------------------------------------------
 
 	-- Distance between connector positions that still counts as "close enough".

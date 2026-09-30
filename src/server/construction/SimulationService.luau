@@ -26,6 +26,7 @@ local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 local ComponentFactory = require(script.Parent.ComponentFactory)
 local ConnectorService = require(script.Parent.ConnectorService)
 local ActuatorService = require(script.Parent.ActuatorService)
+local BehaviourService = require(script.Parent.BehaviourService)
 
 local SimulationService = {}
 
@@ -164,6 +165,7 @@ function SimulationService.StartTest(player: Player): boolean
 	ComponentFactory.SetConnectorMarkersVisible(false)
 	zeroVelocities()
 	ActuatorService.EnableActuators()
+	BehaviourService.Start()
 
 	-- The joint count is printed on purpose: "no duplicate constraints" is an
 	-- acceptance condition, and this is the cheapest way for a human to watch it.
@@ -196,7 +198,8 @@ function SimulationService.ResetToBuild(player: Player?): boolean
 	end
 
 	setState("Resetting")
-	-- Disable actuators FIRST before anchoring or moving geometry
+	-- Stop behaviours and disable actuators FIRST before anchoring or moving geometry
+	BehaviourService.Stop()
 	ActuatorService.DisableActuators()
 	ComponentFactory.SetComponentsAnchored(true)
 	zeroVelocities()

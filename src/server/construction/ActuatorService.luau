@@ -36,7 +36,7 @@ local Config = ConstructionConfig
 
 local ActuatorService = {}
 
-type ActuatorEntry = {
+export type ActuatorEntry = {
 	ConnectionId: string,
 	MotorComponentId: string,
 	OtherComponentId: string,
@@ -82,6 +82,16 @@ end
 
 function ActuatorService.IsPowered(connectionId: string): boolean
 	return actuators[connectionId] ~= nil
+end
+
+function ActuatorService.GetActuatorForComponent(componentId: string): ActuatorEntry?
+	for _, entry in actuators do
+		if entry.OtherComponentId == componentId or entry.MotorComponentId == componentId then
+			return entry
+		end
+	end
+
+	return nil
 end
 
 -- Registration ---------------------------------------------------------------

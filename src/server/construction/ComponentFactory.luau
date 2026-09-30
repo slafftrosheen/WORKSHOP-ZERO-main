@@ -39,6 +39,7 @@ local ConstructionConfig = require(Shared.construction.ConstructionConfig)
 local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
 local SpringBuilder = require(script.Parent.builders.SpringBuilder)
+local FanBuilder = require(script.Parent.builders.FanBuilder)
 
 local Config = ConstructionConfig
 
@@ -300,6 +301,8 @@ function ComponentFactory.Create(
 	local root: Part
 	if definition.Type == "Spring" then
 		root = SpringBuilder.Build(model, componentId, definition)
+	elseif definition.Type == "Fan" then
+		root = FanBuilder.Build(model, componentId, definition)
 	else
 		local part = Instance.new("Part")
 		part.Name = Config.RootPartName
