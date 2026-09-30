@@ -7,11 +7,12 @@ Roblox. Players meet a silly problem, physically construct something to solve
 it, test it, watch it fail, change one thing, and test again. Learning happens
 through the machine, not through a quiz.
 
-The first planned prototype is **Experiment 001 - Save the Duck**.
-It is not implemented yet: this repository currently proves the development
-pipeline end to end.
+The first planned prototype is **Experiment 001 - Save the Duck**. It is not
+implemented yet. What exists today is the construction kernel that every
+experiment will be built on:
 
 ```text
+BUILD  ->  TEST  ->  RESET  ->  BUILD again
 problem -> build -> TEST -> fail -> modify -> TEST again -> succeed
 ```
 
@@ -29,8 +30,9 @@ docs/         design, architecture, asset pipeline, environment, development
 scripts/      doctor / check / build / dev PowerShell commands
 ```
 
-Two bootstrap scripts print a banner on startup, and that is the whole game so
-far. The point of this batch is that the pipeline works.
+You can already drag parts around, snap them together, run the same test twice
+and get the same machine back. There is still no problem to solve, no art and
+nothing to win - see **What you can do right now** below.
 
 ## Prerequisites
 
@@ -104,6 +106,10 @@ Rojo build check      rojo build default.project.json -> throwaway file
 Exit code 0 means the batch is safe to commit. Run it before calling any
 coding batch complete.
 
+The same three checks run in CI on every push and pull request
+(`.github/workflows/ci.yml`), on a Windows runner, followed by
+`scripts/build.ps1`. CI proves code health only - it never opens Studio.
+
 ## Build
 
 ```powershell
@@ -158,6 +164,28 @@ Studio -> running Luau.
 
 Save the place afterwards so your geometry stays in `place\`.
 
+## What you can do right now
+
+In Play mode the server builds a temporary workshop to test the kernel:
+a concrete floor, a marked build area, two planks, two blocks and four wheels.
+It only exists in Studio, and it never touches the place file.
+
+| Input         | Result                                                    |
+| ------------- | --------------------------------------------------------- |
+| Click / tap   | Select a part (blue outline)                               |
+| Drag          | Move it - parts that are joined come along                 |
+| `Q` / `E`     | Rotate 15 degrees left / right                             |
+| `R`           | Flip 90 degrees                                            |
+| `X`           | Disconnect the selected part from everything                |
+| TEST          | Unanchor everything and let Roblox physics run              |
+| RESET         | Restore the exact machine, zero velocity, back to BUILD MODE |
+
+Drag a plank's end near a block and the connectors snap together: rigids weld,
+axles become spinning hinges. While dragging, a green marker shows the joint
+that would be made. The server decides for real when you let go.
+
+More detail, log lines and troubleshooting live in `docs/DEVELOPMENT.md`.
+
 ## The one synchronization rule
 
 ```text
@@ -206,10 +234,13 @@ Details, budgets and the Studio import checklist: `docs/ASSET_PIPELINE.md`.
 
 ## Status
 
-**BOOTSTRAP-001** - pipeline proven, no gameplay yet.
+**WZ-001** - pipeline proven, construction kernel playable, no challenge yet.
 
-Deliberately absent: gameplay framework, ECS, dependency injection, event bus,
-persistence, DataStore, multiplayer building, currency, inventory, analytics,
-monetization, anti-cheat framework, complex UI, custom physics.
+What exists: BUILD / TEST / RESET, drag, snap (Rigid welds, Axle hinges),
+rotation, disconnect, a Studio-only prototype workshop and CI.
+
+What explicitly does not: Save the Duck, springs, powered motors, gears, ropes,
+damage, saving machines, persistence, currency, inventory, multiplayer
+construction, final UI and art, Hyper3D or Blender assets.
 
 Next: **Experiment 001 - Save the Duck.**

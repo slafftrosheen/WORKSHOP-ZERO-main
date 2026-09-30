@@ -1,6 +1,11 @@
 # Workshop Zero - Game Design
 
-Status: **BOOTSTRAP-001**. This document is a compass, not a spec.
+Status: **WZ-001**. This document is a compass, not a spec.
+
+The construction kernel (BUILD / TEST / RESET) now exists as infrastructure.
+Experiment 001 is still not implemented, and none of the systems below have
+been designed yet - the kernel is there so that the first experiment can be
+about a duck rather than about plumbing.
 
 ## Core fantasy
 
@@ -38,27 +43,48 @@ player as a punishment.
 
 Not implemented yet. It is the first thing built once this pipeline is proven.
 
-## First planned components
+## Components
+
+| Component | State                                        |
+| --------- | -------------------------------------------- |
+| Plank     | functional prototype (Rigid ends, Axle sides) |
+| Block     | functional prototype (Rigid faces, Axle sides) |
+| Wheel     | functional prototype (spins on an Axle)       |
+| Spring    | placeholder - defined, refused by the factory |
+| Motor     | placeholder - defined, refused by the factory |
+
+## Interactions
+
+| Interaction | State in WZ-001                                   |
+| ----------- | ------------------------------------------------- |
+| Grab / Move | dragging a component, with its assembly following |
+| Rotate      | `Q` / `E` in 15 degree steps, `R` to flip 90      |
+| Connect     | automatic snap to a nearby compatible connector   |
+| Disconnect  | `X` releases every joint on the selected component |
+| Test        | TEST button: unanchor and let physics run          |
+| Reset       | RESET button: restore the exact build, zero velocity |
+
+Delete is deliberately not implemented yet: nothing in the loop should be able
+to lose a component while the kernel is being proven.
+
+## Construction kernel (WZ-001)
+
+Infrastructure, not gameplay. It gives every future experiment the same three
+phases, so a challenge only has to describe a problem and a win condition:
 
 ```text
-Plank
-Block
-Wheel
-Spring
-Motor
+BUILD   anchored parts, drag, rotate, snap, disconnect
+TEST    unanchored, Roblox physics owns the machine
+RESET   restore the exact build, return to BUILD
 ```
 
-## First planned interactions
+Design rules that follow from it:
 
-```text
-Grab
-Move
-Rotate
-Connect
-Delete
-Test
-Reset
-```
+- Failure is cheap: RESET always returns the machine exactly, so experimenting
+  is free.
+- Joints are recorded as data, not just physics, so future teaching moments can
+  read the machine without guessing.
+- Nothing is punished, saved or scored yet. That is the point.
 
 ## Explicitly out of scope
 

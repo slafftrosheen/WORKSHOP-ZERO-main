@@ -1,0 +1,59 @@
+name: CI
+
+# Proves, on every push and pull request, that the repository's Luau still
+# formats, still lints and still builds into a place.
+#
+# Roblox Studio and Blender are deliberately absent: they are not needed to
+# verify code, and neither has a supported headless install path here.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    name: Luau checks and place build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Report shell version
+        shell: pwsh
+        run: $PSVersionTable.PSVersion.ToString()
+
+      - name: Install Rokit
+        shell: pwsh
+        run: Invoke-RestMethod https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.ps1 | Invoke-Expression
+
+      - name: Put Rokit on PATH
+        shell: pwsh
+        run: |
+          Join-Path $env:USERPROFILE ".rokit\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Trust the pinned upstream tools
+        shell: pwsh
+        run: rokit trust rojo-rbx/rojo UpliftGames/wally Kampfkarren/selene JohnnyMorganz/StyLua JohnnyMorganz/luau-lsp
+
+      - name: Install the pinned toolchain
+        shell: pwsh
+        run: rokit install
+
+      - name: Report tool versions
+        shell: pwsh
+        run: |
+          rokit --version
+          rojo --version
+          wally --version
+          selene --version
+          stylua --version
+          luau-lsp --version
+
+      - name: Check formatting, lint and Rojo project
+        shell: pwsh
+        run: ./scripts/check.ps1
+
+      - name: Build the place
+        shell: pwsh
+        run: ./scripts/build.ps1

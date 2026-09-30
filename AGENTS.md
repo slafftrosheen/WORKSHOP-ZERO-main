@@ -59,6 +59,31 @@ Rokit puts the tool shims in `%USERPROFILE%\.rokit\bin`.
 .\scripts\dev.ps1      # rojo serve, for use with Roblox Studio
 ```
 
+## Construction kernel invariants (WZ-001)
+
+Do not break these without an explicit decision:
+
+- A client may only name a component by `ComponentId`. The server resolves the
+  instance. Never accept an Instance, CFrame, constraint or Lua blob.
+- Connector kind decides the joint: `Rigid` -> `WeldConstraint`,
+  `Axle` -> `HingeConstraint`. An axle is never welded.
+- The connection registry in `ConnectorService` is the truth about the machine;
+  the physical constraint is one field of a record.
+- RESET restores. It never rebuilds the machine, and it never recreates a
+  constraint. TEST captures a snapshot; RESET puts every pivot back and zeroes
+  velocities.
+- DragDetectors run on the server (`RunLocally = false`). Client-side previews
+  are guesses; the server always decides.
+- A connected component moves with its whole assembly, so joints are never
+  stretched during BUILD.
+- Every tunable number and scene name lives in
+  `src/shared/construction/ConstructionConfig.luau`. Server decisions and
+  client previews read the same file.
+- `PrototypeWorkshop` is a Studio-only harness. It never fabricates geometry in
+  a live server, never overwrites `Workspace.Workshop`, and never writes
+  runtime content back into the place file.
+- `--!strict` everywhere. New Luau files start with it; existing files keep it.
+
 ## Repository map
 
 ```text
