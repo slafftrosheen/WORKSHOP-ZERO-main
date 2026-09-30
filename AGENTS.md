@@ -83,6 +83,12 @@ Do not break these without an explicit decision:
   a live server, never overwrites `Workspace.Workshop`, and never writes
   runtime content back into the place file.
 - `--!strict` everywhere. New Luau files start with it; existing files keep it.
+- Physics feel and physics truth are different things. During TEST, Roblox may
+  hand network ownership of an assembly to a nearby client - good for
+  responsiveness. Challenge completion, attempt counts, scoring and unlocks
+  must still be judged by the **server**, from its own view of the duck and the
+  machine. Never from a client touch, a client-owned assembly, or a client
+  claim.
 
 ## Repository map
 

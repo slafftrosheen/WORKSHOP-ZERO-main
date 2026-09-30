@@ -21,6 +21,13 @@ Only `SimulationService` changes the phase, and the phase is published to
 clients as a replicated `StringValue`, so a player who joins mid-test reads
 `Testing` immediately instead of guessing.
 
+Once components are unanchored, Roblox may hand network ownership of an
+assembly to a nearby client. That is desirable for feel and is left alone. It
+does **not** move authority: nothing is scored in WZ-001, and when a challenge
+does score something, the server judges it from its own view of the duck and
+the machine - never from a client touch or a client-owned assembly. Feel may be
+client-simulated; truth may not.
+
 ## Module map
 
 ```text
