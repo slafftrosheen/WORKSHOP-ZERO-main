@@ -115,6 +115,7 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 	RequestExperimentAction = ensureRemoteEvent(remotesFolder, Config.RemoteExperimentAction),
 	FailureToast = ensureRemoteEvent(remotesFolder, Config.RemoteFailureToast),
 	ExperimentState = ensureStringValue(remotesFolder, Config.ExperimentStateValueName),
+	CurrentExperimentId = ensureStringValue(remotesFolder, Config.CurrentExperimentValueName),
 	ExperimentAttempt = ensureIntValue(remotesFolder, Config.AttemptValueName),
 	ExperimentPartsUsed = ensureIntValue(remotesFolder, Config.PartsUsedValueName),
 }

@@ -45,7 +45,50 @@ local function createSwatch(parent: Instance, componentType: string, layoutOrder
 	return swatch
 end
 
-function PartsTray.Create(definition: ExperimentTypes.ExperimentDefinition): ()
+export type PartsTrayHandle = {
+	SetDefinition: (definition: ExperimentTypes.ExperimentDefinition) -> (),
+	Destroy: () -> (),
+}
+
+local function populateRows(panel: Frame, definition: ExperimentTypes.ExperimentDefinition)
+	for _, child in panel:GetChildren() do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+
+	for index, requirement in definition.Inventory do
+		local row = Instance.new("Frame")
+		row.Name = requirement.ComponentType
+		row.LayoutOrder = index + 1
+		row.Size = UDim2.fromOffset(0, ROW_HEIGHT)
+		row.AutomaticSize = Enum.AutomaticSize.X
+		row.BackgroundTransparency = 1
+		row.Parent = panel
+
+		local rowList = Instance.new("UIListLayout")
+		rowList.FillDirection = Enum.FillDirection.Horizontal
+		rowList.VerticalAlignment = Enum.VerticalAlignment.Center
+		rowList.SortOrder = Enum.SortOrder.LayoutOrder
+		rowList.Padding = UDim.new(0, 8)
+		rowList.Parent = row
+
+		createSwatch(row, requirement.ComponentType, 1)
+
+		local label = Instance.new("TextLabel")
+		label.Name = "Count"
+		label.LayoutOrder = 2
+		label.AutomaticSize = Enum.AutomaticSize.XY
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamMedium
+		label.TextSize = 15
+		label.TextColor3 = Color3.fromRGB(226, 230, 240)
+		label.Text = string.format("%s ×%d", requirement.ComponentType:upper(), requirement.Count)
+		label.Parent = row
+	end
+end
+
+function PartsTray.Create(definition: ExperimentTypes.ExperimentDefinition): PartsTrayHandle
 	local playerGui = player:WaitForChild("PlayerGui")
 
 	local gui = Instance.new("ScreenGui")
@@ -92,35 +135,16 @@ function PartsTray.Create(definition: ExperimentTypes.ExperimentDefinition): ()
 	title.Text = "PARTS"
 	title.Parent = panel
 
-	for index, requirement in definition.Inventory do
-		local row = Instance.new("Frame")
-		row.Name = requirement.ComponentType
-		row.LayoutOrder = index + 1
-		row.Size = UDim2.fromOffset(0, ROW_HEIGHT)
-		row.AutomaticSize = Enum.AutomaticSize.X
-		row.BackgroundTransparency = 1
-		row.Parent = panel
+	populateRows(panel, definition)
 
-		local rowList = Instance.new("UIListLayout")
-		rowList.FillDirection = Enum.FillDirection.Horizontal
-		rowList.VerticalAlignment = Enum.VerticalAlignment.Center
-		rowList.SortOrder = Enum.SortOrder.LayoutOrder
-		rowList.Padding = UDim.new(0, 8)
-		rowList.Parent = row
-
-		createSwatch(row, requirement.ComponentType, 1)
-
-		local label = Instance.new("TextLabel")
-		label.Name = "Count"
-		label.LayoutOrder = 2
-		label.AutomaticSize = Enum.AutomaticSize.XY
-		label.BackgroundTransparency = 1
-		label.Font = Enum.Font.GothamMedium
-		label.TextSize = 15
-		label.TextColor3 = Color3.fromRGB(226, 230, 240)
-		label.Text = string.format("%s ×%d", requirement.ComponentType:upper(), requirement.Count)
-		label.Parent = row
-	end
+	return {
+		SetDefinition = function(newDefinition: ExperimentTypes.ExperimentDefinition)
+			populateRows(panel, newDefinition)
+		end,
+		Destroy = function()
+			gui:Destroy()
+		end,
+	}
 end
 
 return table.freeze(PartsTray)

@@ -20,7 +20,7 @@ local ConstructionTypes = require(script.Parent.Parent.construction.Construction
 
 export type ExperimentState = "Loading" | "Build" | "Testing" | "Success"
 
-export type ExperimentAction = "Restart"
+export type ExperimentAction = "Restart" | "Next"
 
 export type PartRequirement = {
 	ComponentType: ConstructionTypes.ComponentType,
@@ -43,6 +43,11 @@ export type FailureEventId =
 	| "BallisticDuck"
 	| "SpaceProgram"
 	| "StructuralOptimism"
+	| "LowTravel"
+	| "BackwardMovement"
+	| "Rollback"
+	| "VehicleFlip"
+	| "HighRpm"
 
 export type FailureThresholds = {
 	-- Below this height the duck is in the pit.
@@ -139,6 +144,7 @@ export type ExperimentModule = {
 	StartAttempt: (attempt: number) -> (),
 	RestoreToBuild: () -> (),
 	Restart: () -> (),
+	Unload: () -> (),
 }
 
 -- What the level builder hands back to the experiment.
@@ -164,6 +170,7 @@ export type ExperimentRemotes = {
 	RequestExperimentAction: RemoteEvent,
 	FailureToast: RemoteEvent,
 	ExperimentState: StringValue,
+	CurrentExperimentId: StringValue,
 	ExperimentAttempt: IntValue,
 	ExperimentPartsUsed: IntValue,
 }
@@ -187,7 +194,7 @@ function ExperimentTypes.ToExperimentAction(value: unknown): ExperimentAction?
 		return nil
 	end
 
-	if value == "Restart" then
+	if value == "Restart" or value == "Next" then
 		return value
 	end
 

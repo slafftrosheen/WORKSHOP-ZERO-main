@@ -84,6 +84,7 @@ local failureToast = waitForRemoteEvent(remotesFolder, Config.RemoteFailureToast
 
 local simulationState = waitForStringValue(remotesFolder, Config.StateValueName)
 local experimentState = waitForStringValue(remotesFolder, Config.ExperimentStateValueName)
+local currentExperimentId = waitForStringValue(remotesFolder, Config.CurrentExperimentValueName)
 local attemptValue = waitForIntValue(remotesFolder, Config.AttemptValueName)
 local partsUsedValue = waitForIntValue(remotesFolder, Config.PartsUsedValueName)
 
@@ -96,6 +97,7 @@ if
 	or failureToast == nil
 	or simulationState == nil
 	or experimentState == nil
+	or currentExperimentId == nil
 	or attemptValue == nil
 	or partsUsedValue == nil
 then
@@ -112,6 +114,7 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 	RequestExperimentAction = requestExperimentAction,
 	FailureToast = failureToast,
 	ExperimentState = experimentState,
+	CurrentExperimentId = currentExperimentId,
 	ExperimentAttempt = attemptValue,
 	ExperimentPartsUsed = partsUsedValue,
 }

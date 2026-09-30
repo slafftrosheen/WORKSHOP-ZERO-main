@@ -155,11 +155,13 @@ end
 type IntroHandle = {
 	Show: () -> (),
 	Hide: () -> (),
+	SetDefinition: (definition: ExperimentTypes.ExperimentDefinition) -> (),
 }
 
 type SuccessHandle = {
 	Show: (attempts: number, partsUsed: number) -> (),
 	Hide: () -> (),
+	SetDefinition: (definition: ExperimentTypes.ExperimentDefinition) -> (),
 }
 
 local function createIntro(): IntroHandle
@@ -179,9 +181,10 @@ local function createIntro(): IntroHandle
 	dim.Parent = gui
 
 	local card = createCard(dim)
-	createLine(card, 1, 16, definition.IntroTitle, 13, Color3.fromRGB(150, 156, 170), false)
-	createLine(card, 2, 42, definition.Name, 30, TITLE_COLOR, true)
-	createLine(card, 3, 24, definition.Objective, 17, TEXT_COLOR, false)
+	local titleLabel =
+		createLine(card, 1, 16, definition.IntroTitle, 13, Color3.fromRGB(150, 156, 170), false)
+	local nameLabel = createLine(card, 2, 42, definition.Name, 30, TITLE_COLOR, true)
+	local objectiveLabel = createLine(card, 3, 24, definition.Objective, 17, TEXT_COLOR, false)
 	createLine(card, 4, 8, "", 8, TEXT_COLOR, false)
 
 	local startButton =
@@ -199,10 +202,16 @@ local function createIntro(): IntroHandle
 			gui.Enabled = true
 		end,
 		Hide = hide,
+		SetDefinition = function(newDef: ExperimentTypes.ExperimentDefinition)
+			titleLabel.Text = newDef.IntroTitle
+			nameLabel.Text = newDef.Name
+			objectiveLabel.Text = newDef.Objective
+			startButton.Text = newDef.IntroButton
+		end,
 	}
 end
 
-local function createSuccess(onRestart: () -> ()): SuccessHandle
+local function createSuccess(onRestart: () -> (), onNext: () -> ()): SuccessHandle
 	local gui = createScreenGui("WorkshopZeroSuccess", 40)
 	gui.Enabled = false
 
@@ -218,21 +227,46 @@ local function createSuccess(onRestart: () -> ()): SuccessHandle
 	dim.Parent = gui
 
 	local card = createCard(dim)
-	createLine(card, 1, 44, definition.SuccessTitle, 32, TITLE_COLOR, true)
-	createLine(card, 2, 26, definition.SuccessLine, 18, TEXT_COLOR, false)
+	local titleLabel = createLine(card, 1, 44, definition.SuccessTitle, 32, TITLE_COLOR, true)
+	local lineLabel = createLine(card, 2, 26, definition.SuccessLine, 18, TEXT_COLOR, false)
 
 	local attemptsLabel = createLine(card, 3, 22, "", 16, TEXT_COLOR, false)
 	local partsLabel = createLine(card, 4, 22, "", 16, TEXT_COLOR, false)
 	createLine(card, 5, 10, "", 10, TEXT_COLOR, false)
 
-	local again = createCardButton(card, 6, definition.RestartButton, Color3.fromRGB(154, 96, 44))
+	local nextButton = createCardButton(card, 6, "NEXT EXPERIMENT", Color3.fromRGB(52, 132, 84))
+	local moreSoonLabel =
+		createLine(card, 6, 28, "MORE EXPERIMENTS SOON", 15, Color3.fromRGB(150, 156, 170), false)
+	local again = createCardButton(card, 7, definition.RestartButton, Color3.fromRGB(154, 96, 44))
+
+	nextButton.Activated:Connect(function()
+		gui.Enabled = false
+		onNext()
+	end)
+
 	again.Activated:Connect(function()
 		gui.Enabled = false
 		onRestart()
 	end)
 
+	local function refreshSuccessUi()
+		titleLabel.Text = definition.SuccessTitle
+		lineLabel.Text = definition.SuccessLine
+		again.Text = definition.RestartButton
+
+		local nextDef = ExperimentDefinitions.GetNext(definition.Id)
+		if nextDef ~= nil then
+			nextButton.Visible = true
+			moreSoonLabel.Visible = false
+		else
+			nextButton.Visible = false
+			moreSoonLabel.Visible = true
+		end
+	end
+
 	return {
 		Show = function(attempts: number, partsUsed: number)
+			refreshSuccessUi()
 			attemptsLabel.Text = string.format("Attempts: %d", attempts)
 			partsLabel.Text = string.format("Parts used: %d", partsUsed)
 			gui.Enabled = true
@@ -240,6 +274,10 @@ local function createSuccess(onRestart: () -> ()): SuccessHandle
 
 		Hide = function()
 			gui.Enabled = false
+		end,
+
+		SetDefinition = function(_newDef: ExperimentTypes.ExperimentDefinition)
+			refreshSuccessUi()
 		end,
 	}
 end
@@ -272,25 +310,29 @@ local function findDuck(): Model?
 	return nil
 end
 
-local function countConnections(): number
+local function countConnections(): (number, number)
 	local runtime = findRuntimeFolder()
 	if runtime == nil then
-		return 0
+		return 0, 0
 	end
 
 	local container = runtime:FindFirstChild(Config.ConnectionsFolderName)
 	if container == nil then
-		return 0
+		return 0, 0
 	end
 
-	local count = 0
+	local total = 0
+	local powered = 0
 	for _, child in container:GetChildren() do
 		if child:IsA("Constraint") then
-			count += 1
+			total += 1
+			if child:GetAttribute(Config.AttributePowered) == true then
+				powered += 1
+			end
 		end
 	end
 
-	return count
+	return total, powered
 end
 
 --[[
@@ -304,7 +346,7 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 	local label = Instance.new("TextLabel")
 	label.Name = "Readout"
 	label.Position = UDim2.fromOffset(16, 220)
-	label.Size = UDim2.fromOffset(260, 150)
+	label.Size = UDim2.fromOffset(260, 180)
 	label.BackgroundColor3 = Color3.fromRGB(12, 14, 18)
 	label.BackgroundTransparency = 0.3
 	label.BorderSizePixel = 0
@@ -339,13 +381,17 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 			height = root.Position.Y
 		end
 
+		local totalConns, poweredAxles = countConnections()
+
 		label.Text = string.format(
-			"EXPERIMENT (F8)\nExperimentState: %s\nSimulationState: %s\nAttempt: %d\nParts used: %d\nConnections: %d\nDuck speed: %.1f\nDuck height: %.1f",
+			"EXPERIMENT (F8)\nExperiment: %s\nExperimentState: %s\nSimulationState: %s\nAttempt: %d\nParts used: %d\nConnections: %d\nPowered axles: %d\nDuck speed: %.1f\nDuck height: %.1f",
+			definition.Id,
 			remotes.ExperimentState.Value,
 			remotes.SimulationState.Value,
 			remotes.ExperimentAttempt.Value,
 			remotes.ExperimentPartsUsed.Value,
-			countConnections(),
+			totalConns,
+			poweredAxles,
 			speed,
 			height
 		)
@@ -363,10 +409,35 @@ function ExperimentController.Start(
 		return
 	end
 
+	local initialId = remotes.CurrentExperimentId.Value
+	if initialId ~= "" then
+		local initialDef = ExperimentDefinitions.Get(initialId)
+		if initialDef ~= nil then
+			definition = initialDef
+		end
+	end
+
 	local toast = ExperimentToast.Create()
 	local intro = createIntro()
 	local success = createSuccess(function()
 		remotes.RequestExperimentAction:FireServer("Restart")
+	end, function()
+		remotes.RequestExperimentAction:FireServer("Next")
+	end)
+
+	local partsTray = PartsTray.Create(definition)
+
+	remotes.CurrentExperimentId:GetPropertyChangedSignal("Value"):Connect(function()
+		local newDef = ExperimentDefinitions.Get(remotes.CurrentExperimentId.Value)
+		if newDef ~= nil then
+			definition = newDef
+			partsTray.SetDefinition(newDef)
+			intro.SetDefinition(newDef)
+			success.SetDefinition(newDef)
+			if ExperimentTypes.ToExperimentState(remotes.ExperimentState.Value) == "Build" then
+				intro.Show()
+			end
+		end
 	end)
 
 	remotes.FailureToast.OnClientEvent:Connect(function(message: unknown)
@@ -413,10 +484,6 @@ function ExperimentController.Start(
 	remotes.ExperimentState:GetPropertyChangedSignal("Value"):Connect(function()
 		applyExperimentState(remotes.ExperimentState.Value)
 	end)
-
-	-- The parts list is informational: parts are real objects on a rack, so this
-	-- is a reminder of what is available, not an inventory to drag from.
-	PartsTray.Create(definition)
 
 	if Config.PlaytestDiagnostics and RunService:IsStudio() then
 		startDebugOverlay(remotes)

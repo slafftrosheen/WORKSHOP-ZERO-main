@@ -59,6 +59,7 @@ local live = false
 local succeeded = false
 local currentAttempt = 1
 local sampler: RBXScriptConnection? = nil
+local goalConnection: RBXScriptConnection? = nil
 local fired: { [ExperimentTypes.FailureEventId]: boolean } = {}
 
 -- Captured at the start of an attempt: enough to tell "the machine went over"
@@ -397,7 +398,11 @@ function SaveTheDuckExperiment.Load(
 		sound.Parent = built.Handles.GoalCap
 	end)
 
-	built.Handles.GoalTrigger.Touched:Connect(onGoalTouched)
+	if goalConnection ~= nil then
+		goalConnection:Disconnect()
+		goalConnection = nil
+	end
+	goalConnection = built.Handles.GoalTrigger.Touched:Connect(onGoalTouched)
 
 	-- Print the asset resolution summary once, so whoever is running Studio
 	-- can immediately see whether custom art is active or not.
@@ -460,6 +465,28 @@ function SaveTheDuckExperiment.Restart()
 	restoreDuck()
 
 	-- Reset diagnostics so the next load prints a fresh asset summary.
+	AssetProvider.ResetDiagnostics()
+end
+
+--[[
+	Cleans all listeners, samplers and state when switching to another experiment.
+]]
+function SaveTheDuckExperiment.Unload()
+	live = false
+	succeeded = false
+	stopSampler()
+
+	if goalConnection ~= nil then
+		goalConnection:Disconnect()
+		goalConnection = nil
+	end
+
+	table.clear(fired)
+	table.clear(builtUp)
+	table.clear(rigidParts)
+
+	handles = nil
+	report = nil
 	AssetProvider.ResetDiagnostics()
 end
 

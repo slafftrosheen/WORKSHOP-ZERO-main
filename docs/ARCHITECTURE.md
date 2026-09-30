@@ -1,11 +1,12 @@
 # Workshop Zero - Architecture
 
-Status: **WZ-002.1**. The construction kernel and Experiment 001 first playable are operational, with game-feel polish and an asset bridge for imported Hyper3D/Blender visual models.
+Status: **WZ-003**. The construction kernel, powered actuators (Motor), Experiment 001 (Save the Duck), and Experiment 002 (Uphill Delivery) are operational, featuring an in-place experiment lifecycle and asset bridge for imported visual models.
 
 > [!IMPORTANT]
 > **Core Architectural Invariants:**
 > - **Visual assets are replaceable skins over stable Workshop Zero physics contracts.**
 > - **Missing art must never make an experiment unplayable.**
+> - **Server owns authoritative game state and physics truth.**
 
 ## The two phases
 
@@ -15,11 +16,11 @@ Everything in this repository exists to serve one loop:
 BUILD  ->  TEST  ->  RESET  ->  BUILD (again)
 ```
 
-| Phase     | Who moves parts              | Components | Joints                       |
+| Phase     | Who moves parts              | Components | Joints / Actuators           |
 | --------- | ---------------------------- | ---------- | ---------------------------- |
 | Build     | the player, through a drag   | anchored   | present but physically inert |
-| Testing   | Roblox physics               | unanchored | live: welds weld, hinges spin |
-| Resetting | nobody                       | anchored   | present, untouched           |
+| Testing   | Roblox physics               | unanchored | live: welds weld, hinges spin, motors power |
+| Resetting | nobody                       | anchored   | actuators disabled first, snapshot restored |
 
 Only `SimulationService` changes the phase, and the phase is published to
 clients as a replicated `StringValue`, so a player who joins mid-test reads
@@ -31,6 +32,17 @@ does **not** move authority: challenge completion, attempt counts and success
 are judged by the server from its own view of the duck and the machine - never
 from a client touch or a client-owned assembly. Feel may be client-simulated;
 truth may not.
+
+## Actuator & Power Architecture (WZ-003)
+
+Workshop Zero keeps physical connection types minimal:
+- **Connector Kinds**: `Rigid` and `Axle` are the **only** connector types. A motor does **not** introduce a new connector kind.
+- **Powered Connection**: When an `Axle` connection joins a `Motor` component to another component (such as a `Wheel`), the resulting `HingeConstraint` is tagged as powered (`AttributePowered = "WZ_Powered"`).
+- **Actuator Layer (`ActuatorService`)**:
+  - `Attachment0` of the hinge is strictly assigned to the motor's connector attachment, guaranteeing deterministic local axes.
+  - Symmetrical drive coordination: Motors placed symmetrically on opposite sides of a vehicle have outward axles pointing in opposite directions ($\vec{A}$ and $-\vec{A}$). The service calculates forward vehicle velocity direction $\vec{D} = \vec{A} \times \vec{Y}$ for each motor. If opposed ($\vec{D}_i \cdot \vec{D}_{ref} < 0$), rotation sign is inverted so both wheels drive forward cooperatively.
+  - Reset contract: When transitioning from `Testing` to `Resetting`, `ActuatorService.DisableActuators()` is called **before** unanchoring or setting pivot CFrames, preventing erratic physics torques during position restoration.
+  - Motor LED: A visual `WZ_MotorIndicator` glows Neon green while running in `Testing` and dims to SmoothPlastic when idle in `Build`.
 
 ## The two state machines (and why there are two)
 
@@ -48,7 +60,9 @@ fighting:
 - success leaves SimulationState at **Testing** so physics keeps running; the
   freeze is an experiment state, never a second physics state machine
 - RESET during Success is refused by `ExperimentService` before it ever reaches
-  `SimulationService`: a finished experiment can only be restarted
+  `SimulationService`: a finished experiment can only be restarted or transitioned
+- NEXT advances progression via `ExperimentService.NextExperiment(player)`,
+  rebuilding the level in-place without place reloading
 
 ## Module map
 
@@ -56,22 +70,29 @@ fighting:
 src/shared/construction/
     ConstructionTypes      states, kinds, record shapes, wire validators
     ConnectorTypes         connector kinds and compatibility
-    ComponentDefinitions   the prototype catalogue (Plank, Block, Wheel)
+    ComponentDefinitions   the prototype catalogue (Plank, Block, Wheel, Motor)
     ConstructionConfig     every tunable number and name
 
 src/shared/experiments/
     ExperimentTypes        experiment vocabulary, report and module contracts
-    ExperimentDefinitions  Save the Duck data: inventory, geometry, thresholds, copy
+    ExperimentDefinitions  Save the Duck and Uphill Delivery definitions
 
 src/server/construction/
-    ComponentFactory       builds components, connectors, drag detectors, socket markers
+    ComponentFactory       builds components, connectors, drag detectors, indicator LEDs
     ConnectorService       the connection registry, snapping, disconnecting
+    ActuatorService        powered hinge management, cooperative rotation sign, LEDs
     SimulationService      the Build/Testing/Resetting state machine
     BuildService           dragging, rotation, build-area rules
+
 src/server/experiments/
-    SaveTheDuckLevel       builds Workspace.Workshop (floor, pads, dressing, duck, goal)
-    SaveTheDuckExperiment  payload handling, goal detection, failure observer
-    ExperimentService      attempt lifecycle, diagnostics, success, restart
+    ExperimentRegistry     id-to-module directory (save_the_duck, uphill_delivery)
+    ExperimentLevelUtil    shared level construction, styling, duck, goal, staging
+    SaveTheDuckLevel       builds Level 001 geometry
+    SaveTheDuckExperiment  Level 001 experiment lifecycle and failure observer
+    UphillDeliveryLevel    builds Level 002 ramp incline and upper platform
+    UphillDeliveryExperiment Level 002 experiment lifecycle and uphill failure observer
+    ExperimentService      attempt lifecycle, diagnostics, progression (Next/Restart)
+
 src/server/
     CollisionGroups        five groups and their matrix
 src/server/assets/
@@ -82,11 +103,11 @@ src/server/dev/
 src/client/construction/
     BuildController        selection, requests, snap preview and snap pulse
 src/client/experiments/
-    ExperimentController   intro card, success panel, toast wiring, debug overlay
+    ExperimentController   intro card, success panel with Next, debug overlay
 src/client/ui/
     PrototypeControls      action button, state line, touch controls
     ExperimentToast        one-line flavour notifications
-    PartsTray              informational parts list
+    PartsTray              dynamic informational parts list
 ```
 
 Dependencies point one way only:
@@ -96,17 +117,15 @@ ConstructionTypes / ConnectorTypes / ConstructionConfig / ComponentDefinitions
         |
   ComponentFactory
         |
-   ConnectorService        SimulationService
-        \                       /
-              BuildService
-                    |
-    PrototypeWorkshop, Bootstrap (wiring)
+   ConnectorService <-> ActuatorService     SimulationService
+        \                                         /
+                        BuildService
+                             |
+             PrototypeWorkshop, Bootstrap (wiring)
 
 ExperimentTypes / ExperimentDefinitions
         |
-  SaveTheDuckLevel -> ComponentFactory
-        |
-  SaveTheDuckExperiment (reports)
+  ExperimentRegistry -> [Experiment Modules] -> ComponentFactory / LevelUtil
         |
   ExperimentService  (observes SimulationService, owns ExperimentState)
         |

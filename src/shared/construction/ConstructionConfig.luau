@@ -34,6 +34,10 @@ local ConstructionConfig = {
 	-- is the real experience; flip it on for kernel development.
 	EnablePrototypeWorkshop = false,
 
+	-- Dev override: for Studio development only. When set to an experiment id
+	-- (e.g. "uphill_delivery"), boots directly into that experiment.
+	DevExperimentId = nil :: string?,
+
 	-- Playtest diagnostics in Studio Output (attempt duration, duck height and
 	-- speed, parts moved). Output only - nothing is written or uploaded.
 	PlaytestDiagnostics = true,
@@ -67,6 +71,7 @@ local ConstructionConfig = {
 	RemoteExperimentAction = "RequestExperimentAction",
 	RemoteFailureToast = "FailureToast",
 	ExperimentStateValueName = "ExperimentState",
+	CurrentExperimentValueName = "CurrentExperimentId",
 	AttemptValueName = "ExperimentAttempt",
 	PartsUsedValueName = "ExperimentPartsUsed",
 
@@ -87,6 +92,7 @@ local ConstructionConfig = {
 	AttributeGoalTrigger = "WZ_GoalTrigger",
 	AttributeGenerated = "WZ_Generated",
 	AttributeExperiment = "WZ_Experiment",
+	AttributePowered = "WZ_Powered",
 
 	-- Visible socket markers, so a child can see where things connect.
 	-- Rigid is a flat plate, Axle is a round cap: shape, not colour alone.
@@ -100,6 +106,14 @@ local ConstructionConfig = {
 	RootPartName = "Root",
 	DragDetectorName = "WZDragDetector",
 	ConnectionsFolderTag = "WZ_Connection",
+
+	-- Motor / Actuator tunables -----------------------------------------------
+
+	-- Starting target for toy electric motor physics.
+	-- Wheel radius ~1.2 studs, 16 rad/s gives ~19 studs/s linear wheel speed.
+	MotorAngularVelocity = 16,
+	MotorMaxTorque = 12000,
+	MotorAngularResponsiveness = 20,
 
 	-- Snapping -----------------------------------------------------------------
 

@@ -40,9 +40,10 @@ local ExperimentDefinitions = require(Shared.experiments.ExperimentDefinitions)
 local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local BuildService = require(script.Parent.Parent.construction.BuildService)
+local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
 local ConnectorService = require(script.Parent.Parent.construction.ConnectorService)
 local SimulationService = require(script.Parent.Parent.construction.SimulationService)
-local SaveTheDuckExperiment = require(script.Parent.SaveTheDuckExperiment)
+local ExperimentRegistry = require(script.Parent.ExperimentRegistry)
 
 local Config = ConstructionConfig
 
@@ -75,6 +76,7 @@ end
 local function publishState()
 	if remotes ~= nil then
 		remotes.ExperimentState.Value = state
+		remotes.CurrentExperimentId.Value = definition.Id
 	end
 end
 
@@ -368,6 +370,8 @@ function ExperimentService.HandleExperimentRequest(player: Player, payload: unkn
 	local action = ExperimentTypes.ToExperimentAction(payload)
 	if action == "Restart" then
 		return ExperimentService.RestartExperiment(player)
+	elseif action == "Next" then
+		return ExperimentService.NextExperiment(player)
 	end
 
 	return false
@@ -383,6 +387,86 @@ end
 
 function ExperimentService.GetState(): ExperimentTypes.ExperimentState
 	return state
+end
+
+--[[
+	Transitions between experiments or loads an initial experiment by ID.
+	Handles clean teardown of previous workshop, connectors, and actuators.
+]]
+function ExperimentService.LoadExperiment(targetId: string, player: Player?): boolean
+	local targetModule = ExperimentRegistry.Get(targetId)
+	if targetModule == nil then
+		warn(string.format("[WZ] Experiment '%s' not found in registry", targetId))
+		return false
+	end
+
+	setState("Loading")
+	printAttempt("Unload")
+
+	if SimulationService.GetState() == "Testing" then
+		SimulationService.ResetToBuild(player)
+	end
+
+	stopSampler()
+	ConnectorService.DisconnectAll()
+	ComponentFactory.Clear()
+
+	if experiment ~= nil then
+		experiment.Unload()
+		experiment = nil
+	end
+
+	if loaded ~= nil and loaded.Workshop ~= nil then
+		if loaded.Workshop:GetAttribute(Config.AttributeGenerated) == true then
+			loaded.Workshop:Destroy()
+		end
+		loaded = nil
+	end
+
+	BuildService.ResetPlacementMemory()
+
+	local report: ExperimentTypes.ExperimentReport = {
+		Success = function()
+			ExperimentService.MarkSuccess()
+		end,
+		Toast = function(message: string)
+			ExperimentService.BroadcastToast(message)
+		end,
+	}
+
+	local built = targetModule.Load(report)
+	if built == nil then
+		warn(string.format("[WZ] The experiment '%s' did not load; workshop is empty", targetId))
+		return false
+	end
+
+	loaded = built
+	experiment = targetModule
+	definition = built.Definition
+
+	BuildService.AttachWorkshop(built.Workshop)
+
+	attempt = 0
+	partsUsed = 0
+	publishCounters()
+	setState("Build")
+
+	log(string.format("%s is ready (%s)", definition.Name, definition.Objective))
+	return true
+end
+
+--[[
+	Advances the session to the next experiment in sequence, if available.
+]]
+function ExperimentService.NextExperiment(player: Player): boolean
+	local nextDef = ExperimentDefinitions.GetNext(definition.Id)
+	if nextDef == nil then
+		log(string.format("No next experiment after %s", definition.Id))
+		return false
+	end
+
+	log(string.format("%s advancing to next experiment: %s", player.Name, nextDef.Id))
+	return ExperimentService.LoadExperiment(nextDef.Id, player)
 end
 
 --[[
@@ -402,33 +486,11 @@ function ExperimentService.Start()
 		end,
 	})
 
-	local report: ExperimentTypes.ExperimentReport = {
-		Success = function()
-			ExperimentService.MarkSuccess()
-		end,
-		Toast = function(message: string)
-			ExperimentService.BroadcastToast(message)
-		end,
-	}
-
-	local built = SaveTheDuckExperiment.Load(report)
-	if built == nil then
-		warn("[WZ] The experiment did not load; the workshop stays empty")
-		return
+	local defaultDef = ExperimentDefinitions.GetDefault()
+	local success = ExperimentService.LoadExperiment(defaultDef.Id)
+	if not success then
+		warn(string.format("[WZ] Failed to load default experiment '%s'", defaultDef.Id))
 	end
-
-	loaded = built
-	experiment = SaveTheDuckExperiment
-	definition = built.Definition
-
-	-- Readers of the build area and of the components: the same wiring the
-	-- developer harness uses, pointed at the real level.
-	BuildService.AttachWorkshop(built.Workshop)
-
-	publishCounters()
-	setState("Build")
-
-	log(string.format("%s is ready (%s)", definition.Name, definition.Objective))
 end
 
 return table.freeze(ExperimentService)

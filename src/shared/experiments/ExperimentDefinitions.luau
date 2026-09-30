@@ -25,6 +25,9 @@
 	gap shrinks - that is the only dial that needs touching.
 ]]
 
+local RunService = game:GetService("RunService")
+
+local ConstructionConfig = require(script.Parent.Parent.construction.ConstructionConfig)
 local ExperimentTypes = require(script.Parent.ExperimentTypes)
 
 local ExperimentDefinitions = {}
@@ -121,20 +124,149 @@ local SAVE_THE_DUCK: ExperimentTypes.ExperimentDefinition = {
 	},
 }
 
+local UPHILL_DELIVERY: ExperimentTypes.ExperimentDefinition = {
+	Id = "uphill_delivery",
+	Number = 2,
+	Name = "UPHILL DELIVERY",
+	Objective = "Get the duck to the button.",
+
+	IntroTitle = "EXPERIMENT 002",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "THE DUCK MADE IT.",
+	RestartButton = "TRY AGAIN",
+
+	Inventory = {
+		{ ComponentType = "Plank", Count = 3 },
+		{ ComponentType = "Block", Count = 3 },
+		{ ComponentType = "Wheel", Count = 6 },
+		{ ComponentType = "Motor", Count = 2 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.6,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		StartPadSize = Vector3.new(24, 0.6, 18),
+		StartPadCenter = Vector3.new(0, 0.3, -18),
+
+		GoalPadSize = Vector3.new(22, 0.6, 16),
+		GoalPadCenter = Vector3.new(0, 10.3, 22),
+
+		DuckSpawn = Vector3.new(0, 1.5, -14),
+		ButtonPosition = Vector3.new(0, 10.6, 22),
+
+		BackWallSize = Vector3.new(120, 30, 2),
+		BackWallCenter = Vector3.new(0, 15, -42),
+
+		PlayerSpawn = Vector3.new(-15, 0.5, -18),
+
+		BuildBoundsSize = Vector3.new(64, 34, 72),
+		BuildBoundsCenter = Vector3.new(0, 12, 2),
+
+		StagingRows = { -24, -21.5, -19, -16.5 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		PitY = 0,
+		AwayDistance = 75,
+		FastSpeed = 45,
+		HighY = 38,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 65,
+	},
+
+	FailureMessages = {
+		LowTravel = {
+			"LOTS OF NOISE.\nNOT MUCH TRAVEL.",
+		},
+		BackwardMovement = {
+			"TECHNICALLY, THAT IS MOVEMENT.",
+		},
+		Rollback = {
+			"GRAVITY HAS FILED AN OBJECTION.",
+		},
+		VehicleFlip = {
+			"WHEELS UP.\nNOT IDEAL.",
+		},
+		HighRpm = {
+			"RPM: QUESTIONABLE.",
+		},
+		DuckDown = {
+			"DUCK DOWN.",
+		},
+		DuckDeparture = {
+			"UNSCHEDULED DUCK DEPARTURE.",
+		},
+		BallisticDuck = {
+			"BALLISTIC DUCK.",
+		},
+		SpaceProgram = {
+			"SPACE PROGRAM STARTED.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+		},
+	},
+}
+
 ExperimentDefinitions.SaveTheDuck = SAVE_THE_DUCK
+ExperimentDefinitions.UphillDelivery = UPHILL_DELIVERY
+
+local orderedList: { ExperimentTypes.ExperimentDefinition } = {
+	SAVE_THE_DUCK,
+	UPHILL_DELIVERY,
+}
 
 local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
 	[SAVE_THE_DUCK.Id] = SAVE_THE_DUCK,
+	[UPHILL_DELIVERY.Id] = UPHILL_DELIVERY,
 }
 
 function ExperimentDefinitions.Get(id: string): ExperimentTypes.ExperimentDefinition?
 	return byId[id]
 end
 
--- The experiment this build loads. One experiment exists; when a second one
--- arrives it gets added to byId and the bootstrap picks it explicitly.
+function ExperimentDefinitions.GetFirst(): ExperimentTypes.ExperimentDefinition
+	return orderedList[1]
+end
+
+function ExperimentDefinitions.GetNext(id: string): ExperimentTypes.ExperimentDefinition?
+	for index, def in orderedList do
+		if def.Id == id then
+			return orderedList[index + 1]
+		end
+	end
+
+	return nil
+end
+
+function ExperimentDefinitions.GetOrdered(): { ExperimentTypes.ExperimentDefinition }
+	return orderedList
+end
+
+-- The experiment this build loads by default.
+-- In Studio, DevExperimentId can override this to jump directly to a level.
 function ExperimentDefinitions.GetDefault(): ExperimentTypes.ExperimentDefinition
-	return SAVE_THE_DUCK
+	if RunService:IsStudio() and ConstructionConfig.DevExperimentId ~= nil then
+		local override = byId[ConstructionConfig.DevExperimentId]
+		if override ~= nil then
+			return override
+		end
+	end
+
+	return ExperimentDefinitions.GetFirst()
 end
 
 -- Deterministic flavour rotation: a child sees variety, a playtest sees the
@@ -157,10 +289,11 @@ function ExperimentDefinitions.FailureMessage(
 	return messages[index]
 end
 
-for _, definition in byId do
-	table.freeze(definition)
+for _, def in byId do
+	table.freeze(def)
 end
 
 table.freeze(byId)
+table.freeze(orderedList)
 
 return table.freeze(ExperimentDefinitions)
