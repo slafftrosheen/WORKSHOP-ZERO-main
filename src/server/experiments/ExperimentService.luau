@@ -38,6 +38,7 @@ local ConstructionConfig = require(Shared.construction.ConstructionConfig)
 local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 local ExperimentDefinitions = require(Shared.experiments.ExperimentDefinitions)
 local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
+local ConstructionMath = require(Shared.construction.ConstructionMath)
 
 local BuildService = require(script.Parent.Parent.construction.BuildService)
 local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
@@ -381,7 +382,7 @@ function ExperimentService.SelectExperiment(player: Player, targetId: string): b
 		return false
 	end
 
-	if targetDef.Number > unlockedIndex then
+	if not ConstructionMath.IsExperimentUnlocked(targetDef.Number, unlockedIndex) then
 		warn(
 			string.format(
 				"[WZ] Player %s requested locked experiment '%s' (#%d, max unlocked #%d)",

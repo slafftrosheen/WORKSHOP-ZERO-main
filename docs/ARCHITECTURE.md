@@ -1,12 +1,60 @@
 # Workshop Zero - Architecture
 
-Status: **WZ-003**. The construction kernel, powered actuators (Motor), Experiment 001 (Save the Duck), and Experiment 002 (Uphill Delivery) are operational, featuring an in-place experiment lifecycle and asset bridge for imported visual models.
+Status: **LONG-RUN-001**. The construction kernel, powered actuators (Motor), stored energy (Spring launcher), aerodynamic thrust (Fan), and all four experiments (Save the Duck, Uphill Delivery, Over the Wall, Windy Business) are fully operational with session-local progression and discovery cards.
 
 > [!IMPORTANT]
 > **Core Architectural Invariants:**
 > - **Visual assets are replaceable skins over stable Workshop Zero physics contracts.**
 > - **Missing art must never make an experiment unplayable.**
 > - **Server owns authoritative game state and physics truth.**
+> - **Never encode the intended solution as the only valid solution.**
+> - **Internal component constraints are never registered as user construction connections.**
+
+## Subsystem Boundaries
+
+The system is strictly partitioned into single-responsibility boundaries:
+
+1. **`ConnectorService` — Mechanical Topology**
+   - Tracks user-constructed joints between components (`Rigid` -> `WeldConstraint`, `Axle` -> `HingeConstraint`).
+   - Owns snapping, alignment, disconnection, and the authoritative connection registry.
+   - Unaware of motors, fans, or experiment rules. Internal component constraints (e.g. spring plungers) are **never** registered here.
+
+2. **`ActuatorService` — Powered Mechanical Joints**
+   - Subscribes to `ConnectorService` lifecycle hooks.
+   - Detects when an `Axle` HingeConstraint connects to a `Motor` component.
+   - Configures motor actuators (`AngularVelocity`, `MotorMaxTorque`, `AngularResponsiveness`).
+   - Cooperatively derives rotational signs so symmetric dual-motor chassis drive forward together.
+   - Enables actuators on `Testing`, disables them **before** transform restoration on `Resetting`.
+
+3. **`BehaviourService` — Component-Specific Physical Effects**
+   - Manages non-joint physical environmental interactions during `Testing`.
+   - Simulates aerodynamic airflow cones and reaction thrust for powered `Fan` components using `VectorForce` primitives.
+   - Runs a single shared, mobile-friendly Heartbeat loop during `Testing` only.
+   - Tears down all dynamic attachments and forces cleanly on `Resetting` or level change.
+
+4. **`ExperimentService` — Experiment Lifecycle & Progression**
+   - Owns the `ExperimentState` state machine (`Loading`, `Build`, `Testing`, `Success`).
+   - Validates session-local unlocks (001 -> 004) without persistent storage.
+   - Coordinates level loading, clean workshop teardown, counter publication, and experiment selection.
+
+5. **`Experiment Modules` — Challenge-Specific Rules**
+   - Implement the `ExperimentModule` contract (`Load`, `StartAttempt`, `RestoreToBuild`, `Restart`, `Unload`).
+   - Own level-specific geometry creation via `ExperimentLevelUtil` and failure observation.
+   - Validate goal completions authoritatively from server physics.
+
+6. **`ComponentFactory` — Component Construction & Lifecycle**
+   - Builds models, adds connectors, attaches DragDetectors, and manages root parts.
+   - Delegates multi-part internal assemblies to specialized builders (`SpringBuilder`, `FanBuilder`).
+   - Handles component-aware anchoring and drift-free internal state restoration (`ResetAllInternalState`).
+
+7. **`AssetProvider` — Replaceable Visuals**
+   - Bridges imported Studio/Blender meshes (`WorkshopZeroAssets`) to physical root parts.
+   - Enforces zero-collision and masslessness on visual skins.
+   - Falls back gracefully to procedural geometry when custom art is absent.
+
+8. **`ConstructionMath` — Pure Mathematical & Validation Helpers**
+   - Pure, deterministic Luau functions free of side-effects.
+   - Derives motor rotation signs, fan aerodynamic falloff, and unlock checks.
 
 ## The two phases
 
@@ -16,11 +64,11 @@ Everything in this repository exists to serve one loop:
 BUILD  ->  TEST  ->  RESET  ->  BUILD (again)
 ```
 
-| Phase     | Who moves parts              | Components | Joints / Actuators           |
-| --------- | ---------------------------- | ---------- | ---------------------------- |
-| Build     | the player, through a drag   | anchored   | present but physically inert |
-| Testing   | Roblox physics               | unanchored | live: welds weld, hinges spin, motors power |
-| Resetting | nobody                       | anchored   | actuators disabled first, snapshot restored |
+| Phase     | Who moves parts              | Components | Joints / Actuators / Behaviours |
+| --------- | ---------------------------- | ---------- | ------------------------------- |
+| Build     | the player, through a drag   | anchored   | present but physically inert    |
+| Testing   | Roblox physics               | unanchored | live: welds weld, hinges spin, motors power, springs compress, fans blow |
+| Resetting | nobody                       | anchored   | actuators & behaviours disabled first, snapshot restored |
 
 Only `SimulationService` changes the phase, and the phase is published to
 clients as a replicated `StringValue`, so a player who joins mid-test reads
@@ -33,7 +81,7 @@ are judged by the server from its own view of the duck and the machine - never
 from a client touch or a client-owned assembly. Feel may be client-simulated;
 truth may not.
 
-## Actuator & Power Architecture (WZ-003)
+## Actuator & Power Architecture (Motor)
 
 Workshop Zero keeps physical connection types minimal:
 - **Connector Kinds**: `Rigid` and `Axle` are the **only** connector types. A motor does **not** introduce a new connector kind.
@@ -43,6 +91,23 @@ Workshop Zero keeps physical connection types minimal:
   - Symmetrical drive coordination: Motors placed symmetrically on opposite sides of a vehicle have outward axles pointing in opposite directions ($\vec{A}$ and $-\vec{A}$). The service calculates forward vehicle velocity direction $\vec{D} = \vec{A} \times \vec{Y}$ for each motor. If opposed ($\vec{D}_i \cdot \vec{D}_{ref} < 0$), rotation sign is inverted so both wheels drive forward cooperatively.
   - Reset contract: When transitioning from `Testing` to `Resetting`, `ActuatorService.DisableActuators()` is called **before** unanchoring or setting pivot CFrames, preventing erratic physics torques during position restoration.
   - Motor LED: A visual `WZ_MotorIndicator` glows Neon green while running in `Testing` and dims to SmoothPlastic when idle in `Build`.
+
+## Spring & Stored Energy Architecture (Spring)
+
+- Built via `SpringBuilder` as a multi-part component (`Root` Base Plate + `WZ_Plunger`).
+- Internal mechanical constraints:
+  - `PrismaticConstraint`: Restricts plunger movement strictly along local Y axis with physical travel limits (0 to 1.8 studs).
+  - `SpringConstraint`: Provides restorative spring force with tuned stiffness (`Config.SpringStiffness = 320`) and damping (`Config.SpringDamping = 18`).
+- Component-aware anchoring: In `Build` mode, both base and plunger are anchored. In `Testing`, the base unanchors with the assembly while the plunger floats freely within constraint limits.
+- Drift-free reset: `ComponentFactory.ResetAllInternalState()` restores the plunger's relative offset to rest position and zeroes velocities on every RESET.
+
+## Aerodynamics & Thrust Architecture (Fan)
+
+- Built via `FanBuilder` with a cylindrical Root, central hub, 4 angled aerodynamic blades, and protective shroud.
+- Input connector: `Axle_Input` on the rear face (`-X`). Requires a direct mechanical `Axle` connection to a `Motor` to activate.
+- Thrust and reaction forces:
+  - Directed airflow cone up to 32 studs in front of the fan (+X). Applies `VectorForce` to unanchored payloads and construction components with quadratic distance falloff and angular falloff.
+  - Reaction thrust: In accordance with Newton's 3rd law, the fan assembly receives an opposing reaction force (`-forward * Config.FanThrustForce`), enabling propeller-driven vehicles.
 
 ## The two state machines (and why there are two)
 
@@ -70,28 +135,37 @@ fighting:
 src/shared/construction/
     ConstructionTypes      states, kinds, record shapes, wire validators
     ConnectorTypes         connector kinds and compatibility
-    ComponentDefinitions   the prototype catalogue (Plank, Block, Wheel, Motor)
+    ComponentDefinitions   catalogue (Plank, Block, Wheel, Motor, Spring, Fan)
     ConstructionConfig     every tunable number and name
+    ConstructionMath       pure motor sign, fan force, and unlock calculations
 
 src/shared/experiments/
     ExperimentTypes        experiment vocabulary, report and module contracts
-    ExperimentDefinitions  Save the Duck and Uphill Delivery definitions
+    ExperimentDefinitions  definitions, ordering, discovery copy, DevExperimentId
 
 src/server/construction/
     ComponentFactory       builds components, connectors, drag detectors, indicator LEDs
+    builders/
+        SpringBuilder      multi-part plunger, prismatic & spring constraint setup
+        FanBuilder         multi-part hub, shroud, and angled blade construction
     ConnectorService       the connection registry, snapping, disconnecting
     ActuatorService        powered hinge management, cooperative rotation sign, LEDs
+    BehaviourService       aerodynamic airflow cone and reaction thrust simulation
     SimulationService      the Build/Testing/Resetting state machine
     BuildService           dragging, rotation, build-area rules
 
 src/server/experiments/
-    ExperimentRegistry     id-to-module directory (save_the_duck, uphill_delivery)
+    ExperimentRegistry     id-to-module directory (001 -> 004)
     ExperimentLevelUtil    shared level construction, styling, duck, goal, staging
     SaveTheDuckLevel       builds Level 001 geometry
     SaveTheDuckExperiment  Level 001 experiment lifecycle and failure observer
     UphillDeliveryLevel    builds Level 002 ramp incline and upper platform
     UphillDeliveryExperiment Level 002 experiment lifecycle and uphill failure observer
-    ExperimentService      attempt lifecycle, diagnostics, progression (Next/Restart)
+    OverTheWallLevel       builds Level 003 barrier wall and target region
+    OverTheWallExperiment  Level 003 experiment lifecycle and launch failure observer
+    WindyBusinessLevel     builds Level 004 low-friction glide track and hazard zone
+    WindyBusinessExperiment Level 004 experiment lifecycle and non-touch observer
+    ExperimentService      attempt lifecycle, diagnostics, progression (Next/Restart/Select)
 
 src/server/
     CollisionGroups        five groups and their matrix
@@ -103,11 +177,12 @@ src/server/dev/
 src/client/construction/
     BuildController        selection, requests, snap preview and snap pulse
 src/client/experiments/
-    ExperimentController   intro card, success panel with Next, debug overlay
+    ExperimentController   intro card, success panel with Next/Board, debug overlay
 src/client/ui/
     PrototypeControls      action button, state line, touch controls
     ExperimentToast        one-line flavour notifications
-    PartsTray              dynamic informational parts list
+    PartsTray              dynamic informational parts list & experiment header
+    ExperimentBoard        modal experiment selector with locked cards & leave confirm
 ```
 
 Dependencies point one way only:

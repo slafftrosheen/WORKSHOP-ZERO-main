@@ -7,13 +7,18 @@ Roblox. Players meet a silly problem, physically construct something to solve
 it, test it, watch it fail, change one thing, and test again. Learning happens
 through the machine, not through a quiz.
 
-**Experiment 001 - Save the Duck** is now the first playable, built on the
+**The Four Experiments Suite** is now fully playable, built on the
 construction kernel that every experiment shares:
 
 ```text
 BUILD  ->  TEST  ->  RESET  ->  BUILD again
-problem -> build -> TEST -> fail -> modify -> TEST again -> succeed
+problem -> build -> TEST -> fail -> modify -> TEST again -> succeed -> discovery -> next
 ```
+
+1. **Experiment 001 — Save the Duck**: Passive construction, beams, gap traversal, and structural physics.
+2. **Experiment 002 — Uphill Delivery**: Powered motors and driven wheels, overcoming gravity and traction up a ramp.
+3. **Experiment 003 — Over the Wall**: Stored energy and compression physics with a spring launcher to clear a 12-stud obstacle.
+4. **Experiment 004 — Windy Business**: Motor-powered propeller fan generating directional airflow to glide the duck without touching it.
 
 ## What is in here
 
@@ -253,16 +258,23 @@ Details, budgets and the Studio import checklist: `docs/ASSET_PIPELINE.md`.
 
 ## Status
 
-**WZ-002.1** - Experiment 001 first playable polished and asset bridge established.
-Parenting bugs resolved (Duck and GoalButton parented authoritatively into `Workspace.Workshop`).
-Environment, scale, lighting, and presentation improved.
-Touch controls refined with separate disconnect and thumb-sized buttons; desktop supports Escape to clear selection.
-Asset bridge (`src/server/assets/AssetProvider.luau`) supports drop-in custom models from `ReplicatedStorage.WorkshopZeroAssets` without modifying physics contracts.
+**LONG-RUN-001** — From Prototype to Small Playable Game.
+Four complete, connected experiments in an authoritative session loop:
+1. `save_the_duck`: Passive construction, cantilever beams, gap crossing.
+2. `uphill_delivery`: Powered motor, traction wheels, climbing a broad incline.
+3. `over_the_wall`: Real compression spring launcher with internal prismatic/spring constraints, clearing a 12-stud barrier.
+4. `windy_business`: Motor-driven aerodynamic propeller fan with distance falloff, clearing the glide track without physical contact.
 
-What exists: BUILD / TEST / RESET, drag, forgiving snap assistance (Rigid welds, Axle hinges),
-rotation, disconnect, connector markers (hidden in TEST), Experiment 001 "Save the Duck",
-collision groups, mobile touch controls, playtest diagnostics, CI, asset bridge.
+**Features in place:**
+- Modular experiment lifecycle (`ExperimentRegistry`, `ExperimentService.LoadExperiment`).
+- Powered mechanical actuators (`ActuatorService`) driving axle hinges during TEST without per-frame scripting.
+- Physical aerodynamic forces (`BehaviourService`) applying constraint `VectorForce` during TEST.
+- Multi-part components with internal constraint simulation (`SpringBuilder`, `FanBuilder`).
+- Component-aware anchoring and drift-free transform restoration.
+- Session unlocks (001 -> 004) with authoritative server validation and locked Experiment Board UI.
+- Discovery cards on experiment success with grounded physics copy.
+- Mobile-responsive UI with HUD tray, top-left experiment cards, and Altered-Machine leave confirmation.
+- Asset bridge (`AssetProvider`) supporting drop-in replacement art without breaking physics.
 
-What explicitly does not: springs, powered motors, gears, ropes, damage,
-saving machines, persistence, currency, inventory, multiplayer construction,
-Experiment 002.
+**What explicitly remains out of scope:**
+DataStore persistence, currency, XP/stars, loot, pets, trading, monetization, gears/chains/winches, logic gates/sensors, multiplayer construction plots.

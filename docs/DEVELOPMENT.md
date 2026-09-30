@@ -73,24 +73,28 @@ rojo serve default.project.json
 rojo plugin install  # install/refresh the Studio plugin
 ```
 
-## Playing Experiment 001
+## Playing the Experiments
 
 Everything below happens in Studio, in Play mode.
 
-### The level
+### The Levels
 
-By default the server now builds the real experiment level instead of the
-developer sandbox:
+By default the server builds the first experiment (`save_the_duck`) and progresses through the suite. You can also override the starting experiment in Studio by setting `DevExperimentId` in `src/shared/experiments/ExperimentDefinitions.luau`:
+- `"save_the_duck"` (Experiment 001)
+- `"uphill_delivery"` (Experiment 002)
+- `"over_the_wall"` (Experiment 003)
+- `"windy_business"` (Experiment 004)
 
+Each level is generated in `Workspace.Workshop` with `WZ_Generated = true`, protecting any hand-authored workshops:
 ```text
 Workspace/Workshop
-    floor with a trench, start pad, goal pad, painted tape boundaries
+    Level-specific geometry (trenches, ramps, barrier walls, glide tracks)
     dressing: back wall, shelves, crates, bench, toolboxes
     BuildBounds     invisible legal build volume
     WorkshopSpawn   player spawn, beside the rack
     Duck            the payload (WZ_Payload), anchored while building
     GoalButton      giant red button with an invisible trigger
-    Components      2 planks, 2 blocks, 4 wheels on the rack
+    Components      parts rack tailored to the active experiment
     Connections     created as you snap things together
 ```
 
@@ -110,10 +114,12 @@ kernel work: set `EnablePrototypeWorkshop = true` in
 | `R`          | Flip 90 degrees on the local X axis (desktop)   |
 | `X`          | Disconnect the selected component (desktop)     |
 | ↺ ↻ FLIP DISCONNECT | Touch buttons, shown while a component is selected on touch devices |
+| [ ☰ EXPERIMENTS ] | Top-left HUD button to open the Experiment Board selector |
 | TEST MACHINE | Unanchor everything - duck included - physics runs |
 | RESET button | Restore the exact build, duck back to its mark, BUILD MODE |
+| NEXT EXPERIMENT | Success panel: progress to the next experiment  |
 | TRY AGAIN    | Success panel only: full experiment restart     |
-| F8           | Studio-only debug overlay (states, attempt, duck speed) |
+| F8           | Studio-only debug overlay (states, attempt, speeds, powered axles, active fans) |
 
 While dragging, a green marker shows the connector pair that would be joined:
 a sphere sits on the target connector and the target component is outlined.
@@ -132,14 +138,19 @@ happen:
   Plank        primitive
   Block        primitive
   Wheel        primitive
+  Motor        primitive
+  Spring       primitive
+  Fan          primitive
+[WZ] Loaded Experiment 002: UPHILL DELIVERY
+[WZ Motor] 2 powered axle(s) active
+[WZ Spring] reset 2 spring(s)
+[WZ Fan] 1 active fan(s) engaged
 [WZ] State Build -> Testing
 [WZ] State Testing -> Resetting
 [WZ] State Resetting -> Build
-[WZ] Connected Plank.Rigid_A -> Block.Rigid_B (Rigid)
-[WZ] Disconnected Plank.Rigid_A - Block.Rigid_B
 [WZ] Experiment Build -> Testing
 [WZ] Attempt 1 started: 5 part(s) used
-[WZ] Flavour event DuckDown: DUCK DOWN.
+[WZ] Flavour event WheelsUp: WHEELS UP. NOT IDEAL.
 [WZ] Experiment Testing -> Success
 ```
 

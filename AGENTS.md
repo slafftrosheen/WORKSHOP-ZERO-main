@@ -9,8 +9,11 @@ Workshop Zero is a Roblox physics/building game. Players solve ridiculous
 problems by building ridiculous machines, testing them, watching them fail,
 changing one thing and testing again.
 
-**Experiment 001 - Save the Duck** is the active first playable prototype.
-Do NOT start Experiment 002 yet.
+**Experiments 001 through 004** form the active 4-experiment playable suite:
+- **Experiment 001 - Save the Duck** (passive construction, structures, gravity)
+- **Experiment 002 - Uphill Delivery** (motors, wheels, torque, traction)
+- **Experiment 003 - Over the Wall** (stored energy, spring launcher, compression)
+- **Experiment 004 - Windy Business** (motors + fans, directional force, non-contact)
 
 ## Hard rules
 
@@ -23,6 +26,11 @@ Do NOT start Experiment 002 yet.
 - Avoid frameworks until complexity proves they are needed.
 - Visual assets are replaceable skins over stable Workshop Zero physics contracts.
 - Missing art must never make an experiment unplayable.
+- Never encode the intended solution as the only valid solution.
+- New components must remain useful outside the experiment that introduces them.
+- Internal component constraints are not user construction connections.
+- Physics should come from Roblox constraints and forces, not scripted CFrame animation.
+- Educational concepts should emerge through play before explanatory copy appears.
 - Never edit generated dependency folders manually
   (`Packages/`, `ServerPackages/`, `DevPackages/`, `build/`).
 - Never commit secrets.

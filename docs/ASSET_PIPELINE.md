@@ -44,7 +44,7 @@ AssetProvider (server runtime bridge)
    - Import 3D -> select `assets/export/roblox/<name>.glb`.
 4. **Organize into `ReplicatedStorage.WorkshopZeroAssets`**:
    - Move imported `Model` into the corresponding category folder:
-     - `ReplicatedStorage.WorkshopZeroAssets.Components` (`Plank`, `Block`, `Wheel`)
+     - `ReplicatedStorage.WorkshopZeroAssets.Components` (`Plank`, `Block`, `Wheel`, `Motor`, `Spring`, `Fan`)
      - `ReplicatedStorage.WorkshopZeroAssets.Payloads` (`Duck`)
      - `ReplicatedStorage.WorkshopZeroAssets.Goals` (`GoalButton`)
      - `ReplicatedStorage.WorkshopZeroAssets.Props`

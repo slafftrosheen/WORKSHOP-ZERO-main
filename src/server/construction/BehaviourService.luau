@@ -20,6 +20,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
 local ConstructionConfig = require(Shared.construction.ConstructionConfig)
+local ConstructionMath = require(Shared.construction.ConstructionMath)
 
 local ComponentFactory = require(script.Parent.ComponentFactory)
 local ActuatorService = require(script.Parent.ActuatorService)
@@ -194,15 +195,16 @@ function BehaviourService.Start()
 							local dir = toTarget.Unit
 							local dot = forward:Dot(dir)
 
-							if dot >= minDot then
-								local falloff =
-									math.clamp(1 - (distance / Config.FanMaxRange), 0, 1)
-								local angleFactor = math.clamp((dot - minDot) / (1 - minDot), 0, 1)
-								local forceMagnitude = Config.FanBaseForce
-									* falloff
-									* (0.35 + 0.65 * angleFactor)
-								local windForce = forward * forceMagnitude
+							local forceMagnitude = ConstructionMath.ComputeFanForce(
+								distance,
+								Config.FanMaxRange,
+								dot,
+								minDot,
+								Config.FanBaseForce
+							)
 
+							if forceMagnitude > 0 then
+								local windForce = forward * forceMagnitude
 								accumulatedForces[target] = (
 									accumulatedForces[target] or Vector3.zero
 								) + windForce

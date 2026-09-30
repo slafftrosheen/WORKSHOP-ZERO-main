@@ -147,7 +147,7 @@ local function pressButton()
 	end
 
 	task.delay(0.45, function()
-		if handles == level then
+		if handles == level and level.GoalCap.Parent ~= nil then
 			level.GoalCap.Position = capRestPosition
 			level.GoalCap.Color = capRestColor
 		end

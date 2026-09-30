@@ -29,6 +29,7 @@ local RunService = game:GetService("RunService")
 local Shared = ReplicatedStorage.Shared
 local ConstructionConfig = require(Shared.construction.ConstructionConfig)
 local ConstructionTypes = require(Shared.construction.ConstructionTypes)
+local ConstructionMath = require(Shared.construction.ConstructionMath)
 
 local ComponentFactory = require(script.Parent.ComponentFactory)
 
@@ -229,17 +230,7 @@ end
 local function computeMotorSign(entry: ActuatorEntry, refDirection: Vector3?): (number, Vector3)
 	local axle = entry.MotorConnector.WorldCFrame.XVector
 	local up = entry.MotorConnector.WorldCFrame.YVector
-	local driveDirection = axle:Cross(up)
-
-	if refDirection == nil or refDirection.Magnitude < 0.01 then
-		return 1, driveDirection
-	end
-
-	if driveDirection:Dot(refDirection) < 0 then
-		return -1, driveDirection
-	end
-
-	return 1, driveDirection
+	return ConstructionMath.ComputeMotorSign(axle, up, refDirection)
 end
 
 --[[

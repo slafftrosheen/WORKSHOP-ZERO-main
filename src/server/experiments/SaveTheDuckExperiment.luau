@@ -159,10 +159,10 @@ local function pressButton()
 	end
 
 	task.delay(0.45, function()
-		-- The level may already have been restarted; the cap is a fresh part in
-		-- that case and this write is simply harmless.
-		level.GoalCap.Position = capRestPosition
-		level.GoalCap.Color = capRestColor
+		if handles == level and level.GoalCap.Parent ~= nil then
+			level.GoalCap.Position = capRestPosition
+			level.GoalCap.Color = capRestColor
+		end
 	end)
 end
 

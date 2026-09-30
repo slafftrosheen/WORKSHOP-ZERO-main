@@ -1,11 +1,12 @@
 # Workshop Zero - Game Design
 
-Status: **WZ-003**. This document is a compass, not a spec.
+Status: **LONG-RUN-001**. This document is a compass, not a spec.
 
-The construction kernel (BUILD / TEST / RESET) exists as infrastructure, and
-two experiments are now playable on top of it:
-- **Experiment 001 - Save the Duck**: kinetic bridge/gap traversal.
-- **Experiment 002 - Uphill Delivery**: powered motion, torque, and traction.
+The construction kernel (BUILD / TEST / RESET) serves four fully connected, playable experiments:
+- **Experiment 001 - Save the Duck**: Structure, spans, gravity, cantilever beams.
+- **Experiment 002 - Uphill Delivery**: Powered motors, rotation, torque, and traction up an incline.
+- **Experiment 003 - Over the Wall**: Stored energy, compression physics, spring launcher over a 12-stud obstacle.
+- **Experiment 004 - Windy Business**: Directional airflow, propeller thrust, non-contact glide track mechanics.
 
 ## Core fantasy
 
@@ -21,7 +22,9 @@ problem
   -> observe failure
   -> modify
   -> TEST again
-  -> succeed ... or discover something better
+  -> succeed
+  -> discovery
+  -> next experiment
 ```
 
 ## Education model
@@ -29,13 +32,14 @@ problem
 Knowledge through physical interaction and experimentation.
 
 A player should learn why a machine failed by watching it fail, not by reading
-a sentence about it. No quiz popups. No "correct answer" buttons.
+a sentence about it. No quiz popups. No "correct answer" buttons. Educational
+concepts emerge through play before explanatory copy appears.
 
 ## Failure
 
 Failure is celebrated rather than punished. A machine that collapses in a
 spectacular new way is progress. Nothing should take a component away from a
-player as a punishment.
+player as a punishment. Flavour messages joke about the outcome, never the child.
 
 ## Playable experiments
 
@@ -49,6 +53,7 @@ A duck. A trench. A giant red button across the gap.
 - **Inventory**: 2 Planks, 2 Blocks, 4 Wheels.
 - **Problem**: 14-stud gap separating start pad and goal pad.
 - **Concept**: Structure, spans, gravity, unpowered rolling.
+- **Discovery**: "Longer beams bend the problem around you."
 
 ---
 
@@ -66,7 +71,7 @@ A duck. A trench. A giant red button across the gap.
 
 ```text
 Get the duck up the ramp to the button.
-4 planks, 4 blocks, 6 wheels, 2 motors.
+3 planks, 3 blocks, 6 wheels, 2 motors.
 ```
 
 #### Educational concept
@@ -85,39 +90,111 @@ rotation
 No tutorial popups explain gear ratios or normal forces. Instead:
 - **Torque & Incline**: A single-motor cart might stall or spin if it lacks sufficient torque to climb the 10-stud incline. Adding a second motor doubles available drive torque.
 - **Traction & Slip**: Wheels without enough downward load will spin freely against the ramp surface (`FULL THROTTLE, NO TRACTION`).
-- **Mass & Stability**: Placing the duck high or too far back causes wheelies and flips (`BACKFLIP ATTEMPT!`). Building a wider, lower-center-of-gravity chassis climbs stably.
+- **Mass & Stability**: Placing the duck high or too far back causes wheelies and flips (`WHEELS UP. NOT IDEAL.`). Building a wider, lower-center-of-gravity chassis climbs stably.
 - **Symmetry**: Placing motors on both sides of a cart causes their axles to point in opposite outward directions. The actuator system cooperatively coordinates rotation signs so both wheels roll forward together.
 
 #### Inventory
 
-- 4 Planks
-- 4 Blocks
-- 6 Wheels
-- 2 Motors
+- 3 Planks, 3 Blocks, 6 Wheels, 2 Motors.
 
-#### Failure is content (flavour lines)
+#### Discovery
 
-- **Low travel / Stall**: `SPINNING IN PLACE.` / `GRAVITY DISAGREES.` / `ENGINE RUNNING, CAR ASLEEP.`
-- **Backward movement**: `WRONG WAY, DUCK.` / `REVERSE DISCOVERY.`
-- **Rollback**: `UNPLANNED ROLLBACK.` / `WHAT GOES UP COMES DOWN.`
-- **Vehicle flip**: `BACKFLIP ATTEMPT!` / `WHEELS UP, DUCK DOWN.`
-- **High RPM / Burnout**: `FULL THROTTLE, NO TRACTION.` / `SMOKE DETECTED (METAPHORICALLY).`
+"Rotation becomes movement when wheels can push against the ground."
 
 ---
 
-## The experiment lifecycle
+### Experiment 003: Over the Wall
 
 ```text
-Loading -> Build -> Testing -> Success
-                ^          |
-                +-- RESET -+   (machine restored, duck re-marked)
+                🔴 GOAL
+               ┌──────┐
 
-TRY AGAIN = full restart (Build): joints removed, parts re-racked,
-attempts zeroed, duck and button restored
+        ███████████████
+        █    WALL     █ (12 studs high)
+        ███████████████
 
-NEXT EXPERIMENT = in-place transition to the next experiment definition
-without place reloading
+🦆 START
 ```
+
+```text
+Get the duck over the wall to the button.
+3 planks, 4 blocks, 4 wheels, 1 motor, 2 springs.
+```
+
+#### Educational concept
+
+```text
+compression
+  -> potential energy stored in spring
+  -> rapid release
+  -> kinetic energy & vertical trajectory
+```
+
+- **Compression & Release**: Placing the duck on the spring plunger or driving into it compresses the spring along its prismatic axis. Releasing or snapping upward transfers kinetic momentum to launch the payload over the wall.
+- **Alternative solutions**: A high ramp with a motor car, a catapult lever, or a stacked tower are equally valid. Never encode the intended launcher as the only valid solution.
+
+#### Inventory
+
+- 3 Planks, 4 Blocks, 4 Wheels, 1 Motor, 2 Springs.
+
+#### Discovery
+
+"A compressed spring can release its energy very quickly."
+
+---
+
+### Experiment 004: Windy Business
+
+```text
+🦆 START ──[ low friction glide track ]──> FORBIDDEN GAP ──> 🔴 GOAL
+                                            (no touch!)
+```
+
+```text
+Move the duck to the button without touching it.
+2 planks, 4 blocks, 2 wheels, 2 motors, 2 fans.
+```
+
+#### Educational concept
+
+```text
+motor rotation
+  -> aerodynamic propeller blades
+  -> directional airflow & distance falloff
+  -> non-contact applied force
+```
+
+- **Non-contact Rule**: The server tracks physical collisions with the duck. If any construction component physically touches the duck during TEST, the attempt cannot succeed (`THAT COUNTS AS TOUCHING.`).
+- **Fan thrust & Airflow**: Connecting a Fan's `Axle_Input` directly to a Motor axle powers the fan. Airflow blows forward with a quadratic distance falloff up to 32 studs, blowing the duck across the frictionless glide track without physical contact.
+- **Reaction force**: The fan itself receives an equal and opposite reaction force, enabling propeller cars.
+
+#### Inventory
+
+- 2 Planks, 4 Blocks, 2 Wheels, 2 Motors, 2 Fans.
+
+#### Discovery
+
+"You can move something without touching it directly."
+
+---
+
+## Session progression & Unlocks
+
+- **Authoritative Unlocks**: Starts with Experiment 001 unlocked (`unlockedIndex = 1`). Success in experiment $N$ unlocks experiment $N + 1$.
+- **Experiment Board**: Accessible anytime via the HUD button `[ ☰ EXPERIMENTS ]` or after success. Displays experiment cards; locked experiments display `???`.
+- **Altered-Machine Confirmation**: Selecting another experiment while having modified the current machine displays a clean confirmation (`LEAVE THIS EXPERIMENT? Your current machine will be cleared.`).
+- **No Persistence**: All progression is session-local. No DataStore is used.
+
+## Components
+
+| Component | State                                                  | Description |
+| --------- | ------------------------------------------------------ | ----------- |
+| Plank     | Active                                                 | Long structural beam (12x1x2), 6 rigid mounts |
+| Block     | Active                                                 | Modular structural cube (3x3x3), 6 rigid mounts |
+| Wheel     | Active                                                 | Rolling cylinder (1x4x4), 2 axle connectors |
+| Motor     | Active                                                 | Powered rotary drive (2x2x2), 1 rigid mount, 1 axle output |
+| Spring    | Active                                                 | Compression launcher (3x2.5x3), 1 rigid mount, internal plunger |
+| Fan       | Active                                                 | Aerodynamic propeller (0.8x3.2x3.2), 1 rigid mount, 1 axle input |
 
 `ExperimentState` (challenge lifecycle) is deliberately separate from
 `SimulationState` (physics truth). Success freezes the *experiment*, not
