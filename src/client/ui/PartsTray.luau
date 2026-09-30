@@ -3,12 +3,12 @@
 --[[
 	PartsTray
 
-	The parts list, and nothing more. Parts are real objects sitting on a rack in
-	the world, so this panel is informational: it answers "what have I got?" at a
-	glance without pretending to be an inventory the player drags from.
+	The top-left HUD panel showing:
+		* Current Experiment number, name, and short objective
+		* Sleek "☰ EXPERIMENTS" button to open the Experiment Board
+		* Staged parts inventory on the rack
 
-	It reads the same experiment definition the server used to build the rack,
-	so the panel can never promise a part the level did not stage.
+	Hidden during TEST mode so the world becomes primary.
 ]]
 
 local Players = game:GetService("Players")
@@ -25,6 +25,12 @@ local PartsTray = {}
 local ROW_HEIGHT = 26
 local SWATCH = 18
 
+export type PartsTrayHandle = {
+	SetDefinition: (definition: ExperimentTypes.ExperimentDefinition) -> (),
+	SetVisible: (visible: boolean) -> (),
+	Destroy: () -> (),
+}
+
 local function createSwatch(parent: Instance, componentType: string, layoutOrder: number): Frame
 	local definition = ComponentDefinitions.Get(componentType)
 	local color = if definition ~= nil then definition.Color else Color3.fromRGB(150, 150, 150)
@@ -38,33 +44,27 @@ local function createSwatch(parent: Instance, componentType: string, layoutOrder
 	swatch.Parent = parent
 
 	local corner = Instance.new("UICorner")
-	-- A wheel reads as a wheel; everything else keeps a soft square corner.
 	corner.CornerRadius = if componentType == "Wheel" then UDim.new(1, 0) else UDim.new(0, 4)
 	corner.Parent = swatch
 
 	return swatch
 end
 
-export type PartsTrayHandle = {
-	SetDefinition: (definition: ExperimentTypes.ExperimentDefinition) -> (),
-	Destroy: () -> (),
-}
-
-local function populateRows(panel: Frame, definition: ExperimentTypes.ExperimentDefinition)
-	for _, child in panel:GetChildren() do
-		if child:IsA("Frame") then
+local function populateRows(container: Instance, definition: ExperimentTypes.ExperimentDefinition)
+	for _, child in container:GetChildren() do
+		if child:IsA("Frame") and string.find(child.Name, "^PartRow_") ~= nil then
 			child:Destroy()
 		end
 	end
 
 	for index, requirement in definition.Inventory do
 		local row = Instance.new("Frame")
-		row.Name = requirement.ComponentType
-		row.LayoutOrder = index + 1
+		row.Name = string.format("PartRow_%s", requirement.ComponentType)
+		row.LayoutOrder = 10 + index
 		row.Size = UDim2.fromOffset(0, ROW_HEIGHT)
 		row.AutomaticSize = Enum.AutomaticSize.X
 		row.BackgroundTransparency = 1
-		row.Parent = panel
+		row.Parent = container
 
 		local rowList = Instance.new("UIListLayout")
 		rowList.FillDirection = Enum.FillDirection.Horizontal
@@ -81,14 +81,17 @@ local function populateRows(panel: Frame, definition: ExperimentTypes.Experiment
 		label.AutomaticSize = Enum.AutomaticSize.XY
 		label.BackgroundTransparency = 1
 		label.Font = Enum.Font.GothamMedium
-		label.TextSize = 15
+		label.TextSize = 14
 		label.TextColor3 = Color3.fromRGB(226, 230, 240)
 		label.Text = string.format("%s ×%d", requirement.ComponentType:upper(), requirement.Count)
 		label.Parent = row
 	end
 end
 
-function PartsTray.Create(definition: ExperimentTypes.ExperimentDefinition): PartsTrayHandle
+function PartsTray.Create(
+	definition: ExperimentTypes.ExperimentDefinition,
+	onOpenBoard: (() -> ())?
+): PartsTrayHandle
 	local playerGui = player:WaitForChild("PlayerGui")
 
 	local gui = Instance.new("ScreenGui")
@@ -102,7 +105,7 @@ function PartsTray.Create(definition: ExperimentTypes.ExperimentDefinition): Par
 	panel.Position = UDim2.fromOffset(16, 16)
 	panel.AutomaticSize = Enum.AutomaticSize.XY
 	panel.BackgroundColor3 = Color3.fromRGB(24, 26, 32)
-	panel.BackgroundTransparency = 0.18
+	panel.BackgroundTransparency = 0.15
 	panel.BorderSizePixel = 0
 	panel.Parent = gui
 
@@ -112,7 +115,7 @@ function PartsTray.Create(definition: ExperimentTypes.ExperimentDefinition): Par
 
 	local padding = Instance.new("UIPadding")
 	padding.PaddingTop = UDim.new(0, 10)
-	padding.PaddingBottom = UDim.new(0, 10)
+	padding.PaddingBottom = UDim.new(0, 12)
 	padding.PaddingLeft = UDim.new(0, 12)
 	padding.PaddingRight = UDim.new(0, 14)
 	padding.Parent = panel
@@ -124,22 +127,112 @@ function PartsTray.Create(definition: ExperimentTypes.ExperimentDefinition): Par
 	list.Padding = UDim.new(0, 6)
 	list.Parent = panel
 
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.LayoutOrder = 1
-	title.AutomaticSize = Enum.AutomaticSize.XY
-	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 12
-	title.TextColor3 = Color3.fromRGB(150, 156, 170)
-	title.Text = "PARTS"
-	title.Parent = panel
+	-- Top header: Experiment badge and selector button
+	local header = Instance.new("Frame")
+	header.Name = "Header"
+	header.LayoutOrder = 1
+	header.AutomaticSize = Enum.AutomaticSize.XY
+	header.BackgroundTransparency = 1
+	header.Parent = panel
+
+	local headerLayout = Instance.new("UIListLayout")
+	headerLayout.FillDirection = Enum.FillDirection.Horizontal
+	headerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	headerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	headerLayout.Padding = UDim.new(0, 12)
+	headerLayout.Parent = header
+
+	local infoBox = Instance.new("Frame")
+	infoBox.Name = "InfoBox"
+	infoBox.LayoutOrder = 1
+	infoBox.AutomaticSize = Enum.AutomaticSize.XY
+	infoBox.BackgroundTransparency = 1
+	infoBox.Parent = header
+
+	local infoLayout = Instance.new("UIListLayout")
+	infoLayout.FillDirection = Enum.FillDirection.Vertical
+	infoLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	infoLayout.Padding = UDim.new(0, 2)
+	infoLayout.Parent = infoBox
+
+	local expTitle = Instance.new("TextLabel")
+	expTitle.Name = "ExpTitle"
+	expTitle.LayoutOrder = 1
+	expTitle.AutomaticSize = Enum.AutomaticSize.XY
+	expTitle.BackgroundTransparency = 1
+	expTitle.Font = Enum.Font.GothamBold
+	expTitle.TextSize = 13
+	expTitle.TextColor3 = Color3.fromRGB(255, 214, 92)
+	expTitle.TextXAlignment = Enum.TextXAlignment.Left
+	expTitle.Text = string.format("EXPERIMENT %03d: %s", definition.Number, definition.Name)
+	expTitle.Parent = infoBox
+
+	local expObjective = Instance.new("TextLabel")
+	expObjective.Name = "ExpObjective"
+	expObjective.LayoutOrder = 2
+	expObjective.AutomaticSize = Enum.AutomaticSize.XY
+	expObjective.BackgroundTransparency = 1
+	expObjective.Font = Enum.Font.GothamMedium
+	expObjective.TextSize = 11
+	expObjective.TextColor3 = Color3.fromRGB(180, 186, 200)
+	expObjective.TextXAlignment = Enum.TextXAlignment.Left
+	expObjective.Text = definition.Objective
+	expObjective.Parent = infoBox
+
+	if onOpenBoard ~= nil then
+		local boardBtn = Instance.new("TextButton")
+		boardBtn.Name = "BoardBtn"
+		boardBtn.LayoutOrder = 2
+		boardBtn.Size = UDim2.fromOffset(104, 26)
+		boardBtn.BackgroundColor3 = Color3.fromRGB(48, 54, 68)
+		boardBtn.BorderSizePixel = 0
+		boardBtn.Font = Enum.Font.GothamBold
+		boardBtn.TextSize = 11
+		boardBtn.TextColor3 = Color3.fromRGB(240, 244, 255)
+		boardBtn.Text = "☰ EXPERIMENTS"
+		boardBtn.Parent = header
+
+		local boardBtnCorner = Instance.new("UICorner")
+		boardBtnCorner.CornerRadius = UDim.new(0, 6)
+		boardBtnCorner.Parent = boardBtn
+
+		boardBtn.Activated:Connect(function()
+			onOpenBoard()
+		end)
+	end
+
+	-- Divider
+	local divider = Instance.new("Frame")
+	divider.Name = "Divider"
+	divider.LayoutOrder = 2
+	divider.Size = UDim2.new(1, 0, 0, 1)
+	divider.BackgroundColor3 = Color3.fromRGB(48, 52, 64)
+	divider.BorderSizePixel = 0
+	divider.Parent = panel
+
+	-- "PARTS" subheader
+	local partsHeader = Instance.new("TextLabel")
+	partsHeader.Name = "PartsHeader"
+	partsHeader.LayoutOrder = 3
+	partsHeader.AutomaticSize = Enum.AutomaticSize.XY
+	partsHeader.BackgroundTransparency = 1
+	partsHeader.Font = Enum.Font.GothamBold
+	partsHeader.TextSize = 11
+	partsHeader.TextColor3 = Color3.fromRGB(150, 156, 170)
+	partsHeader.Text = "PARTS"
+	partsHeader.Parent = panel
 
 	populateRows(panel, definition)
 
 	return {
 		SetDefinition = function(newDefinition: ExperimentTypes.ExperimentDefinition)
+			expTitle.Text =
+				string.format("EXPERIMENT %03d: %s", newDefinition.Number, newDefinition.Name)
+			expObjective.Text = newDefinition.Objective
 			populateRows(panel, newDefinition)
+		end,
+		SetVisible = function(visible: boolean)
+			gui.Enabled = visible
 		end,
 		Destroy = function()
 			gui:Destroy()

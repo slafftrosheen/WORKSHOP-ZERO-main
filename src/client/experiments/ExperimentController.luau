@@ -28,6 +28,7 @@ local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local ExperimentToast = require(script.Parent.Parent.ui.ExperimentToast)
 local PartsTray = require(script.Parent.Parent.ui.PartsTray)
+local ExperimentBoard = require(script.Parent.Parent.ui.ExperimentBoard)
 
 local Config = ConstructionConfig
 local player = Players.LocalPlayer
@@ -211,7 +212,11 @@ local function createIntro(): IntroHandle
 	}
 end
 
-local function createSuccess(onRestart: () -> (), onNext: () -> ()): SuccessHandle
+local function createSuccess(
+	onRestart: () -> (),
+	onNext: () -> (),
+	onOpenBoard: () -> ()
+): SuccessHandle
 	local gui = createScreenGui("WorkshopZeroSuccess", 40)
 	gui.Enabled = false
 
@@ -232,16 +237,70 @@ local function createSuccess(onRestart: () -> (), onNext: () -> ()): SuccessHand
 
 	local attemptsLabel = createLine(card, 3, 22, "", 16, TEXT_COLOR, false)
 	local partsLabel = createLine(card, 4, 22, "", 16, TEXT_COLOR, false)
-	createLine(card, 5, 10, "", 10, TEXT_COLOR, false)
 
-	local nextButton = createCardButton(card, 6, "NEXT EXPERIMENT", Color3.fromRGB(52, 132, 84))
+	-- Discovery Card section
+	local discoveryBox = Instance.new("Frame")
+	discoveryBox.Name = "DiscoveryBox"
+	discoveryBox.LayoutOrder = 5
+	discoveryBox.Size = UDim2.fromScale(1, 0)
+	discoveryBox.AutomaticSize = Enum.AutomaticSize.Y
+	discoveryBox.BackgroundColor3 = Color3.fromRGB(34, 38, 48)
+	discoveryBox.BorderSizePixel = 0
+	discoveryBox.Parent = card
+
+	local discCorner = Instance.new("UICorner")
+	discCorner.CornerRadius = UDim.new(0, 8)
+	discCorner.Parent = discoveryBox
+
+	local discPadding = Instance.new("UIPadding")
+	discPadding.PaddingTop = UDim.new(0, 10)
+	discPadding.PaddingBottom = UDim.new(0, 10)
+	discPadding.PaddingLeft = UDim.new(0, 14)
+	discPadding.PaddingRight = UDim.new(0, 14)
+	discPadding.Parent = discoveryBox
+
+	local discLayout = Instance.new("UIListLayout")
+	discLayout.FillDirection = Enum.FillDirection.Vertical
+	discLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	discLayout.Padding = UDim.new(0, 3)
+	discLayout.Parent = discoveryBox
+
+	createLine(discoveryBox, 1, 14, "DISCOVERY", 11, Color3.fromRGB(255, 214, 92), true)
+	local discTitleLabel = createLine(
+		discoveryBox,
+		2,
+		20,
+		definition.DiscoveryTitle,
+		16,
+		Color3.fromRGB(255, 255, 255),
+		true
+	)
+	local discBodyLabel = createLine(
+		discoveryBox,
+		3,
+		30,
+		definition.DiscoveryBody,
+		13,
+		Color3.fromRGB(200, 206, 220),
+		false
+	)
+
+	createLine(card, 6, 8, "", 8, TEXT_COLOR, false)
+
+	local nextButton = createCardButton(card, 7, "NEXT EXPERIMENT", Color3.fromRGB(52, 132, 84))
+	local boardButton = createCardButton(card, 8, "EXPERIMENTS", Color3.fromRGB(48, 54, 68))
+	local again = createCardButton(card, 9, definition.RestartButton, Color3.fromRGB(154, 96, 44))
 	local moreSoonLabel =
-		createLine(card, 6, 28, "MORE EXPERIMENTS SOON", 15, Color3.fromRGB(150, 156, 170), false)
-	local again = createCardButton(card, 7, definition.RestartButton, Color3.fromRGB(154, 96, 44))
+		createLine(card, 10, 24, "MORE EXPERIMENTS SOON", 14, Color3.fromRGB(150, 156, 170), false)
 
 	nextButton.Activated:Connect(function()
 		gui.Enabled = false
 		onNext()
+	end)
+
+	boardButton.Activated:Connect(function()
+		gui.Enabled = false
+		onOpenBoard()
 	end)
 
 	again.Activated:Connect(function()
@@ -252,15 +311,19 @@ local function createSuccess(onRestart: () -> (), onNext: () -> ()): SuccessHand
 	local function refreshSuccessUi()
 		titleLabel.Text = definition.SuccessTitle
 		lineLabel.Text = definition.SuccessLine
+		discTitleLabel.Text = definition.DiscoveryTitle
+		discBodyLabel.Text = definition.DiscoveryBody
 		again.Text = definition.RestartButton
 
 		local nextDef = ExperimentDefinitions.GetNext(definition.Id)
 		if nextDef ~= nil then
 			nextButton.Visible = true
 			moreSoonLabel.Visible = false
+			boardButton.Text = "EXPERIMENTS"
 		else
 			nextButton.Visible = false
 			moreSoonLabel.Visible = true
+			boardButton.Text = "ALL EXPERIMENTS"
 		end
 	end
 
@@ -335,6 +398,22 @@ local function countConnections(): (number, number)
 	return total, powered
 end
 
+local function countBehaviourComponents(): number
+	local runtime = findRuntimeFolder()
+	if runtime == nil then
+		return 0
+	end
+
+	local count = 0
+	for _, child in runtime:GetDescendants() do
+		if child:IsA("Model") and child:GetAttribute(Config.AttributeComponentType) == "Fan" then
+			count += 1
+		end
+	end
+
+	return count
+end
+
 --[[
 	F8, Studio only: the numbers a person watching a playtest wants. This is not
 	for players, so it is never created on a real client.
@@ -346,7 +425,7 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 	local label = Instance.new("TextLabel")
 	label.Name = "Readout"
 	label.Position = UDim2.fromOffset(16, 220)
-	label.Size = UDim2.fromOffset(260, 180)
+	label.Size = UDim2.fromOffset(260, 200)
 	label.BackgroundColor3 = Color3.fromRGB(12, 14, 18)
 	label.BackgroundTransparency = 0.3
 	label.BorderSizePixel = 0
@@ -382,9 +461,10 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 		end
 
 		local totalConns, poweredAxles = countConnections()
+		local activeBehaviours = countBehaviourComponents()
 
 		label.Text = string.format(
-			"EXPERIMENT (F8)\nExperiment: %s\nExperimentState: %s\nSimulationState: %s\nAttempt: %d\nParts used: %d\nConnections: %d\nPowered axles: %d\nDuck speed: %.1f\nDuck height: %.1f",
+			"EXPERIMENT (F8)\nExperiment: %s\nExperimentState: %s\nSimulationState: %s\nAttempt: %d\nParts used: %d\nConnections: %d\nPowered axles: %d\nActive behaviour: %d\nDuck speed: %.1f\nDuck height: %.1f",
 			definition.Id,
 			remotes.ExperimentState.Value,
 			remotes.SimulationState.Value,
@@ -392,6 +472,7 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 			remotes.ExperimentPartsUsed.Value,
 			totalConns,
 			poweredAxles,
+			activeBehaviours,
 			speed,
 			height
 		)
@@ -417,15 +498,41 @@ function ExperimentController.Start(
 		end
 	end
 
+	local board = ExperimentBoard.Create({
+		OnSelectExperiment = function(targetId: string)
+			remotes.RequestExperimentAction:FireServer({
+				Action = "Select",
+				ExperimentId = targetId,
+			})
+		end,
+		HasAlteredMachine = function()
+			return remotes.ExperimentPartsUsed.Value > 0
+		end,
+		IsBuildMode = function()
+			return remotes.SimulationState.Value == "Build"
+		end,
+	})
+
 	local toast = ExperimentToast.Create()
 	local intro = createIntro()
 	local success = createSuccess(function()
 		remotes.RequestExperimentAction:FireServer("Restart")
 	end, function()
 		remotes.RequestExperimentAction:FireServer("Next")
+	end, function()
+		board.Show()
 	end)
 
-	local partsTray = PartsTray.Create(definition)
+	local partsTray = PartsTray.Create(definition, function()
+		board.Show()
+	end)
+
+	board.SetUnlockedIndex(remotes.UnlockedExperimentIndex.Value)
+	board.SetCurrentExperimentId(remotes.CurrentExperimentId.Value)
+
+	remotes.UnlockedExperimentIndex:GetPropertyChangedSignal("Value"):Connect(function()
+		board.SetUnlockedIndex(remotes.UnlockedExperimentIndex.Value)
+	end)
 
 	remotes.CurrentExperimentId:GetPropertyChangedSignal("Value"):Connect(function()
 		local newDef = ExperimentDefinitions.Get(remotes.CurrentExperimentId.Value)
@@ -434,6 +541,7 @@ function ExperimentController.Start(
 			partsTray.SetDefinition(newDef)
 			intro.SetDefinition(newDef)
 			success.SetDefinition(newDef)
+			board.SetCurrentExperimentId(newDef.Id)
 			if ExperimentTypes.ToExperimentState(remotes.ExperimentState.Value) == "Build" then
 				intro.Show()
 			end
@@ -452,6 +560,7 @@ function ExperimentController.Start(
 
 		if state == "Success" then
 			intro.Hide()
+			partsTray.SetVisible(false)
 
 			task.delay(SUCCESS_PAUSE, function()
 				if
@@ -468,6 +577,9 @@ function ExperimentController.Start(
 
 		if state == "Testing" then
 			intro.Hide()
+			partsTray.SetVisible(false)
+		elseif state == "Build" then
+			partsTray.SetVisible(true)
 		end
 	end
 

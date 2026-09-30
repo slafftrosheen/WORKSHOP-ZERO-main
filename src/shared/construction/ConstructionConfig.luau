@@ -74,6 +74,7 @@ local ConstructionConfig = {
 	CurrentExperimentValueName = "CurrentExperimentId",
 	AttemptValueName = "ExperimentAttempt",
 	PartsUsedValueName = "ExperimentPartsUsed",
+	UnlockedExperimentValueName = "UnlockedExperimentIndex",
 
 	-- Attributes --------------------------------------------------------------
 

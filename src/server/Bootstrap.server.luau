@@ -118,7 +118,10 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 	CurrentExperimentId = ensureStringValue(remotesFolder, Config.CurrentExperimentValueName),
 	ExperimentAttempt = ensureIntValue(remotesFolder, Config.AttemptValueName),
 	ExperimentPartsUsed = ensureIntValue(remotesFolder, Config.PartsUsedValueName),
+	UnlockedExperimentIndex = ensureIntValue(remotesFolder, Config.UnlockedExperimentValueName),
 }
+
+remotes.UnlockedExperimentIndex.Value = 1
 
 SimulationService.SetRemotes(remotes)
 BuildService.SetRemotes(remotes)

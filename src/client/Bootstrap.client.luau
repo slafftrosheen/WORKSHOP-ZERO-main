@@ -87,6 +87,7 @@ local experimentState = waitForStringValue(remotesFolder, Config.ExperimentState
 local currentExperimentId = waitForStringValue(remotesFolder, Config.CurrentExperimentValueName)
 local attemptValue = waitForIntValue(remotesFolder, Config.AttemptValueName)
 local partsUsedValue = waitForIntValue(remotesFolder, Config.PartsUsedValueName)
+local unlockedIndexValue = waitForIntValue(remotesFolder, Config.UnlockedExperimentValueName)
 
 if
 	requestSimulationAction == nil
@@ -100,6 +101,7 @@ if
 	or currentExperimentId == nil
 	or attemptValue == nil
 	or partsUsedValue == nil
+	or unlockedIndexValue == nil
 then
 	return
 end
@@ -117,6 +119,7 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 	CurrentExperimentId = currentExperimentId,
 	ExperimentAttempt = attemptValue,
 	ExperimentPartsUsed = partsUsedValue,
+	UnlockedExperimentIndex = unlockedIndexValue,
 }
 
 -- The panel asks the controller to act on the current selection; it never

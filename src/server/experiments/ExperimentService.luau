@@ -66,6 +66,7 @@ local loaded: ExperimentTypes.LoadedExperiment? = nil
 local experiment: ExperimentTypes.ExperimentModule? = nil
 local attempt = 0
 local partsUsed = 0
+local unlockedIndex = 1
 local diagnostics: Diagnostics? = nil
 local sampler: RBXScriptConnection? = nil
 
@@ -286,6 +287,10 @@ function ExperimentService.MarkSuccess()
 	end
 
 	printAttempt("Success")
+	unlockedIndex = math.max(unlockedIndex, definition.Number + 1)
+	if remotes ~= nil then
+		remotes.UnlockedExperimentIndex.Value = unlockedIndex
+	end
 	setState("Success")
 	log(string.format("The duck reached the goal after %d attempt(s)", attempt))
 
@@ -369,12 +374,46 @@ function ExperimentService.RestartExperiment(player: Player): boolean
 	return true
 end
 
+function ExperimentService.SelectExperiment(player: Player, targetId: string): boolean
+	local targetDef = ExperimentDefinitions.Get(targetId)
+	if targetDef == nil then
+		warn(string.format("[WZ] Experiment '%s' does not exist", targetId))
+		return false
+	end
+
+	if targetDef.Number > unlockedIndex then
+		warn(
+			string.format(
+				"[WZ] Player %s requested locked experiment '%s' (#%d, max unlocked #%d)",
+				player.Name,
+				targetId,
+				targetDef.Number,
+				unlockedIndex
+			)
+		)
+		return false
+	end
+
+	if state ~= "Build" and state ~= "Success" then
+		warn(string.format("[WZ] Cannot switch experiment while in %s state", state))
+		return false
+	end
+
+	return ExperimentService.LoadExperiment(targetId, player)
+end
+
 function ExperimentService.HandleExperimentRequest(player: Player, payload: unknown): boolean
-	local action = ExperimentTypes.ToExperimentAction(payload)
-	if action == "Restart" then
+	local req = ExperimentTypes.ToExperimentActionRequest(payload)
+	if req == nil then
+		return false
+	end
+
+	if req.Action == "Restart" then
 		return ExperimentService.RestartExperiment(player)
-	elseif action == "Next" then
+	elseif req.Action == "Next" then
 		return ExperimentService.NextExperiment(player)
+	elseif req.Action == "Select" and req.ExperimentId ~= nil then
+		return ExperimentService.SelectExperiment(player, req.ExperimentId)
 	end
 
 	return false
@@ -384,6 +423,7 @@ end
 
 function ExperimentService.SetRemotes(remoteSet: ExperimentTypes.ExperimentRemotes)
 	remotes = remoteSet
+	remotes.UnlockedExperimentIndex.Value = unlockedIndex
 	publishState()
 	publishCounters()
 end

@@ -20,7 +20,12 @@ local ConstructionTypes = require(script.Parent.Parent.construction.Construction
 
 export type ExperimentState = "Loading" | "Build" | "Testing" | "Success"
 
-export type ExperimentAction = "Restart" | "Next"
+export type ExperimentAction = "Restart" | "Next" | "Select"
+
+export type ExperimentActionRequest = {
+	Action: ExperimentAction,
+	ExperimentId: string?,
+}
 
 export type PartRequirement = {
 	ComponentType: ConstructionTypes.ComponentType,
@@ -177,6 +182,7 @@ export type ExperimentRemotes = {
 	CurrentExperimentId: StringValue,
 	ExperimentAttempt: IntValue,
 	ExperimentPartsUsed: IntValue,
+	UnlockedExperimentIndex: IntValue,
 }
 
 local ExperimentTypes = {}
@@ -193,13 +199,31 @@ function ExperimentTypes.ToExperimentState(value: unknown): ExperimentState?
 	return nil
 end
 
-function ExperimentTypes.ToExperimentAction(value: unknown): ExperimentAction?
-	if type(value) ~= "string" then
+function ExperimentTypes.ToExperimentActionRequest(value: unknown): ExperimentActionRequest?
+	if type(value) == "string" then
+		if value == "Restart" or value == "Next" then
+			return { Action = value }
+		end
 		return nil
 	end
 
-	if value == "Restart" or value == "Next" then
-		return value
+	if type(value) == "table" then
+		local tbl = value :: { [string]: unknown }
+		local action = tbl.Action
+		if action == "Restart" or action == "Next" then
+			return { Action = action }
+		elseif action == "Select" and type(tbl.ExperimentId) == "string" then
+			return { Action = "Select", ExperimentId = tbl.ExperimentId }
+		end
+	end
+
+	return nil
+end
+
+function ExperimentTypes.ToExperimentAction(value: unknown): ExperimentAction?
+	local req = ExperimentTypes.ToExperimentActionRequest(value)
+	if req ~= nil then
+		return req.Action
 	end
 
 	return nil
