@@ -343,16 +343,23 @@ function SaveTheDuckExperiment.Load(
 	-- The physics collider (Duck/Body) is untouched; only appearance changes.
 	local duckVisual = AssetProvider.Get("Payloads", "Duck")
 	if duckVisual ~= nil then
+		duckVisual:PivotTo(built.Handles.Duck:GetPivot())
 		duckVisual.Parent = built.Handles.Duck
 		local root = built.Handles.Duck.PrimaryPart
 		if root ~= nil then
-			local weld = Instance.new("WeldConstraint")
-			weld.Name = "WZ_VisualWeld"
-			weld.Part0 = root
-			local vizRoot = duckVisual.PrimaryPart
-			if vizRoot ~= nil then
-				weld.Part1 = vizRoot
-				weld.Parent = vizRoot
+			for _, descendant in duckVisual:GetDescendants() do
+				if descendant:IsA("BasePart") then
+					local weld = Instance.new("WeldConstraint")
+					weld.Name = "WZ_VisualWeld"
+					weld.Part0 = root
+					weld.Part1 = descendant
+					weld.Parent = descendant
+				end
+			end
+		end
+		for _, child in built.Handles.Duck:GetChildren() do
+			if child:IsA("BasePart") then
+				child.Transparency = 1
 			end
 		end
 	end
@@ -360,15 +367,22 @@ function SaveTheDuckExperiment.Load(
 	-- Optional: replace the goal button appearance with a custom imported visual.
 	local goalVisual = AssetProvider.Get("Goals", "GoalButton")
 	if goalVisual ~= nil then
+		goalVisual:PivotTo(built.Handles.Goal:GetPivot())
 		goalVisual.Parent = built.Handles.Goal
 		local cap = built.Handles.GoalCap
-		local vizRoot = goalVisual.PrimaryPart
-		if vizRoot ~= nil then
-			local weld = Instance.new("WeldConstraint")
-			weld.Name = "WZ_VisualWeld"
-			weld.Part0 = cap
-			weld.Part1 = vizRoot
-			weld.Parent = vizRoot
+		for _, descendant in goalVisual:GetDescendants() do
+			if descendant:IsA("BasePart") then
+				local weld = Instance.new("WeldConstraint")
+				weld.Name = "WZ_VisualWeld"
+				weld.Part0 = cap
+				weld.Part1 = descendant
+				weld.Parent = descendant
+			end
+		end
+		for _, child in built.Handles.Goal:GetChildren() do
+			if child:IsA("BasePart") and child ~= built.Handles.GoalTrigger then
+				child.Transparency = 1
+			end
 		end
 	end
 
