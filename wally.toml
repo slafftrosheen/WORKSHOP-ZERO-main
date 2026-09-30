@@ -1,0 +1,14 @@
+# Wally - Roblox package manager
+# Run with: wally install
+#
+# BOOTSTRAP-001 deliberately has ZERO dependencies.
+# No Knit, no Fusion, no React, no ProfileService, no Promise libraries.
+# The package manager is configured now so packages can be added later
+# without a migration.
+
+[package]
+name = "workshopzero/workshop-zero"
+version = "0.0.1"
+# Change the scope to the real GitHub owner before ever publishing.
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"

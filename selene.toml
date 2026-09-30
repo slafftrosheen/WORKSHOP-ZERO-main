@@ -1,0 +1,8 @@
+# Selene - Luau linter
+# Run with: selene src
+
+std = "roblox"
+
+# BOOTSTRAP-001 keeps linting deliberately conservative.
+# Extra rules should only be added when the codebase actually needs them,
+# not as a lint experiment.

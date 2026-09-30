@@ -1,0 +1,37 @@
+# ---------------------------------------------------------------------------
+# Workshop Zero - files that never belong in Git
+# ---------------------------------------------------------------------------
+
+# Rojo build output (regenerate with scripts/build.ps1)
+build/
+
+# Generated dependency folders (Wally / Rojo). Never edit these by hand.
+Packages/
+ServerPackages/
+DevPackages/
+
+# Secrets and local environment files. .env.example stays committed.
+.env
+.env.*
+!.env.example
+
+# Tooling scratch
+*.tmp
+*.log
+sourcemap.json
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Tool metadata owned by the editor/app, not by the game
+.freebuff/
+
+# Editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# NOTE: .rbxlx place snapshots are deliberately NOT ignored.
+# place/WorkshopZeroPrototype.rbxlx is the Studio-owned working place and is
+# versioned on purpose.

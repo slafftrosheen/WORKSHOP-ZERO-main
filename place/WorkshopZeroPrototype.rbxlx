@@ -1,0 +1,111 @@
+<roblox version="4">
+  <Item class="ReplicatedStorage" referent="0">
+    <Properties>
+      <string name="Name">ReplicatedStorage</string>
+    </Properties>
+    <Item class="Folder" referent="1">
+      <Properties>
+        <string name="Name">Shared</string>
+      </Properties>
+      <Item class="ModuleScript" referent="2">
+        <Properties>
+          <string name="Name">ProjectInfo</string>
+          <string name="Source"><![CDATA[--!strict
+
+--[[
+	ProjectInfo
+
+	The small, immutable set of facts about Workshop Zero that both the server
+	and the client agree on.
+
+	Keep this module boring. It is the first thing every future module reads,
+	so if it ever needs to change, it should change in one obvious place.
+]]
+
+local ProjectInfo = {
+	Name = "Workshop Zero",
+	InternalName = "WorkshopZero",
+	Version = "0.0.1-dev",
+	Prototype = true,
+}
+
+table.freeze(ProjectInfo)
+
+return ProjectInfo
+]]></string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="ServerScriptService" referent="3">
+    <Properties>
+      <string name="Name">ServerScriptService</string>
+    </Properties>
+    <Item class="Folder" referent="4">
+      <Properties>
+        <string name="Name">WorkshopZero</string>
+      </Properties>
+      <Item class="Script" referent="5">
+        <Properties>
+          <string name="Name">Bootstrap</string>
+          <token name="RunContext">0</token>
+          <string name="Source"><![CDATA[--!strict
+
+--[[
+	Bootstrap (server)
+
+	Proves the server half of the development pipeline works:
+	Rojo sync -> Roblox Studio -> server scripts run.
+
+	It intentionally does nothing else. No framework, no game architecture,
+	no networking layer.
+]]
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local ProjectInfo = require(ReplicatedStorage.Shared.ProjectInfo)
+
+print(string.format("[%s] Server bootstrap %s", ProjectInfo.InternalName, ProjectInfo.Version))
+]]></string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="StarterPlayer" referent="6">
+    <Properties>
+      <string name="Name">StarterPlayer</string>
+    </Properties>
+    <Item class="StarterPlayerScripts" referent="7">
+      <Properties>
+        <string name="Name">StarterPlayerScripts</string>
+      </Properties>
+      <Item class="Folder" referent="8">
+        <Properties>
+          <string name="Name">WorkshopZero</string>
+        </Properties>
+        <Item class="LocalScript" referent="9">
+          <Properties>
+            <string name="Name">Bootstrap</string>
+            <string name="Source"><![CDATA[--!strict
+
+--[[
+	Bootstrap (client)
+
+	Proves the client half of the development pipeline works:
+	Rojo sync -> Roblox Studio -> local scripts run.
+
+	It intentionally does nothing else.
+]]
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local ProjectInfo = require(ReplicatedStorage.Shared.ProjectInfo)
+
+print(string.format("[%s] Client bootstrap %s", ProjectInfo.InternalName, ProjectInfo.Version))
+]]></string>
+          </Properties>
+        </Item>
+      </Item>
+    </Item>
+  </Item>
+</roblox>

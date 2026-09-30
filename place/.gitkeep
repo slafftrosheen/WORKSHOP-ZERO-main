@@ -1,0 +1,15 @@
+# Keep this folder in Git.
+
+place/WorkshopZeroPrototype.rbxlx is the Studio-owned working place:
+
+    Workshop geometry
+    Lighting
+    Imported meshes
+    Manual layout
+    Future challenge geometry
+
+Rules:
+  - scripts/build.ps1 creates build/WorkshopZero.rbxlx and NEVER overwrites
+    the place file after the first seed.
+  - Rojo syncs managed code into this place during development.
+  - Do not use Roblox Studio Script Sync at the same time as Rojo.

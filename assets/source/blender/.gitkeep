@@ -1,0 +1,8 @@
+# Keep this folder in Git.
+
+Editable Blender source files live in assets/source/blender/.
+
+These are working files: cleanup, pivots, materials and exports are done here.
+The exported, Roblox-ready result goes to assets/export/roblox/.
+
+See docs/ASSET_PIPELINE.md.

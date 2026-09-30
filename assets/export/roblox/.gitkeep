@@ -1,0 +1,13 @@
+# Keep this folder in Git.
+
+Roblox-ready exports go here, named with the project naming convention:
+
+    motor_small_01.glb
+    wheel_rubber_01.glb
+    plank_wood_01.glb
+
+These are the files that get imported into Roblox Studio with the Studio
+Importer. Keep the Blender source, keep the Hyper3D original, and keep this
+clean export as a separate step.
+
+See docs/ASSET_PIPELINE.md.

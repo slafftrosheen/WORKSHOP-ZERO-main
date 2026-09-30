@@ -1,0 +1,10 @@
+# Keep this folder in Git.
+
+Hyper3D / Rodin original downloads live in a folder per asset:
+
+    assets/source/hyper3d/<asset-name>/
+
+Treat everything here as an untouched original. Never overwrite an original
+generation - a new attempt gets a new folder or a new name.
+
+See docs/ASSET_PIPELINE.md.

@@ -1,0 +1,186 @@
+# Workshop Zero - Asset Pipeline
+
+## The pipeline
+
+```text
+idea / sketch / reference
+        |
+        v
+Hyper3D / Rodin
+        |
+        v
+original GLB
+        |
+        v
+Blender
+        |
+        v
+cleanup / optimize / pivot / materials
+        |
+        v
+Roblox-ready GLB
+        |
+        v
+Studio Importer
+        |
+        v
+MeshPart visual
+        +
+simple Roblox collision geometry
+```
+
+Every arrow is a deliberate step. Skipping one produces an asset nobody can
+find, fix or reuse six months later.
+
+## Folder map
+
+```text
+assets/source/hyper3d/<asset-name>/   untouched originals
+assets/source/blender/                editable Blender sources
+assets/export/roblox/                 clean, correctly named exports
+assets/references/                    sketches, photos, inspiration
+```
+
+Large binaries (`*.blend`, `*.glb`, `*.gltf`, `*.fbx`, `*.obj`, `*.stl`,
+`*.psd`, `*.exr`) are stored through Git LFS. Small PNG/JPG art stays as normal
+Git objects on purpose.
+
+## Hyper3D / Rodin
+
+Hyper3D/Rodin is initially a **human-operated content tool**. There is no API
+automation and no API client in this repository. Do not build one yet.
+
+- Store originals under `assets/source/hyper3d/<asset-name>/`.
+- Prefer **GLB** with **PBR** materials for normal props.
+- Never overwrite an original. A new attempt gets a new folder or a new name.
+- Filenames coming out of the generator may stay untouched in the source
+  folder. Renaming happens at the export step.
+
+If API automation is ever added, credentials must come from an environment
+variable (`RODIN_API_KEY`) and must never enter Git or Roblox code.
+`.env.example` exists for exactly that future, and is the only place the
+variable is mentioned. It currently contains one line:
+
+```text
+RODIN_API_KEY=
+```
+
+## Blender rules
+
+Editable sources live in `assets/source/blender/`.
+
+For Roblox-oriented scenes:
+
+```text
+Unit System: None
+Rotation: Degrees
+```
+
+Before final export:
+
+```text
+clean topology
+remove hidden junk
+remove duplicate geometry
+apply scale
+apply rotation where appropriate
+set deliberate origin / pivot
+verify normals
+verify UVs
+reduce unnecessary polygons
+remove unnecessary materials
+give objects meaningful names
+```
+
+Keep the visual and the physics separate:
+
+```text
+Visual asset:  pretty mesh
+Physics:       simple Part / box / cylinder / convex approximation
+```
+
+Generated models are **not** physics collision meshes. Do not hand a complex
+generated mesh to Roblox's collision solver for a fast-moving machine part
+unless testing proves it is actually needed.
+
+## Performance budget
+
+Hard limit:
+
+```text
+Never exceed Roblox's per-mesh 20,000 triangle limit.
+```
+
+Workshop Zero internal targets are much smaller:
+
+| Asset kind             | Triangles         | Texture      |
+| ---------------------- | ----------------- | ------------ |
+| tiny / simple prop     | 500 - 3,000       | 256 x 256    |
+| normal interactive prop| 2,000 - 8,000     | 512 x 512    |
+| important hero prop    | 10,000 - 15,000   | 1024 x 1024  |
+
+Hero props only when the visuals actually justify it. Do not chase polygon
+limits. Workshop Zero should run well on ordinary phones and tablets, because
+that is what the family actually has.
+
+## Naming conventions
+
+Semantic names, lower snake case, version suffix.
+
+Good:
+
+```text
+motor_small_01
+wheel_rubber_01
+plank_wood_01
+spring_medium_01
+button_goal_red_01
+duck_rubber_01
+```
+
+Bad:
+
+```text
+mesh3
+finalfinal
+newobject
+rodin_output_92873
+Cube.042
+```
+
+Generated filenames may remain untouched in `assets/source/hyper3d`.
+Clean Roblox exports must be renamed properly.
+
+## Studio import
+
+Preferred format: **GLB / glTF**. FBX is acceptable if GLB creates a specific
+problem.
+
+1. Put the export in `assets/export/roblox/` with its final name.
+2. In Studio: **File -> Import -> 3D Importer** (or Avatar/Asset Manager for
+   accessory-style items), choose the file.
+3. Keep Blender -> Roblox orientation and scale intact; do not "fix" a
+   rotation by rotating the imported MeshPart.
+4. Verify, in this order:
+
+```text
+verify scale
+verify pivot
+verify orientation
+verify textures
+verify SurfaceAppearance / PBR
+verify material count
+verify collision behavior
+verify mobile visual quality
+```
+
+5. If the mesh is a machine component, replace its imported collision with a
+   simple Part / box / cylinder / convex hull unless testing shows otherwise.
+6. Save the place. The imported mesh now lives in the Studio-owned place, not
+   in Git.
+
+## Future idea: reproducible asset import
+
+Roblox now ships an `opencloud`/asset-import path and Studio has a scriptable
+3D importer. When the asset count grows past "a handful", revisit automated
+import - as a separate, explicit decision, not as a BOOTSTRAP-001 side effect.
