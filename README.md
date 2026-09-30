@@ -7,9 +7,8 @@ Roblox. Players meet a silly problem, physically construct something to solve
 it, test it, watch it fail, change one thing, and test again. Learning happens
 through the machine, not through a quiz.
 
-The first planned prototype is **Experiment 001 - Save the Duck**. It is not
-implemented yet. What exists today is the construction kernel that every
-experiment will be built on:
+**Experiment 001 - Save the Duck** is now the first playable, built on the
+construction kernel that every experiment shares:
 
 ```text
 BUILD  ->  TEST  ->  RESET  ->  BUILD again
@@ -30,9 +29,9 @@ docs/         design, architecture, asset pipeline, environment, development
 scripts/      doctor / check / build / dev PowerShell commands
 ```
 
-You can already drag parts around, snap them together, run the same test twice
-and get the same machine back. There is still no problem to solve, no art and
-nothing to win - see **What you can do right now** below.
+You can already play the first experiment end to end: a duck, a gap, a giant
+red button, eight parts on a rack. Everything is still Roblox primitives - art
+comes later, on purpose. See **Experiment 001 - Save the Duck** below.
 
 ## Prerequisites
 
@@ -164,25 +163,38 @@ Studio -> running Luau.
 
 Save the place afterwards so your geometry stays in `place\`.
 
-## What you can do right now
+## Experiment 001 - Save the Duck
 
-In Play mode the server builds a temporary workshop to test the kernel:
-a concrete floor, a marked build area, two planks, two blocks and four wheels.
-It only exists in Studio, and it never touches the place file.
+The workshop floor has a trench cut through it. A duck waits on the start pad;
+a giant red button waits across the gap. You get two planks, two blocks and
+four wheels, staged on a rack beside you. Build anything. Press
+**TEST MACHINE**. Physics decides.
 
 | Input         | Result                                                    |
 | ------------- | --------------------------------------------------------- |
 | Click / tap   | Select a part (blue outline)                               |
 | Drag          | Move it - parts that are joined come along                 |
-| `Q` / `E`     | Rotate 15 degrees left / right                             |
-| `R`           | Flip 90 degrees                                            |
-| `X`           | Disconnect the selected part from everything                |
-| TEST          | Unanchor everything and let Roblox physics run              |
-| RESET         | Restore the exact machine, zero velocity, back to BUILD MODE |
+| `Q` / `E`     | Rotate 15 degrees left / right (desktop)                   |
+| `R`           | Flip 90 degrees (desktop)                                  |
+| `X`           | Disconnect the selected part (desktop)                     |
+| ↺ ↻ FLIP / DISCONNECT | The same actions as large buttons (phones/tablets) |
+| TEST MACHINE  | Unanchor everything - duck included - and let physics run   |
+| RESET         | Restore the exact machine you built; duck back to its mark  |
+| TRY AGAIN     | Full restart: joints removed, parts re-racked, attempts zeroed |
+
+Rules of the world:
+
+- Only the duck can press the button. A plank on the trigger wins nothing.
+- RESET keeps your machine exactly as built - change one thing, test again.
+- TRY AGAIN is the full restart and lives only on the success panel.
+- Failure messages ("BALLISTIC DUCK.") are flavour, not judgement. You decide
+  when an attempt is over.
+- The avatar cannot kick the machine or the duck: players pass through parts
+  and payloads by design.
 
 Drag a plank's end near a block and the connectors snap together: rigids weld,
 axles become spinning hinges. While dragging, a green marker shows the joint
-that would be made. The server decides for real when you let go.
+that would be made, and a pulse confirms the joint the server actually made.
 
 More detail, log lines and troubleshooting live in `docs/DEVELOPMENT.md`.
 
@@ -228,19 +240,24 @@ Details, budgets and the Studio import checklist: `docs/ASSET_PIPELINE.md`.
 | `docs/GAME_DESIGN.md`        | fantasy, core loop, scope, and non-goals  |
 | `docs/ARCHITECTURE.md`       | mapping, ownership, code rules            |
 | `docs/ASSET_PIPELINE.md`     | Hyper3D -> Blender -> Studio, budgets     |
+| `docs/ASSET_WISHLIST.md`     | future assets and Hyper3D prompts         |
 | `docs/ENVIRONMENT.md`        | detected tools, versions, manual steps    |
 | `docs/DEVELOPMENT.md`        | daily workflow and troubleshooting        |
 | `AGENTS.md`                  | rules for AI coding sessions              |
 
 ## Status
 
-**WZ-001** - pipeline proven, construction kernel playable, no challenge yet.
+**WZ-002** - Experiment 001 is playable: the challenge, the duck, the goal,
+failure flavour, success flow, touch controls and collision policy exist.
+Verified by static checks only so far; the Studio acceptance pass and the first
+family playtest are still pending.
 
 What exists: BUILD / TEST / RESET, drag, snap (Rigid welds, Axle hinges),
-rotation, disconnect, a Studio-only prototype workshop and CI.
+rotation, disconnect, connector markers, Experiment 001 "Save the Duck",
+collision groups, mobile touch controls, playtest diagnostics, CI.
 
-What explicitly does not: Save the Duck, springs, powered motors, gears, ropes,
-damage, saving machines, persistence, currency, inventory, multiplayer
-construction, final UI and art, Hyper3D or Blender assets.
+What explicitly does not: springs, powered motors, gears, ropes, damage,
+saving machines, persistence, currency, inventory, multiplayer construction,
+final UI and art, Hyper3D or Blender assets.
 
-Next: **Experiment 001 - Save the Duck.**
+Next: Studio acceptance pass, then the first family playtest.

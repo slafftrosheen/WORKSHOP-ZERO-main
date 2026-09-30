@@ -1,7 +1,7 @@
 # Workshop Zero - Architecture
 
-Status: **WZ-001**. The construction kernel exists and is playable in principle.
-There is still no challenge, no art and no persistence.
+Status: **WZ-002**. The construction kernel exists, and Experiment 001 runs on
+top of it. There is still no art, no persistence and no framework.
 
 ## The two phases
 
@@ -23,10 +23,28 @@ clients as a replicated `StringValue`, so a player who joins mid-test reads
 
 Once components are unanchored, Roblox may hand network ownership of an
 assembly to a nearby client. That is desirable for feel and is left alone. It
-does **not** move authority: nothing is scored in WZ-001, and when a challenge
-does score something, the server judges it from its own view of the duck and
-the machine - never from a client touch or a client-owned assembly. Feel may be
-client-simulated; truth may not.
+does **not** move authority: challenge completion, attempt counts and success
+are judged by the server from its own view of the duck and the machine - never
+from a client touch or a client-owned assembly. Feel may be client-simulated;
+truth may not.
+
+## The two state machines (and why there are two)
+
+```text
+SimulationState   Build | Testing | Resetting     physics truth, SimulationService
+ExperimentState   Loading | Build | Testing | Success   challenge lifecycle, ExperimentService
+```
+
+Only `SimulationService` writes SimulationState and only `ExperimentService`
+writes ExperimentState. They observe each other's transitions instead of
+fighting:
+
+- an attempt starts when the simulation enters Testing (`Build -> Testing`)
+- an attempt ends when the simulation returns to Build, or at success
+- success leaves SimulationState at **Testing** so physics keeps running; the
+  freeze is an experiment state, never a second physics state machine
+- RESET during Success is refused by `ExperimentService` before it ever reaches
+  `SimulationService`: a finished experiment can only be restarted
 
 ## Module map
 
@@ -37,18 +55,32 @@ src/shared/construction/
     ComponentDefinitions   the prototype catalogue (Plank, Block, Wheel)
     ConstructionConfig     every tunable number and name
 
+src/shared/experiments/
+    ExperimentTypes        experiment vocabulary, report and module contracts
+    ExperimentDefinitions  Save the Duck data: inventory, geometry, thresholds, copy
+
 src/server/construction/
-    ComponentFactory       builds components, connectors, drag detectors
+    ComponentFactory       builds components, connectors, drag detectors, socket markers
     ConnectorService       the connection registry, snapping, disconnecting
     SimulationService      the Build/Testing/Resetting state machine
     BuildService           dragging, rotation, build-area rules
+src/server/experiments/
+    SaveTheDuckLevel       builds Workspace.Workshop (floor, pads, dressing, duck, goal)
+    SaveTheDuckExperiment  payload handling, goal detection, failure observer
+    ExperimentService      attempt lifecycle, diagnostics, success, restart
+src/server/
+    CollisionGroups        five groups and their matrix
 src/server/dev/
-    PrototypeWorkshop      Studio-only runtime sandbox and starter parts
+    PrototypeWorkshop      Studio-only runtime sandbox, behind a config flag
 
 src/client/construction/
-    BuildController        selection, requests, snap preview
+    BuildController        selection, requests, snap preview and snap pulse
+src/client/experiments/
+    ExperimentController   intro card, success panel, toast wiring, debug overlay
 src/client/ui/
-    PrototypeControls      the TEST/RESET panel
+    PrototypeControls      action button, state line, touch controls
+    ExperimentToast        one-line flavour notifications
+    PartsTray              informational parts list
 ```
 
 Dependencies point one way only:
@@ -63,6 +95,16 @@ ConstructionTypes / ConnectorTypes / ConstructionConfig / ComponentDefinitions
               BuildService
                     |
     PrototypeWorkshop, Bootstrap (wiring)
+
+ExperimentTypes / ExperimentDefinitions
+        |
+  SaveTheDuckLevel -> ComponentFactory
+        |
+  SaveTheDuckExperiment (reports)
+        |
+  ExperimentService  (observes SimulationService, owns ExperimentState)
+        |
+  Bootstrap (wiring)
 ```
 
 The client never requires a server module. Both read the same shared config,
@@ -178,18 +220,95 @@ ReplicatedStorage/WorkshopZeroRemotes
     RequestDisconnect         RemoteEvent  client -> server  { ComponentId }
     DragStateChanged          RemoteEvent  server -> client  componentId | nil
     SimulationState           StringValue  server -> all      the current phase
+
+    RequestExperimentAction   RemoteEvent  client -> server  "Restart"
+    FailureToast              RemoteEvent  server -> client  flavour line
+    ExperimentState           StringValue  server -> all      the challenge phase
+    ExperimentAttempt         IntValue     server -> all      attempts this session
+    ExperimentPartsUsed       IntValue     server -> all      parts used, last test
 ```
+
+Simulation and experiment requests are funneled through `ExperimentService`,
+which can refuse what the kernel alone would accept (RESET during Success).
 
 Rules:
 
 - A client may only name things, never build them. No instances, no CFrames,
   no constraints, no Lua blobs.
-- Every field is validated against a small enumerator in `ConstructionTypes`.
+- Every field is validated against a small enumerator in `ConstructionTypes`
+  or `ExperimentTypes`.
 - `DragStateChanged` goes only to the player who is dragging, so a snap preview
   never appears on somebody else's screen.
+- Success never originates from a client. The server's own `Touched` handler on
+  the goal trigger validates payload identity and experiment state.
 
 There is no ownership or per-player plot concept yet: anybody may manipulate
 any component. Multiplayer construction is explicitly out of scope.
+
+## The payload concept
+
+A payload is the thing an experiment asks the player to move. The duck is a
+payload, not a component:
+
+```text
+Model Duck        WZ_Payload     = true
+                  WZ_PayloadType = "Duck"
+```
+
+Payloads cannot be dragged, rotated, snapped or disconnected - the construction
+kernel never touches them. During BUILD a payload is anchored; TEST unanchors
+it; RESET restores its exact saved spawn transform with zero velocity. Goal
+detection walks up from the touching part to find a model carrying
+`WZ_Payload`, so a part dropped onto the trigger cannot claim to be the duck.
+
+## Goal validation (success sequence)
+
+```text
+goal trigger Touched
+  -> experiment is live (Testing) and not already succeeded
+  -> the touching part's ancestors contain THIS payload
+  -> success marked exactly once (ExperimentState -> Success)
+  -> button reaction: cap depress, colour lift, one sound
+  -> attempts and parts used are published; client renders the panel
+```
+
+Physics keeps running after success by design. RESET is refused; TRY AGAIN is
+the only way out.
+
+## Failure feedback philosophy
+
+The FailureObserver is not a referee. It never ends an attempt; the player
+does, with RESET. It watches the duck (pit, distance, speed, height) and the
+structure (rigid-jointed components tipping past a threshold) and surfaces one
+short flavour message per event per attempt. The only automatic action is a
+safety freeze far below the world, which still does not reset anything.
+
+## Collision policy
+
+Five groups, registered before any part exists, matrix documented in
+`src/server/CollisionGroups.luau`:
+
+```text
+                              Player  Comp  Payload  Env   Trigger
+    Players                    yes    no     no      yes    no
+    WorkshopComponents         no     yes    yes     yes    yes
+    Payloads                   no     yes    yes     yes    yes
+    Environment                yes    yes    yes     yes    yes
+    GoalTrigger                no     yes    yes     yes    no
+```
+
+The design point: a player avatar can never solve, break or trigger the
+experiment by walking into it. Components and payloads still collide with each
+other and the world, so machines can push, carry and launch the duck. Player
+parts are assigned to the group on spawn, including accessories added later.
+
+## Mobile controls
+
+The control panel derives its presentation from `UserInputService`: where a
+hardware keyboard is absent, selected-component actions become four large
+touch buttons (↺ ↻ FLIP, DISCONNECT) and the desktop `Q / E / R / X` hint line
+is never shown. Desktop shortcuts keep working. There is no radial menu, no
+gesture vocabulary and no UI framework.
 
 ## Ownership
 
@@ -210,10 +329,19 @@ Two-way sync / syncback stays off.
 
 ## Generated at runtime, never saved
 
-`PrototypeWorkshop` creates `Workspace.WorkshopZeroRuntime` in Studio only, and
-only when no authored `Workspace.Workshop` exists. It is a development harness:
-a live server never fabricates level geometry, and no runtime content is ever
-written back into the place file.
+Two generators exist, and exactly one runs at a time:
+
+```text
+EnablePrototypeWorkshop = false (default)  ->  ExperimentService.Start()
+EnablePrototypeWorkshop = true (Studio)    ->  PrototypeWorkshop.Setup()
+```
+
+`SaveTheDuckLevel` builds `Workspace.Workshop` at runtime, replacing only a
+previous `WZ_Generated` workshop and never touching a hand-authored one.
+`PrototypeWorkshop` creates `Workspace.WorkshopZeroRuntime` in Studio only.
+Both are development harnesses in the sense that nothing is ever written back
+into the place file - the level is rebuilt every session, and Workspace stays
+Studio-owned.
 
 ## Deliberately absent
 

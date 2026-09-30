@@ -19,6 +19,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
@@ -46,6 +47,11 @@ type Preview = {
 
 local FACING_FLIP = CFrame.Angles(0, math.pi, 0)
 
+-- How long to wait before believing the world: a snap is the server's decision,
+-- and its result only becomes visible here once it replicates.
+local REPLICATION_DELAY = 0.2
+local SNAP_PULSE_TIME = 0.4
+
 local KEY_OPERATIONS: { [Enum.KeyCode]: ConstructionTypes.RotationOperation } = {
 	[Enum.KeyCode.Q] = "YawLeft",
 	[Enum.KeyCode.E] = "YawRight",
@@ -59,7 +65,12 @@ local remotes: ConstructionTypes.ConstructionRemotes? = nil
 local controls: ControlsHandle? = nil
 local highlight: Highlight? = nil
 local previewHighlight: Highlight? = nil
+local movingHighlight: Highlight? = nil
 local previewSphere: Part? = nil
+
+-- Which connectors were already joined when the current drag started, so a
+-- pulse can celebrate a *new* joint instead of an old one.
+local occupiedBeforeDrag: { [Attachment]: boolean } = {}
 
 -- Reading the world ----------------------------------------------------------
 
@@ -94,15 +105,38 @@ local function componentName(model: Model): string
 	return model.Name
 end
 
-local function getRuntimeComponents(): { Model }
-	local result: { Model } = {}
+--[[
+	Components live in a folder inside the level. Two runtime names are possible
+	(the real experiment level, or the developer harness), so both are tried, and
+	the answer is cached because this lookup runs while a drag preview updates.
+]]
+local runtimeNames = { Config.AuthoredWorkshopName, Config.RuntimeFolderName }
+local cachedContainer: Instance? = nil
 
-	local runtime = Workspace:FindFirstChild(Config.RuntimeFolderName)
-	if runtime == nil then
-		return result
+local function findComponentsContainer(): Instance?
+	if cachedContainer ~= nil and cachedContainer.Parent ~= nil then
+		return cachedContainer
 	end
 
-	local container = runtime:FindFirstChild(Config.ComponentsFolderName)
+	cachedContainer = nil
+
+	for _, name in runtimeNames do
+		local runtime = Workspace:FindFirstChild(name)
+		if runtime ~= nil then
+			local container = runtime:FindFirstChild(Config.ComponentsFolderName)
+			if container ~= nil then
+				cachedContainer = container
+				return container
+			end
+		end
+	end
+
+	return nil
+end
+
+local function getRuntimeComponents(): { Model }
+	local result: { Model } = {}
+	local container = findComponentsContainer()
 	if container == nil then
 		return result
 	end
@@ -212,6 +246,10 @@ local function hidePreview()
 	if previewHighlight ~= nil then
 		previewHighlight.Enabled = false
 	end
+
+	if movingHighlight ~= nil then
+		movingHighlight.Enabled = false
+	end
 end
 
 local function updatePreview()
@@ -238,6 +276,13 @@ local function updatePreview()
 	sphere.Transparency = 0.45
 	marker.Adornee = preview.Target
 	marker.Enabled = true
+
+	-- The part in the player's hands lights up too, so "this will connect" is
+	-- readable without looking away from the part being dragged.
+	if movingHighlight ~= nil then
+		movingHighlight.Adornee = moving
+		movingHighlight.Enabled = true
+	end
 end
 
 local function setSelection(model: Model?)
@@ -255,17 +300,17 @@ end
 
 -- Requests -------------------------------------------------------------------
 
-local function requestOnSelection(operation: ConstructionTypes.RotationOperation?)
+local function requestOnSelection(operation: ConstructionTypes.RotationOperation?): boolean
 	local remoteSet = remotes
 	local model = selection
 
 	if remoteSet == nil or model == nil or model.Parent == nil then
-		return
+		return false
 	end
 
 	local componentId = componentIdOf(model)
 	if componentId == nil then
-		return
+		return false
 	end
 
 	if operation ~= nil then
@@ -273,6 +318,23 @@ local function requestOnSelection(operation: ConstructionTypes.RotationOperation
 	else
 		remoteSet.RequestDisconnect:FireServer({ ComponentId = componentId })
 	end
+
+	return true
+end
+
+--[[
+	Rotation and disconnection for whatever is selected.
+
+	Exported because the touch controls live in the UI layer: this module owns the
+	selection, and the panel asks it to act on that selection. The server still
+	validates every request.
+]]
+function BuildController.RequestRotation(operation: ConstructionTypes.RotationOperation): boolean
+	return requestOnSelection(operation)
+end
+
+function BuildController.RequestDisconnect(): boolean
+	return requestOnSelection(nil)
 end
 
 local function pickComponentAt(position: Vector3): Model?
@@ -297,6 +359,62 @@ local function pickComponentAt(position: Vector3): Model?
 	end
 
 	return findComponent(result.Instance)
+end
+
+-- Snap feedback ---------------------------------------------------------------
+
+local function rememberConnectorState(model: Model)
+	table.clear(occupiedBeforeDrag)
+
+	for _, attachment in connectorsOf(model) do
+		occupiedBeforeDrag[attachment] = not isFreeConnector(attachment)
+	end
+end
+
+local function pulseAt(position: Vector3)
+	local pulse = Instance.new("Part")
+	pulse.Name = "WZ_SnapPulse"
+	pulse.Shape = Enum.PartType.Ball
+	pulse.Size = Vector3.one * 0.5
+	pulse.Position = position
+	pulse.Anchored = true
+	pulse.CanCollide = false
+	pulse.CanQuery = false
+	pulse.CanTouch = false
+	pulse.CastShadow = false
+	pulse.Color = Color3.fromRGB(160, 255, 180)
+	pulse.Material = Enum.Material.Neon
+	pulse.Transparency = 0.15
+	pulse.Parent = Workspace
+
+	TweenService:Create(pulse, TweenInfo.new(SNAP_PULSE_TIME), {
+		Size = Vector3.one * 3,
+		Transparency = 1,
+	}):Play()
+
+	task.delay(SNAP_PULSE_TIME + 0.1, function()
+		pulse:Destroy()
+	end)
+end
+
+--[[
+	Called a moment after a drag ended: if the server joined the part to
+	something, a free connector became occupied, and that connector pulses. The
+	client never decides that a snap happened - it reads the result of the
+	server's decision once it replicates.
+]]
+local function pulseNewConnection(componentId: string)
+	local model = findComponentById(componentId)
+	if model == nil then
+		return
+	end
+
+	for _, attachment in connectorsOf(model) do
+		if occupiedBeforeDrag[attachment] ~= true and not isFreeConnector(attachment) then
+			pulseAt(attachment.WorldCFrame.Position)
+			return
+		end
+	end
 end
 
 -- Wiring ---------------------------------------------------------------------
@@ -325,6 +443,15 @@ function BuildController.Start(
 	snapHighlight.Enabled = false
 	snapHighlight.Parent = Workspace
 	previewHighlight = snapHighlight
+
+	local heldHighlight = Instance.new("Highlight")
+	heldHighlight.Name = "WZ_HeldHighlight"
+	heldHighlight.FillColor = Color3.fromRGB(150, 200, 255)
+	heldHighlight.FillTransparency = 0.85
+	heldHighlight.OutlineColor = Color3.fromRGB(200, 225, 255)
+	heldHighlight.Enabled = false
+	heldHighlight.Parent = Workspace
+	movingHighlight = heldHighlight
 
 	local sphere = Instance.new("Part")
 	sphere.Name = "WZ_SnapPreview"
@@ -367,8 +494,20 @@ function BuildController.Start(
 		-- Validate at the wire, exactly like the server validates its own inputs.
 		if type(componentId) == "string" then
 			draggingComponentId = componentId :: string
+
+			local dragged = findComponentById(componentId :: string)
+			if dragged ~= nil then
+				rememberConnectorState(dragged)
+			end
 		else
+			local finished = draggingComponentId
 			draggingComponentId = nil
+
+			if finished ~= nil then
+				task.delay(REPLICATION_DELAY, function()
+					pulseNewConnection(finished)
+				end)
+			end
 		end
 
 		updatePreview()

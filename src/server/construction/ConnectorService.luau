@@ -314,6 +314,20 @@ local function releaseConnector(componentId: string, connectorName: string)
 	end
 end
 
+local function removeConnection(connectionId: string): boolean
+	local record = connections[connectionId]
+	if record == nil then
+		return false
+	end
+
+	record.Constraint:Destroy()
+	releaseConnector(record.ComponentA, record.ConnectorA)
+	releaseConnector(record.ComponentB, record.ConnectorB)
+	connections[connectionId] = nil
+
+	return true
+end
+
 --[[
 	Removes every connection that touches a component. Intentionally coarse for
 	this batch: later batches can offer "disconnect this joint" on a specific
@@ -332,24 +346,47 @@ function ConnectorService.Disconnect(componentId: string): number
 	for _, connectionId in doomed do
 		local record = connections[connectionId]
 		if record ~= nil then
-			record.Constraint:Destroy()
-			releaseConnector(record.ComponentA, record.ConnectorA)
-			releaseConnector(record.ComponentB, record.ConnectorB)
-			connections[connectionId] = nil
-
-			log(
-				string.format(
-					"Disconnected %s.%s - %s.%s",
-					displayName(record.ComponentA),
-					record.ConnectorA,
-					displayName(record.ComponentB),
-					record.ConnectorB
-				)
+			local description = string.format(
+				"%s.%s - %s.%s",
+				displayName(record.ComponentA),
+				record.ConnectorA,
+				displayName(record.ComponentB),
+				record.ConnectorB
 			)
+
+			if removeConnection(connectionId) then
+				log(string.format("Disconnected %s", description))
+			end
 		end
 	end
 
 	return #doomed
+end
+
+--[[
+	Removes every connection between every component.
+
+	This is what "start the experiment again" means, and it is deliberately not
+	what RESET means: RESET keeps the machine exactly as the player built it.
+]]
+function ConnectorService.DisconnectAll(): number
+	local doomed: { string } = {}
+	for connectionId in connections do
+		table.insert(doomed, connectionId)
+	end
+
+	local removed = 0
+	for _, connectionId in doomed do
+		if removeConnection(connectionId) then
+			removed += 1
+		end
+	end
+
+	if removed > 0 then
+		log(string.format("Disconnected every joint (%d)", removed))
+	end
+
+	return removed
 end
 
 return table.freeze(ConnectorService)

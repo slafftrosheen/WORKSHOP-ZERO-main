@@ -83,6 +83,24 @@ function BuildService.AttachWorkshop(runtime: Instance)
 	end
 end
 
+--[[
+	Forgets every remembered placement and records the components' current
+transforms as valid.
+
+	A full experiment restart moves parts back to the rack, and without this the
+	build service would still remember the pre-restart transforms and "return" a
+	part to the wrong place on the next out-of-bounds drop.
+]]
+function BuildService.ResetPlacementMemory()
+	sessions = {}
+
+	for _, model in ComponentFactory.GetComponents() do
+		if model.Parent ~= nil then
+			lastValidPivots[model] = model:GetPivot()
+		end
+	end
+end
+
 function BuildService.Track(model: Model)
 	if tracked[model] then
 		return

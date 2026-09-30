@@ -68,26 +68,30 @@ rojo serve default.project.json
 rojo plugin install  # install/refresh the Studio plugin
 ```
 
-## Playing with the construction kernel
+## Playing Experiment 001
 
 Everything below happens in Studio, in Play mode.
 
-### The prototype workshop
+### The level
 
-There is no authored level yet, so the server builds a runtime sandbox when it
-is running in Studio:
+By default the server now builds the real experiment level instead of the
+developer sandbox:
 
 ```text
-Workspace/WorkshopZeroRuntime
-    Floor          big anchored slab
-    BuildBounds    transparent volume a placement must stay inside
-    WorkshopSpawn  where you start, just outside the build area
-    Components     2 planks, 2 blocks, 4 wheels
-    Connections    created as you snap things together
+Workspace/Workshop
+    floor with a trench, start pad, goal pad, painted tape boundaries
+    dressing: back wall, shelves, crates, bench, toolboxes
+    BuildBounds     invisible legal build volume
+    WorkshopSpawn   player spawn, beside the rack
+    Duck            the payload (WZ_Payload), anchored while building
+    GoalButton      giant red button with an invisible trigger
+    Components      2 planks, 2 blocks, 4 wheels on the rack
+    Connections     created as you snap things together
 ```
 
-The harness steps aside if `Workspace.Workshop` ever exists, and it never
-touches the place file: runtime content disappears when the session ends.
+The old kernel sandbox (`Workspace/WorkshopZeroRuntime`) is still available for
+kernel work: set `EnablePrototypeWorkshop = true` in
+`src/shared/construction/ConstructionConfig.luau` and Play again.
 
 ### Controls
 
@@ -95,15 +99,19 @@ touches the place file: runtime content disappears when the session ends.
 | ------------ | ----------------------------------------------- |
 | Click / tap  | Select a component (blue outline)               |
 | Drag         | Move the selected component; connected parts come along |
-| `Q` / `E`    | Rotate 15 degrees left / right                  |
-| `R`          | Flip 90 degrees on the local X axis             |
-| `X`          | Disconnect the selected component from everything |
-| TEST button  | Unanchor everything and let physics run         |
-| RESET button | Anchor, restore the exact build, come back to BUILD MODE |
+| `Q` / `E`    | Rotate 15 degrees left / right (desktop)        |
+| `R`          | Flip 90 degrees on the local X axis (desktop)   |
+| `X`          | Disconnect the selected component (desktop)     |
+| ↺ ↻ FLIP DISCONNECT | Touch buttons, shown while a component is selected on touch devices |
+| TEST MACHINE | Unanchor everything - duck included - physics runs |
+| RESET button | Restore the exact build, duck back to its mark, BUILD MODE |
+| TRY AGAIN    | Success panel only: full experiment restart     |
+| F8           | Studio-only debug overlay (states, attempt, duck speed) |
 
 While dragging, a green marker shows the connector pair that would be joined:
 a sphere sits on the target connector and the target component is outlined.
-The server decides for real when the drag is released.
+The held component is also outlined. The server decides for real when the drag
+is released; a green pulse marks the joint it actually made.
 
 ### Reading the logs
 
@@ -116,7 +124,29 @@ happen:
 [WZ] State Resetting -> Build
 [WZ] Connected Plank.Rigid_A -> Block.Rigid_B (Rigid)
 [WZ] Disconnected Plank.Rigid_A - Block.Rigid_B
+[WZ] Experiment Build -> Testing
+[WZ] Attempt 1 started: 5 part(s) used
+[WZ] Flavour event DuckDown: DUCK DOWN.
+[WZ] Experiment Testing -> Success
 ```
+
+### Playtest diagnostics
+
+With `PlaytestDiagnostics = true` (the default, Studio only) every attempt
+prints a summary when it ends:
+
+```text
+[WZ] Attempt 3
+    Duration before Reset: 9.4s
+    Connections: 3
+    Parts moved: 5
+    Duck max speed: 26.1
+    Duck max height: 12.8
+    Result: Reset
+```
+
+This is how a parent observes how their children actually solve the challenge.
+It is Output only: nothing is stored, uploaded or shown to players.
 
 Nothing logs per frame. If a log line would fire every Heartbeat, it does not
 belong.
@@ -196,10 +226,12 @@ Script Sync is probably on. Turn it off; Rojo owns code.
 Run `stylua src`, then run the check again.
 
 **Nothing to build with: no components appear.**
-The runtime workshop only exists in Studio. Check the server Output for
-`[WZ] Runtime workshop ready with 8 components`. If it is missing, the server
-script did not start - confirm the Rojo plugin is connected and that the place
-was opened from `place\`.
+The level is built by the server at the start of Play. Check the server Output
+for `[WZ] SAVE THE DUCK is ready (Get the duck to the button.)`. If it is
+missing, the server script did not start - confirm the Rojo plugin is connected
+and that the place was opened from `place\`. If `Workspace.Workshop` already
+exists and was **not** generated this session (no `WZ_Generated` attribute),
+the builder refuses to touch it and the workshop stays empty by design.
 
 **A machine will not snap.**
 Alignment matters: a connector must face the connector it is joining, within
@@ -207,8 +239,15 @@ Alignment matters: a connector must face the connector it is joining, within
 closer. `Rigid` only meets `Rigid`, and `Axle` only meets `Axle`.
 
 **TEST does not respond.**
-Only the phase you are in accepts its action: TEST works in BUILD MODE, RESET
-works while TESTING, and a request during RESETTING is ignored on purpose.
+Only the phase you are in accepts its action: TEST MACHINE works in BUILD MODE,
+RESET works while TESTING, a request during RESETTING is ignored on purpose,
+and a finished experiment (Success) can only be restarted with TRY AGAIN - not
+reset.
+
+**The duck fell through the world and vanished / froze.**
+Below the cleanup threshold the payload is anchored where it stopped so physics
+cannot grind forever. It is not a bug and not a reset: press RESET when you are
+done inspecting the disaster.
 
 **Somebody rebuilt and the Workshop disappeared.**
 That is what the place-file rule prevents. Reopen

@@ -28,9 +28,19 @@ local ConnectorService = require(script.Parent.ConnectorService)
 
 local SimulationService = {}
 
+-- One observer slot, not an event bus. The experiment layer watches the
+-- simulation; nothing else does.
+type Observer = {
+	OnStateChanged: (
+		previous: ConstructionTypes.SimulationState,
+		current: ConstructionTypes.SimulationState
+	) -> (),
+}
+
 local state: ConstructionTypes.SimulationState = "Build"
 local snapshot: { [string]: ConstructionTypes.ComponentSnapshot } = {}
 local remotes: ConstructionTypes.ConstructionRemotes? = nil
+local observer: Observer? = nil
 
 local function log(message: string)
 	if RunService:IsStudio() then
@@ -49,6 +59,11 @@ local function setState(newState: ConstructionTypes.SimulationState)
 	state = newState
 	publish()
 	log(string.format("State %s -> %s", previous, newState))
+
+	if observer ~= nil then
+		local notify = observer.OnStateChanged
+		notify(previous, newState)
+	end
 end
 
 local function zeroVelocities()
@@ -103,6 +118,17 @@ end
 function SimulationService.SetRemotes(remoteSet: ConstructionTypes.ConstructionRemotes)
 	remotes = remoteSet
 	publish()
+end
+
+--[[
+	Registers the single observer of phase changes.
+
+	The experiment layer uses this to react to TEST and RESET without owning any
+	physics state of its own: SimulationState stays the only truth about what the
+	workshop is doing.
+]]
+function SimulationService.SetObserver(value: Observer?)
+	observer = value
 end
 
 function SimulationService.RequestAction(player: Player, payload: unknown): boolean

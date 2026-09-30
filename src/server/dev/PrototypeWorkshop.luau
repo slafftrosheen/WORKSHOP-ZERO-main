@@ -75,6 +75,7 @@ local function createPart(name: string, size: Vector3, position: Vector3, parent
 	part.Anchored = true
 	part.TopSurface = Enum.SurfaceType.Smooth
 	part.BottomSurface = Enum.SurfaceType.Smooth
+	part.CollisionGroup = ConstructionConfig.CollisionGroupEnvironment
 	part.Parent = parent
 
 	return part

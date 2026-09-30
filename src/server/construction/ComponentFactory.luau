@@ -55,6 +55,58 @@ local function log(message: string)
 	end
 end
 
+--[[
+	Small socket geometry so a child can see where a part will connect.
+
+	Rigid is a flat plate, Axle is a round cap: the difference is a shape, not
+	only a colour. Markers are welded to the root, massless, non-colliding and
+	invisible to raycasts, so they are presentation and never physics.
+]]
+local function createConnectorMarker(
+	attachment: Attachment,
+	connectorType: ConstructionTypes.ConnectorType
+)
+	if not Config.ShowConnectorMarkers then
+		return
+	end
+
+	local root = attachment.Parent
+	if root == nil or not root:IsA("BasePart") then
+		return
+	end
+
+	local isRigid = ConnectorTypes.IsRigid(connectorType)
+
+	local marker = Instance.new("Part")
+	marker.Name = string.format("%s_%s", Config.ConnectorMarkerName, attachment.Name)
+	marker.Shape = if isRigid then Enum.PartType.Block else Enum.PartType.Cylinder
+	marker.Size = if isRigid then Config.RigidMarkerSize else Config.AxleMarkerSize
+	marker.Color = if isRigid then Color3.fromRGB(120, 138, 158) else Color3.fromRGB(78, 84, 98)
+	marker.Material = if isRigid then Enum.Material.SmoothPlastic else Enum.Material.Metal
+	marker.Anchored = false
+	marker.CanCollide = false
+	marker.CanQuery = false
+	marker.CanTouch = false
+	marker.CastShadow = false
+	marker.Massless = true
+	marker.CollisionGroup = Config.CollisionGroupComponents
+
+	-- A flat plate is thin along its own Y axis, so roll it onto the connector's
+	-- X axis. A cylinder already spins around X, which is the axle direction.
+	local markerCFrame = if isRigid
+		then attachment.WorldCFrame * CFrame.Angles(0, 0, math.rad(-90))
+		else attachment.WorldCFrame
+
+	marker.CFrame = markerCFrame
+	marker.Parent = root.Parent or root
+
+	local weld = Instance.new("WeldConstraint")
+	weld.Name = "WZ_SocketWeld"
+	weld.Part0 = root
+	weld.Part1 = marker
+	weld.Parent = marker
+end
+
 local function ensureFolder(parent: Instance, name: string): Instance
 	local existing = parent:FindFirstChild(name)
 	if existing ~= nil then
@@ -266,7 +318,16 @@ function ComponentFactory.Create(
 		attachment.Parent = root
 	end
 
+	root.CollisionGroup = Config.CollisionGroupComponents
 	model.PrimaryPart = root
+
+	-- Markers need the model's parts in place first, so they are created after
+	-- the connectors and before the model is moved into the world.
+	if Config.ShowConnectorMarkers then
+		for _, connector in definition.Connectors do
+			createConnectorMarker(connector, connector.Type)
+		end
+	end
 
 	-- RunLocally = false means the drag is performed by the server and all drag
 	-- events fire in server scripts, so placement stays authoritative.

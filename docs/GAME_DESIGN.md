@@ -1,11 +1,11 @@
 # Workshop Zero - Game Design
 
-Status: **WZ-001**. This document is a compass, not a spec.
+Status: **WZ-002**. This document is a compass, not a spec.
 
-The construction kernel (BUILD / TEST / RESET) now exists as infrastructure.
-Experiment 001 is still not implemented, and none of the systems below have
-been designed yet - the kernel is there so that the first experiment can be
-about a duck rather than about plumbing.
+The construction kernel (BUILD / TEST / RESET) exists as infrastructure, and
+the first experiment is now playable on top of it. Everything after Experiment
+001 is still undesigned - the kernel is there so that the next experiment can
+also be about a duck-level idea rather than about plumbing.
 
 ## Core fantasy
 
@@ -37,32 +37,96 @@ Failure is celebrated rather than punished. A machine that collapses in a
 spectacular new way is progress. Nothing should take a component away from a
 player as a punishment.
 
-## First planned prototype
+## First playable: Experiment 001 - Save the Duck
 
-**Experiment 001 - Save the Duck.**
+Implemented in WZ-002 with Roblox primitives only.
 
-Not implemented yet. It is the first thing built once this pipeline is proven.
+```text
+A duck. A trench. A giant red button across the gap.
+2 planks, 2 blocks, 4 wheels. Build anything. TEST. Physics decides.
+```
+
+### Rules
+
+- The player receives exactly 2 Planks, 2 Blocks, 4 Wheels, staged on a rack
+  inside the build area.
+- Any physically valid solution wins. There is no hidden solution and no
+  scripted expected machine. A bridge, a cart, a ramp, a catapult-shaped
+  accident and a collapsing tower are all equally valid.
+- Only the duck activates the goal. The server validates payload identity, not
+  names, and never trusts a client claim.
+- The level is readable and exaggerated: pads a step high, a 14-stud trench,
+  everything at ground level so nobody gets stranded.
+
+### The experiment lifecycle
+
+```text
+Loading -> Build -> Testing -> Success
+                ^          |
+                +-- RESET -+   (machine restored, duck re-marked)
+
+TRY AGAIN = full restart (Build): joints removed, parts re-racked,
+attempts zeroed, duck and button restored
+```
+
+`ExperimentState` (challenge lifecycle) is deliberately separate from
+`SimulationState` (physics truth). Success freezes the *experiment*, not
+physics: the player watches what their machine did before the success panel
+even appears.
+
+### Normal RESET vs TRY AGAIN
+
+This distinction is a core Workshop Zero principle:
+
+- **RESET** (after a failed test) restores the machine exactly as built. Parts
+  stay where the player put them. The loop is build -> test -> fail ->
+  change one thing -> test again.
+- **TRY AGAIN** (`RestartExperiment`) removes every connection, returns every
+  part to its rack position, restores rotation, duck, button and attempts.
+  It exists only on the success panel.
+
+### Failure is content
+
+> Failure is part of gameplay. Never automatically reset a funny failure unless
+> continuing would break the runtime.
+
+The FailureObserver surfaces short flavour lines at most once per event per
+attempt: DUCK DOWN. / UNSCHEDULED DUCK DEPARTURE. / BALLISTIC DUCK. / SPACE
+PROGRAM STARTED. / STRUCTURAL OPTIMISM DETECTED. It never ends an attempt and
+never judges the player - the laugh is aimed at the machine. The only automatic
+intervention is freezing a payload that falls below the cleanup threshold, so
+physics cannot grind forever; the player still chooses RESET.
+
+> Do not tell the player how to solve an experiment if the physics can teach
+> them.
+
+The intro card is three short lines. No tutorial wall, no solution hints, no
+quiz.
 
 ## Components
 
 | Component | State                                        |
 | --------- | -------------------------------------------- |
-| Plank     | functional prototype (Rigid ends, Axle sides) |
-| Block     | functional prototype (Rigid faces, Axle sides) |
-| Wheel     | functional prototype (spins on an Axle)       |
+| Plank     | in Experiment 001 inventory (2 available)     |
+| Block     | in Experiment 001 inventory (2 available)     |
+| Wheel     | in Experiment 001 inventory (4 available)     |
 | Spring    | placeholder - defined, refused by the factory |
 | Motor     | placeholder - defined, refused by the factory |
 
+Spring and Motor exist in the catalogue as placeholders and MUST NOT appear in
+any playable inventory until they actually do something.
+
 ## Interactions
 
-| Interaction | State in WZ-001                                   |
+| Interaction | State in WZ-002                                   |
 | ----------- | ------------------------------------------------- |
 | Grab / Move | dragging a component, with its assembly following |
-| Rotate      | `Q` / `E` in 15 degree steps, `R` to flip 90      |
-| Connect     | automatic snap to a nearby compatible connector   |
-| Disconnect  | `X` releases every joint on the selected component |
-| Test        | TEST button: unanchor and let physics run          |
+| Rotate      | `Q` / `E` in 15 degree steps, `R` to flip 90; large touch buttons on mobile |
+| Connect     | automatic snap, with preview while dragging and a pulse on the joint made |
+| Disconnect  | `X` on desktop, DISCONNECT button on touch; releases every joint on the selection |
+| Test        | TEST MACHINE button: unanchor everything, duck included  |
 | Reset       | RESET button: restore the exact build, zero velocity |
+| Restart     | TRY AGAIN on the success panel: full experiment restart |
 
 Delete is deliberately not implemented yet: nothing in the loop should be able
 to lose a component while the kernel is being proven.
