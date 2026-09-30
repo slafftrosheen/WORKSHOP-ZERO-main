@@ -1,5 +1,10 @@
 # Workshop Zero - Development
 
+> [!IMPORTANT]
+> **Core Architecture Rules:**
+> - **Visual assets are replaceable skins over stable Workshop Zero physics contracts.**
+> - **Missing art must never make an experiment unplayable.**
+
 ## The daily loop
 
 ```powershell
@@ -98,6 +103,8 @@ kernel work: set `EnablePrototypeWorkshop = true` in
 | Input        | Result                                          |
 | ------------ | ----------------------------------------------- |
 | Click / tap  | Select a component (blue outline)               |
+| Click empty space | Deselect active component                  |
+| `Escape`     | Clear selection (desktop)                       |
 | Drag         | Move the selected component; connected parts come along |
 | `Q` / `E`    | Rotate 15 degrees left / right (desktop)        |
 | `R`          | Flip 90 degrees on the local X axis (desktop)   |
@@ -119,6 +126,12 @@ The server prints a small set of lines, in Studio only, when useful things
 happen:
 
 ```text
+[WZ Assets]
+  Duck         primitive
+  GoalButton   primitive
+  Plank        primitive
+  Block        primitive
+  Wheel        primitive
 [WZ] State Build -> Testing
 [WZ] State Testing -> Resetting
 [WZ] State Resetting -> Build

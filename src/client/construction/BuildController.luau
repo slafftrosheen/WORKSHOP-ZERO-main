@@ -529,6 +529,11 @@ function BuildController.Start(
 			return
 		end
 
+		if input.KeyCode == Enum.KeyCode.Escape then
+			setSelection(nil)
+			return
+		end
+
 		local isPointerDown = input.UserInputType == Enum.UserInputType.MouseButton1
 			or input.UserInputType == Enum.UserInputType.Touch
 

@@ -37,6 +37,7 @@ local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
 local ConnectorService = require(script.Parent.Parent.construction.ConnectorService)
 local SaveTheDuckLevel = require(script.Parent.SaveTheDuckLevel)
+local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
 
 local Config = ConstructionConfig
 
@@ -338,13 +339,55 @@ function SaveTheDuckExperiment.Load(
 	capRestPosition = built.Handles.GoalCap.Position
 	capRestColor = built.Handles.GoalCap.Color
 
-	local sound = Instance.new("Sound")
-	sound.Name = "WZ_GoalSound"
-	sound.SoundId = BUTTON_SOUND
-	sound.Volume = 0.45
-	sound.Parent = built.Handles.GoalCap
+	-- Optional: replace the duck appearance with a custom imported visual.
+	-- The physics collider (Duck/Body) is untouched; only appearance changes.
+	local duckVisual = AssetProvider.Get("Payloads", "Duck")
+	if duckVisual ~= nil then
+		duckVisual.Parent = built.Handles.Duck
+		local root = built.Handles.Duck.PrimaryPart
+		if root ~= nil then
+			local weld = Instance.new("WeldConstraint")
+			weld.Name = "WZ_VisualWeld"
+			weld.Part0 = root
+			local vizRoot = duckVisual.PrimaryPart
+			if vizRoot ~= nil then
+				weld.Part1 = vizRoot
+				weld.Parent = vizRoot
+			end
+		end
+	end
+
+	-- Optional: replace the goal button appearance with a custom imported visual.
+	local goalVisual = AssetProvider.Get("Goals", "GoalButton")
+	if goalVisual ~= nil then
+		goalVisual.Parent = built.Handles.Goal
+		local cap = built.Handles.GoalCap
+		local vizRoot = goalVisual.PrimaryPart
+		if vizRoot ~= nil then
+			local weld = Instance.new("WeldConstraint")
+			weld.Name = "WZ_VisualWeld"
+			weld.Part0 = cap
+			weld.Part1 = vizRoot
+			weld.Parent = vizRoot
+		end
+	end
+
+	-- Attempt to play a button sound on success.  rbxasset:// sounds are not
+	-- guaranteed to exist forever; wrap in pcall so a missing asset does not
+	-- break the experiment.
+	pcall(function()
+		local sound = Instance.new("Sound")
+		sound.Name = "WZ_GoalSound"
+		sound.SoundId = BUTTON_SOUND
+		sound.Volume = 0.45
+		sound.Parent = built.Handles.GoalCap
+	end)
 
 	built.Handles.GoalTrigger.Touched:Connect(onGoalTouched)
+
+	-- Print the asset resolution summary once, so whoever is running Studio
+	-- can immediately see whether custom art is active or not.
+	AssetProvider.PrintDiagnostics()
 
 	return {
 		Definition = definition,
@@ -401,6 +444,9 @@ function SaveTheDuckExperiment.Restart()
 	end
 
 	restoreDuck()
+
+	-- Reset diagnostics so the next load prints a fresh asset summary.
+	AssetProvider.ResetDiagnostics()
 end
 
 return table.freeze(SaveTheDuckExperiment)

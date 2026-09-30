@@ -1,36 +1,56 @@
 # Workshop Zero - Asset Pipeline
 
-## The pipeline
+> [!IMPORTANT]
+> **Core Architecture Rules:**
+> - **Visual assets are replaceable skins over stable Workshop Zero physics contracts.**
+> - **Missing art must never make an experiment unplayable.**
+
+## The asset bridge pipeline
 
 ```text
-idea / sketch / reference
-        |
-        v
 Hyper3D / Rodin
-        |
-        v
-original GLB
-        |
-        v
+       |
+       v (export GLB)
 Blender
-        |
-        v
-cleanup / optimize / pivot / materials
-        |
-        v
-Roblox-ready GLB
-        |
-        v
-Studio Importer
-        |
-        v
-MeshPart visual
-        +
-simple Roblox collision geometry
+       | clean mesh, normalize scale, apply transforms, set origin/pivot, inspect materials
+       v (export GLB)
+Roblox Studio Import 3D
+       |
+       v
+ReplicatedStorage.WorkshopZeroAssets/<category>/<AssetName>
+       | (set Model pivot correctly)
+       v
+AssetProvider (server runtime bridge)
+       |
+       +---> Clones visual model
+       +---> Normalizes physics (CanCollide=false, CanTouch=false, Massless=true)
+       +---> Welds visual to authoritative Root Part
+       `---> Hides primitive Root Part (or falls back cleanly to primitive if missing)
 ```
 
-Every arrow is a deliberate step. Skipping one produces an asset nobody can
-find, fix or reuse six months later.
+### Exact step-by-step workflow
+
+1. **Hyper3D / Rodin**: Generate prompt-based model, export GLB. Save raw export to `assets/source/hyper3d/<asset-name>/`.
+2. **Blender**:
+   - Open GLB.
+   - Clean mesh (remove internal faces, loose geometry, duplicate vertices).
+   - Normalize scale (match required Roblox stud dimensions).
+   - Apply all transforms (`Ctrl+A` -> Apply All Transforms).
+   - Set origin / pivot to geometric center or connection socket.
+   - Inspect and assign clean PBR materials.
+   - Export optimized GLB to `assets/export/roblox/<name>.glb`.
+3. **Roblox Studio 3D Importer**:
+   - Open Studio place.
+   - Import 3D -> select `assets/export/roblox/<name>.glb`.
+4. **Organize into `ReplicatedStorage.WorkshopZeroAssets`**:
+   - Move imported `Model` into the corresponding category folder:
+     - `ReplicatedStorage.WorkshopZeroAssets.Components` (`Plank`, `Block`, `Wheel`)
+     - `ReplicatedStorage.WorkshopZeroAssets.Payloads` (`Duck`)
+     - `ReplicatedStorage.WorkshopZeroAssets.Goals` (`GoalButton`)
+     - `ReplicatedStorage.WorkshopZeroAssets.Props`
+   - Set `Model.PrimaryPart` and verify its pivot.
+5. **Play**:
+   - Start Play mode. `AssetProvider` automatically discovers the asset, normalizes it, and welds it over the physics root. Studio Output confirms `[WZ Assets] <Name> custom`. If the asset is absent, the game falls back to the primitive without error.
 
 ## Folder map
 

@@ -1,7 +1,11 @@
 # Workshop Zero - Architecture
 
-Status: **WZ-002**. The construction kernel exists, and Experiment 001 runs on
-top of it. There is still no art, no persistence and no framework.
+Status: **WZ-002.1**. The construction kernel and Experiment 001 first playable are operational, with game-feel polish and an asset bridge for imported Hyper3D/Blender visual models.
+
+> [!IMPORTANT]
+> **Core Architectural Invariants:**
+> - **Visual assets are replaceable skins over stable Workshop Zero physics contracts.**
+> - **Missing art must never make an experiment unplayable.**
 
 ## The two phases
 
@@ -70,6 +74,8 @@ src/server/experiments/
     ExperimentService      attempt lifecycle, diagnostics, success, restart
 src/server/
     CollisionGroups        five groups and their matrix
+src/server/assets/
+    AssetProvider          resolves imported visual models from ReplicatedStorage
 src/server/dev/
     PrototypeWorkshop      Studio-only runtime sandbox, behind a config flag
 
@@ -128,6 +134,33 @@ WorkshopZeroRuntime/Components/<ComponentModel>     Folder
 Nothing in the kernel addresses a component by instance. Requests from a client
 carry a `ComponentId` string and the server resolves the real instance through
 `ComponentFactory.FindComponentById`.
+
+## Visual vs physics separation (Asset bridge)
+
+A core rule of Workshop Zero is:
+
+```text
+GENERATED/IMPORTED MESH = VISUAL (appearance only)
+ROBLOX ROOT PART        = PHYSICS (mass, collisions, constraints, dragging)
+```
+
+The construction kernel and experiments remain 100% playable with primitive parts. When custom meshes (from Hyper3D -> Blender) are placed in `ReplicatedStorage.WorkshopZeroAssets`:
+
+```text
+ReplicatedStorage.WorkshopZeroAssets/
+    Components/       Plank, Block, Wheel
+    Payloads/         Duck
+    Goals/            GoalButton
+    Props/
+```
+
+`AssetProvider.Get(category, name)` provides the bridge:
+1. It clones the imported visual model.
+2. It strips all collision and mass (`CanCollide = false`, `CanTouch = false`, `Massless = true`, `CanQuery = false`).
+3. It validates proper setup in Studio (`PrimaryPart` presence, masslessness).
+4. The caller welds the visual model to the physics `Root` part with `WeldConstraint`.
+5. The primitive `Root` is made transparent (`Transparency = 1`), revealing the visual mesh while preserving the exact physics contract.
+6. If the asset is missing, the game falls back to the procedural primitive without error.
 
 ## Connector contract
 

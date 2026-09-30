@@ -104,11 +104,11 @@ local ConstructionConfig = {
 	-- Snapping -----------------------------------------------------------------
 
 	-- Distance between connector positions that still counts as "close enough".
-	SnapDistance = 1.25,
+	SnapDistance = 1.75,
 
 	-- Half-angle tolerance. A connector counts as compatible when its outward
 	-- axis is within this angle of the direction the snap would rotate it to.
-	SnapAngleToleranceDegrees = 60,
+	SnapAngleToleranceDegrees = 75,
 
 	-- Build area ---------------------------------------------------------------
 

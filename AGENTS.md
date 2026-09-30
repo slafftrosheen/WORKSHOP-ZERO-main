@@ -9,8 +9,8 @@ Workshop Zero is a Roblox physics/building game. Players solve ridiculous
 problems by building ridiculous machines, testing them, watching them fail,
 changing one thing and testing again.
 
-The first planned prototype is **Experiment 001 - Save the Duck**.
-It is not implemented yet. Do not start it opportunistically.
+**Experiment 001 - Save the Duck** is the active first playable prototype.
+Do NOT start Experiment 002 yet.
 
 ## Hard rules
 
@@ -21,6 +21,8 @@ It is not implemented yet. Do not start it opportunistically.
   future currency.
 - Prefer small modules.
 - Avoid frameworks until complexity proves they are needed.
+- Visual assets are replaceable skins over stable Workshop Zero physics contracts.
+- Missing art must never make an experiment unplayable.
 - Never edit generated dependency folders manually
   (`Packages/`, `ServerPackages/`, `DevPackages/`, `build/`).
 - Never commit secrets.

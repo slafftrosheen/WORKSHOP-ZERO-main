@@ -43,9 +43,9 @@ function ExperimentToast.Create(): Handle
 	local frame = Instance.new("Frame")
 	frame.Name = "Toast"
 	frame.AnchorPoint = Vector2.new(0.5, 0)
-	frame.Position = UDim2.new(0.5, 0, 0, 52)
+	frame.Position = UDim2.new(0.5, 0, 0, 44)
 	frame.AutomaticSize = Enum.AutomaticSize.XY
-	frame.BackgroundColor3 = Color3.fromRGB(24, 22, 28)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 18, 24)
 	frame.BackgroundTransparency = 1
 	frame.BorderSizePixel = 0
 	frame.Visible = false
@@ -86,6 +86,10 @@ function ExperimentToast.Create(): Handle
 	stroke.Thickness = 2
 	stroke.Parent = label
 
+	local toastScale = Instance.new("UIScale")
+	toastScale.Scale = 1
+	toastScale.Parent = frame
+
 	local generation = 0
 
 	local function fade(background: number, text: number, duration: number)
@@ -104,6 +108,15 @@ function ExperimentToast.Create(): Handle
 
 		label.Text = message
 		frame.Visible = true
+
+		-- Punch scale: start oversized, spring back to 1.
+		toastScale.Scale = 1.12
+		TweenService:Create(
+			toastScale,
+			TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Scale = 1 }
+		):Play()
+
 		fade(VISIBLE_BACKGROUND, VISIBLE_TEXT, FADE_IN)
 
 		task.delay(FADE_IN + HOLD, function()
@@ -112,10 +125,16 @@ function ExperimentToast.Create(): Handle
 			end
 
 			fade(1, 1, FADE_OUT)
+			TweenService:Create(
+				toastScale,
+				TweenInfo.new(FADE_OUT, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+				{ Scale = 0.88 }
+			):Play()
 
 			task.delay(FADE_OUT, function()
 				if generation == mine then
 					frame.Visible = false
+					toastScale.Scale = 1
 				end
 			end)
 		end)

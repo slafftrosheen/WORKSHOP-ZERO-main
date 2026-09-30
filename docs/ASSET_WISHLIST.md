@@ -1,12 +1,11 @@
 # Workshop Zero - Asset Wishlist
 
-Status: **future production notes only.** WZ-002 deliberately ships with Roblox
-primitives, because the point of the first playable is to validate challenge,
-interaction, feedback and fun before spending any time dressing it.
+> [!IMPORTANT]
+> **Core Architecture Rules:**
+> - **Visual assets are replaceable skins over stable Workshop Zero physics contracts.**
+> - **Missing art must never make an experiment unplayable.**
 
-Nothing here is imported yet. When assets do get made, they follow
-`docs/ASSET_PIPELINE.md`: Hyper3D originals into `assets/source/hyper3d/`,
-cleanup in Blender, clean renamed exports into `assets/export/roblox/`.
+This wishlist defines the initial production asset queue for Hyper3D generation and Blender cleanup. The game remains 100% playable using procedural primitives when any or all of these models are absent.
 
 Shared visual direction for every asset:
 
@@ -14,166 +13,140 @@ Shared visual direction for every asset:
 warm workshop, chunky geometry, toy-like proportions
 big readable silhouettes, minimal small detail
 handmade rather than industrial, friendly rather than realistic
-clean topology, no text, no logos, isolated objects
+clean topology, low polygon count, no text, no logos, isolated single objects
 ```
 
 ---
 
-## Rubber duck
+## Priority 0 Asset Queue (Experiment 001)
 
-**Replaces:** the primitive `Duck` model in `SaveTheDuckLevel`
-**Direction:** recognisably yellow, small next to a plank, reads as "me, the
-point of the experiment" from across the level. Cheerful, not sarcastic.
+### P0-01 Rubber Duck
 
-### Hyper3D prompt
+- **Purpose**: The star and payload of Experiment 001. Transported by player machines to trigger the goal.
+- **Approximate Roblox Size**: `2.5 × 2.0 × 3.0` studs (matches `SaveTheDuckExperiment` payload volume).
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Payloads.Duck`
+- **Visual Requirements**: Recognisably yellow, rounded exaggerated silhouette, friendly simple face, oversized head, clean broad surfaces, slightly handmade workshop-toy character.
+- **What NOT to Model**: Do NOT model collision meshes, interior hollows, or stands/pedestals. Physics is handled entirely by the authoritative invisible/primitive payload collider.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized chunky yellow rubber duck toy for a family-friendly physics construction game. Exaggerated rounded silhouette, friendly simple face, oversized head, clean broad surfaces, slightly handmade workshop-toy character, minimal tiny details, no text, no stand, no environment, isolated single object.
 
-```text
-Stylized chunky yellow rubber duck toy for a family-friendly Roblox physics
-building game. Rounded exaggerated silhouette, cheerful, simple forms, minimal
-small detail, slightly handmade toy appearance, clean topology-friendly shape,
-no text, no stand, isolated object.
-```
-
-## Giant red goal button
-
-**Replaces:** the primitive `GoalButton` model in `SaveTheDuckLevel`
-**Direction:** absurdly oversized, broad red cap on a simple metal base,
-obviously pressable, friendly rather than dangerous.
-
-### Hyper3D prompt
-
-```text
-Oversized comical mechanical red push button for a stylized maker workshop
-game. Chunky industrial-toy proportions, broad red cap, simple metal base,
-visible screws, friendly rather than dangerous, clear readable silhouette,
-suitable for Roblox.
-```
-
-## Plank
-
-**Replaces:** the primitive Plank component root
-**Direction:** warm wood, slightly worn edges, proportions identical to the
-gameplay size (8 x 0.6 x 2 studs) so connector offsets stay valid.
-
-### Hyper3D prompt
-
-```text
-Stylized wooden plank building piece for a family Roblox construction game.
-Long flat board with softly rounded worn edges, warm honey wood color, subtle
-grain, toy-like chunky proportions, clean simple geometry, no text, isolated
-object.
-```
-
-## Wood / metal block
-
-**Replaces:** the primitive Block component root
-**Direction:** reads as heavier than a plank. Either warm wood or painted
-metal; one material, no greebles.
-
-### Hyper3D prompt
-
-```text
-Stylized square wooden building block for a family Roblox construction game.
-Chunky cube with softly beveled edges, painted workshop finish, slight hand-made
-irregularity, simple readable silhouette, clean topology, no text, isolated
-object.
-```
-
-## Workshop wheel
-
-**Replaces:** the primitive Wheel component root (still needs a true axle hole
-or hub visual)
-**Direction:** rubber tyre over a simple hub, spinning is the point, so the
-silhouette must stay round from every angle.
-
-### Hyper3D prompt
-
-```text
-Stylized toy wheel for a Roblox physics building game. Chunky rubber tire with
-simple rounded hub, dark matte finish, slightly oversized cartoon proportions,
-clean circular silhouette from every angle, no spokes detail, no text, isolated
-object.
-```
-
-## Workbench
-
-**Replaces:** the primitive bench in the level dressing
-**Direction:** sturdy, scarred by use, reads instantly as "machines are made
-here".
-
-### Hyper3D prompt
-
-```text
-Stylized wooden maker workbench for a family Roblox workshop game. Chunky
-planked top with visible clamps and light wear, sturdy legs, warm handmade
-feel, exaggerated toy proportions, clean simple geometry, no tools attached, no
-text, isolated object.
-```
-
-## Toolbox
-
-**Replaces:** the primitive toolboxes on the bench
-**Direction:** bright painted metal, handle up, slightly too big for the
-objects it could hold. One colour plus metal, no logos.
-
-### Hyper3D prompt
-
-```text
-Stylized vintage metal toolbox for a family Roblox workshop game. Chunky
-rounded box with bright painted finish, simple handle on top, subtle dents and
-scuffs, friendly toy proportions, clean topology, no logos, no text, isolated
-object.
-```
-
-## Shelves
-
-**Replaces:** the primitive wall shelves and crates
-**Direction:** heavy timber brackets, mostly empty so the level stays readable;
-crates as separate pieces.
-
-### Hyper3D prompt
-
-```text
-Stylized wooden workshop shelf for a family Roblox game. Thick timber plank on
-heavy brackets, warm wood tones, light sawdust wear, chunky toy proportions,
-clean simple geometry, no clutter, no text, isolated object.
-```
-
-## Workshop clutter
-
-**Replaces:** nothing yet - optional dressing pass
-**Direction:** a few silhouettes only (barrel, crate, lamp, cable spool).
-Never near the build area; clutter exists at the edges of the frame.
-
-### Hyper3D prompt
-
-```text
-Small set of stylized workshop clutter props for a family Roblox game: wooden
-barrel, crate, cable spool and hanging lamp. Chunky warm toy-like proportions,
-handmade feel, simple readable silhouettes, clean topology, no text, isolated
-objects.
-```
-
-## Warning barrier
-
-**Replaces:** nothing yet - optional framing of the pit / goal area
-**Direction:** striped sawhorse, toy-like, communicates "edge" without reading
-as danger. Colour stripes do the work, not detail.
-
-### Hyper3D prompt
-
-```text
-Stylized wooden sawhorse warning barrier for a playful Roblox workshop game.
-A-frame legs with striped plank, chunky toy proportions, warm painted stripes,
-friendly rather than industrial, clean simple geometry, no text, no symbols,
-isolated object.
-```
+  Roblox-friendly low-poly game asset.
+  Simple topology.
+  Strong silhouette.
+  PBR materials.
+  No internal geometry.
+  No thin fragile pieces.
+  ```
+- **Blender Cleanup Notes**:
+  - Center origin at the bottom base of the duck body.
+  - Scale to 2.5 studs wide, 2.0 studs high, 3.0 studs deep.
+  - Apply all transformations (`Ctrl+A`).
+  - Merge vertices by distance, verify surface normals face outward.
+  - Ensure single clean PBR material set.
 
 ---
 
-## When this list is opened
+### P0-02 Giant Red Goal Button
 
-Not before the family playtest of WZ-002 says the game is fun with primitives.
-Swapping a primitive for a mesh must not change gameplay sizes: gameplay
-dimensions stay in `ExperimentDefinitions` and `ComponentDefinitions`, and the
-mesh is dressed onto them.
+- **Purpose**: Level objective target. Depressed when the duck contacts it to complete the experiment.
+- **Approximate Roblox Size**: `4.0 × 1.8 × 4.0` studs base with `3.2 × 0.8 × 3.2` studs plunger cap.
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Goals.GoalButton`
+- **Visual Requirements**: Oversized comical red mechanical push button. Huge readable red cap, chunky metal/industrial base, visible oversized bolts, rounded toy-industrial forms, friendly rather than dangerous, strong silhouette.
+- **What NOT to Model**: Do NOT model trigger physics or moving constraint mechanics. The server-owned invisible `GoalTrigger` part remains authoritative for contact detection.
+- **Hyper3D Prompt**:
+  ```text
+  Oversized comical red mechanical push button for a playful maker workshop physics game. Huge readable red cap, chunky metal base, visible oversized bolts, rounded toy-industrial forms, friendly rather than dangerous, strong silhouette, no text, isolated object.
+
+  Stylized Roblox-friendly low-poly game asset.
+  PBR materials.
+  No environment.
+  No tiny mechanical details.
+  ```
+- **Blender Cleanup Notes**:
+  - Model base and cap as clean sub-parts or single unified model with cap centered.
+  - Set origin at the bottom center of the mounting base.
+  - Keep poly count under 3,000 tris.
+  - Assign vibrant red material to cap, matte metallic finish to base.
+
+---
+
+### P0-03 Workshop Wheel
+
+- **Purpose**: Rotational component attached to axles for rolling vehicles and kinetic contraptions.
+- **Approximate Roblox Size**: `3.0 × 1.5 × 3.0` studs (`Cylinder` matching `ComponentDefinitions.luau`).
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Wheel`
+- **Visual Requirements**: Chunky workshop construction wheel. Thick rubber tire, simple metal hub, large obvious round axle opening, toy-like mechanical proportions, clean circular silhouette from every angle.
+- **What NOT to Model**: Do NOT include an axle rod or constraint. The axle hole is purely visual; physical rotation is governed by Roblox Attachments and `HingeConstraint`.
+- **Hyper3D Prompt**:
+  ```text
+  Chunky workshop construction wheel for a playful Roblox engineering game. Thick rubber tire, simple metal hub, large obvious round axle opening, toy-like mechanical proportions, slightly imperfect maker-workshop character, clean silhouette, no text, isolated object.
+
+  Low-poly game asset.
+  PBR.
+  No axle included.
+  No hidden/internal geometry.
+  ```
+- **Blender Cleanup Notes**:
+  - Center origin at the exact geometric center of the axle hole.
+  - Orient wheel so rotation axis aligns cleanly with the component's coordinate space.
+  - Keep cylinder segments clean (24–32 segments max).
+
+---
+
+### P0-04 Structural Plank
+
+- **Purpose**: Primary structural beam for building ramps, bridges, levers, and chassis.
+- **Approximate Roblox Size**: `8.0 × 1.0 × 2.0` studs (matches `ComponentDefinitions.luau` Plank).
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Plank`
+- **Visual Requirements**: Chunky rectangular wooden beam, soft bevels, subtle wear, obvious mounting areas at both ends, simple handmade workshop character, broad readable surfaces.
+- **What NOT to Model**: Do NOT model protruding connector pins or studs that conflict with runtime socket visual indicators.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized reusable construction plank for a playful maker workshop Roblox game. Chunky rectangular wooden beam, soft bevels, subtle wear, obvious mounting areas at both ends, simple handmade workshop character, broad readable surfaces, no nails sticking out, no text, isolated object.
+
+  Low-poly.
+  Game-ready.
+  PBR.
+  Strong silhouette.
+  ```
+- **Blender Cleanup Notes**:
+  - Maintain exact bounds `8.0 × 1.0 × 2.0` studs so socket connector offsets align accurately.
+  - Set origin at center of the plank (`0, 0, 0`).
+  - Warm timber / pine grain texture with softly beveled edges.
+
+---
+
+### P0-05 Construction Block
+
+- **Purpose**: Heavy structural anchor, weight, spacer, and multi-socket connector block.
+- **Approximate Roblox Size**: `3.0 × 3.0 × 3.0` studs (matches `ComponentDefinitions.luau` Block).
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Block`
+- **Visual Requirements**: Chunky multipurpose construction block, durable toy-workshop form, soft bevels, slightly industrial painted workshop material, broad mounting faces, simple silhouette.
+- **What NOT to Model**: Do NOT embed complex greebles or tiny screws.
+- **Hyper3D Prompt**:
+  ```text
+  Chunky multipurpose construction block for a playful engineering workshop game. Durable toy-workshop form, soft bevels, slightly industrial material, broad mounting faces, intentionally simple silhouette, friendly stylized design, no text, isolated object.
+
+  Roblox-friendly low-poly game asset.
+  PBR.
+  No tiny details.
+  ```
+- **Blender Cleanup Notes**:
+  - Center origin at `(0, 0, 0)`.
+  - Ensure soft bevels on all 12 edges without excess polygons.
+  - Distinct workshop colour (e.g. painted workshop teal/navy/grey).
+
+---
+
+## Priority 1 Asset Queue (Environment & Dressing)
+
+### P1-01 Maker Workbench
+- **Purpose**: Level staging and dressing background prop.
+- **Approximate Size**: `12.0 × 3.5 × 5.0` studs.
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.Workbench`
+
+### P1-02 Tool Storage Rack
+- **Purpose**: Component rack holding unused building parts.
+- **Approximate Size**: `10.0 × 4.0 × 4.0` studs.
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.ToolRack`

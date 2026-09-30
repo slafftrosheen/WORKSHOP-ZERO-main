@@ -50,10 +50,10 @@ local TESTING_HINT = "Physics is in charge."
 local SUCCESS_HINT = "The duck made it."
 
 local BUTTON_COLORS = {
-	Test = Color3.fromRGB(52, 132, 84),
-	Reset = Color3.fromRGB(154, 96, 44),
-	Busy = Color3.fromRGB(78, 82, 92),
-	Touch = Color3.fromRGB(58, 64, 78),
+	Test = Color3.fromRGB(44, 120, 74),
+	Reset = Color3.fromRGB(148, 82, 32),
+	Busy = Color3.fromRGB(58, 62, 74),
+	Touch = Color3.fromRGB(50, 56, 72),
 }
 
 local STATE_COLORS = {
@@ -149,18 +149,16 @@ function PrototypeControls.Create(config: Config): Handle
 	layout.Padding = UDim.new(0, 6)
 	layout.Parent = panel
 
-	local title = createLabel("Title", 1, 14, panel)
-	title.Text = "WORKSHOP ZERO"
-	title.TextSize = 12
-	title.TextColor3 = Color3.fromRGB(150, 156, 170)
+	-- No static title: the panel reveals its purpose from context.
+	-- State is communicated by the selected-part name or the action button.
 
-	local stateLabel = createLabel("State", 2, 18, panel)
+	local stateLabel = createLabel("State", 1, 18, panel)
 	stateLabel.Font = Enum.Font.GothamBold
-	stateLabel.TextSize = 16
+	stateLabel.TextSize = 15
 
-	local hintLabel = createLabel("Hint", 3, 46, panel)
-	hintLabel.TextSize = 12
-	hintLabel.TextColor3 = Color3.fromRGB(170, 176, 190)
+	local hintLabel = createLabel("Hint", 2, 46, panel)
+	hintLabel.TextSize = 11
+	hintLabel.TextColor3 = Color3.fromRGB(160, 168, 184)
 	hintLabel.TextWrapped = true
 	hintLabel.TextYAlignment = Enum.TextYAlignment.Top
 
@@ -172,7 +170,7 @@ function PrototypeControls.Create(config: Config): Handle
 	if isTouch then
 		local row = Instance.new("Frame")
 		row.Name = "RotateRow"
-		row.LayoutOrder = 4
+		row.LayoutOrder = 3
 		row.Size = UDim2.new(1, 0, 0, 52)
 		row.BackgroundTransparency = 1
 		row.Visible = false
@@ -204,8 +202,10 @@ function PrototypeControls.Create(config: Config): Handle
 
 		rotateRow = row
 
+		-- DISCONNECT is placed in its own row, away from rotation buttons,
+		-- so it cannot be hit accidentally.
 		disconnectButton =
-			createTouchButton("Disconnect", "DISCONNECT", 5, UDim2.new(1, 0, 0, 44), panel)
+			createTouchButton("Disconnect", "DISCONNECT", 4, UDim2.new(1, 0, 0, 44), panel)
 		disconnectButton.Visible = false
 		disconnectButton.Activated:Connect(function()
 			config.OnDisconnect()
@@ -214,19 +214,35 @@ function PrototypeControls.Create(config: Config): Handle
 
 	local button = Instance.new("TextButton")
 	button.Name = "Action"
-	button.LayoutOrder = 6
-	button.Size = UDim2.new(1, 0, 0, 44)
+	button.LayoutOrder = 5
+	button.Size = UDim2.new(1, 0, 0, 52)
 	button.BackgroundColor3 = BUTTON_COLORS.Test
 	button.BorderSizePixel = 0
 	button.Font = Enum.Font.GothamBold
-	button.TextSize = 17
+	button.TextSize = 18
 	button.TextColor3 = Color3.fromRGB(255, 255, 255)
 	button.Text = "TEST MACHINE"
+	button.AutoButtonColor = false
 	button.Parent = panel
 
 	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 8)
+	buttonCorner.CornerRadius = UDim.new(0, 10)
 	buttonCorner.Parent = button
+
+	-- Subtle scale pulse on press, so the button feels tactile.
+	local buttonScale = Instance.new("UIScale")
+	buttonScale.Scale = 1
+	buttonScale.Parent = button
+
+	button.MouseButton1Down:Connect(function()
+		buttonScale.Scale = 0.96
+	end)
+	button.MouseButton1Up:Connect(function()
+		buttonScale.Scale = 1
+	end)
+	button.MouseLeave:Connect(function()
+		buttonScale.Scale = 1
+	end)
 
 	local currentState: ConstructionTypes.SimulationState = "Build"
 	local currentExperiment: ExperimentTypes.ExperimentState = "Loading"
@@ -258,11 +274,18 @@ function PrototypeControls.Create(config: Config): Handle
 		end
 
 		if currentState == "Build" then
-			stateLabel.Text = "BUILD MODE"
+			-- Show selected part name instead of "BUILD MODE" when something is
+			-- selected: the part name is the only information the player needs.
+			if currentSelection ~= nil then
+				stateLabel.Text = currentSelection
+				stateLabel.TextColor3 = Color3.fromRGB(220, 228, 248)
+			else
+				stateLabel.Text = "BUILD MODE"
+			end
 		elseif currentState == "Testing" then
 			stateLabel.Text = "TESTING"
 		else
-			stateLabel.Text = "RESETTING"
+			stateLabel.Text = "RESETTING..."
 		end
 	end
 
@@ -309,15 +332,18 @@ function PrototypeControls.Create(config: Config): Handle
 			button.Text = "TEST MACHINE"
 			button.BackgroundColor3 = BUTTON_COLORS.Test
 			button.Active = true
+			buttonScale.Scale = 1
 		elseif newState == "Testing" then
 			currentAction = "Reset"
-			button.Text = "RESET"
+			button.Text = "RESET MACHINE"
 			button.BackgroundColor3 = BUTTON_COLORS.Reset
 			button.Active = true
+			buttonScale.Scale = 1
 		else
-			button.Text = "RESETTING"
+			button.Text = "RESETTING..."
 			button.BackgroundColor3 = BUTTON_COLORS.Busy
 			button.Active = false
+			buttonScale.Scale = 1
 		end
 
 		refreshStateLabel()
@@ -347,12 +373,28 @@ function PrototypeControls.Create(config: Config): Handle
 		config.OnAction(currentAction)
 	end)
 
+	-- Escape clears selection on desktop (keyboard must be present).
+	if hasKeyboard() then
+		UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: boolean)
+			if gameProcessed then
+				return
+			end
+			if input.KeyCode == Enum.KeyCode.Escape then
+				currentSelection = nil
+				refreshHint()
+				refreshStateLabel()
+				refreshSelectionTools()
+			end
+		end)
+	end
+
 	local handle: Handle = {
 		SetState = setState,
 
 		SetSelection = function(name: string?)
 			currentSelection = name
 			refreshHint()
+			refreshStateLabel()
 			refreshSelectionTools()
 		end,
 

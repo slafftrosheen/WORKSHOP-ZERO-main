@@ -37,6 +37,7 @@ local ComponentDefinitions = require(Shared.construction.ComponentDefinitions)
 local ConnectorTypes = require(Shared.construction.ConnectorTypes)
 local ConstructionConfig = require(Shared.construction.ConstructionConfig)
 local ConstructionTypes = require(Shared.construction.ConstructionTypes)
+local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
 
 local Config = ConstructionConfig
 
@@ -285,6 +286,10 @@ function ComponentFactory.Create(
 	end
 
 	local componentId = HttpService:GenerateGUID(false)
+	if RunService:IsStudio() and registry[componentId] ~= nil then
+		warn(string.format("[WZ] Diagnostic: duplicate ComponentId %s detected", componentId))
+	end
+
 	local model = Instance.new("Model")
 	model.Name = string.format("WZ_%s_%s", definition.DisplayName, string.sub(componentId, 1, 6))
 	model:SetAttribute(Config.AttributeComponent, true)
@@ -321,11 +326,33 @@ function ComponentFactory.Create(
 	root.CollisionGroup = Config.CollisionGroupComponents
 	model.PrimaryPart = root
 
+	-- Optional visual asset bridge: if a custom imported model exists for this
+	-- component, clone and weld it over the Root collider, then make the Root
+	-- primitive transparent. Root remains the authoritative physics body.
+	local visual = AssetProvider.Get("Components", definition.DisplayName)
+	if visual ~= nil then
+		visual:PivotTo(root.CFrame)
+		for _, descendant in visual:GetDescendants() do
+			if descendant:IsA("BasePart") then
+				local weld = Instance.new("WeldConstraint")
+				weld.Name = "WZ_VisualWeld"
+				weld.Part0 = root
+				weld.Part1 = descendant
+				weld.Parent = descendant
+			end
+		end
+		visual.Parent = model
+		root.Transparency = 1
+	end
+
 	-- Markers need the model's parts in place first, so they are created after
 	-- the connectors and before the model is moved into the world.
 	if Config.ShowConnectorMarkers then
 		for _, connector in definition.Connectors do
-			createConnectorMarker(connector, connector.Type)
+			local attachment = root:FindFirstChild(connector.Name)
+			if attachment ~= nil and attachment:IsA("Attachment") then
+				createConnectorMarker(attachment, connector.Type)
+			end
 		end
 	end
 
@@ -373,6 +400,20 @@ function ComponentFactory.SetComponentsAnchored(anchored: boolean)
 		for _, descendant in model:GetDescendants() do
 			if descendant:IsA("BasePart") then
 				descendant.Anchored = anchored
+			end
+		end
+	end
+end
+
+-- Toggles socket marker visibility between BUILD and TEST modes.
+function ComponentFactory.SetConnectorMarkersVisible(visible: boolean)
+	for _, model in ComponentFactory.GetComponents() do
+		for _, descendant in model:GetDescendants() do
+			if
+				descendant:IsA("BasePart")
+				and string.find(descendant.Name, "^" .. Config.ConnectorMarkerName) ~= nil
+			then
+				descendant.Transparency = if visible then 0 else 1
 			end
 		end
 	end

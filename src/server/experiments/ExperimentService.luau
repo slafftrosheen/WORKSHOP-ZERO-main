@@ -146,11 +146,30 @@ end
 local function startSampler()
 	stopSampler()
 
+	-- LoadedExperiment has no Handles field.  Find the duck payload by scanning
+	-- the workshop folder, the same way the client's debug overlay does.
 	local active = loaded
-	local root = if active ~= nil then active.Handles.Duck.PrimaryPart else nil
-	if root == nil then
+	if active == nil then
 		return
 	end
+
+	local duckRoot: BasePart? = nil
+	for _, descendant in active.Workshop:GetDescendants() do
+		if
+			descendant:IsA("BasePart")
+			and descendant:GetAttribute(Config.AttributePayload) == true
+		then
+			duckRoot = descendant
+			break
+		end
+	end
+
+	if duckRoot == nil then
+		log("startSampler: duck not found in Workshop - diagnostics unavailable")
+		return
+	end
+
+	local root: BasePart = duckRoot
 
 	diagnostics = {
 		StartedAt = os.clock(),

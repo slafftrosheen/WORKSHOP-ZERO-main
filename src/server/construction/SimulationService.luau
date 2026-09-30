@@ -160,6 +160,7 @@ function SimulationService.StartTest(player: Player): boolean
 	setState("Testing")
 	ComponentFactory.SetDraggingEnabled(false)
 	ComponentFactory.SetComponentsAnchored(false)
+	ComponentFactory.SetConnectorMarkersVisible(false)
 	zeroVelocities() -- The joint count is printed on purpose: "no duplicate constraints" is an
 	-- acceptance condition, and this is the cheapest way for a human to watch it.
 	log(
@@ -201,6 +202,7 @@ function SimulationService.ResetToBuild(player: Player): boolean
 
 	snapshot = {}
 	ComponentFactory.SetDraggingEnabled(true)
+	ComponentFactory.SetConnectorMarkersVisible(true)
 	setState("Build")
 
 	log(

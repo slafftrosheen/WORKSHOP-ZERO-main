@@ -29,9 +29,15 @@ docs/         design, architecture, asset pipeline, environment, development
 scripts/      doctor / check / build / dev PowerShell commands
 ```
 
+> [!IMPORTANT]
+> **Core Architecture Invariants:**
+> - **Visual assets are replaceable skins over stable Workshop Zero physics contracts.**
+> - **Missing art must never make an experiment unplayable.**
+
 You can already play the first experiment end to end: a duck, a gap, a giant
-red button, eight parts on a rack. Everything is still Roblox primitives - art
-comes later, on purpose. See **Experiment 001 - Save the Duck** below.
+red button, eight parts on a rack. Everything works out of the box with procedural
+primitives, while the new `AssetProvider` bridge allows custom Hyper3D/Blender
+models to be dropped in without changing physics code. See **Experiment 001 - Save the Duck** below.
 
 ## Prerequisites
 
@@ -247,17 +253,16 @@ Details, budgets and the Studio import checklist: `docs/ASSET_PIPELINE.md`.
 
 ## Status
 
-**WZ-002** - Experiment 001 is playable: the challenge, the duck, the goal,
-failure flavour, success flow, touch controls and collision policy exist.
-Verified by static checks only so far; the Studio acceptance pass and the first
-family playtest are still pending.
+**WZ-002.1** - Experiment 001 first playable polished and asset bridge established.
+Parenting bugs resolved (Duck and GoalButton parented authoritatively into `Workspace.Workshop`).
+Environment, scale, lighting, and presentation improved.
+Touch controls refined with separate disconnect and thumb-sized buttons; desktop supports Escape to clear selection.
+Asset bridge (`src/server/assets/AssetProvider.luau`) supports drop-in custom models from `ReplicatedStorage.WorkshopZeroAssets` without modifying physics contracts.
 
-What exists: BUILD / TEST / RESET, drag, snap (Rigid welds, Axle hinges),
-rotation, disconnect, connector markers, Experiment 001 "Save the Duck",
-collision groups, mobile touch controls, playtest diagnostics, CI.
+What exists: BUILD / TEST / RESET, drag, forgiving snap assistance (Rigid welds, Axle hinges),
+rotation, disconnect, connector markers (hidden in TEST), Experiment 001 "Save the Duck",
+collision groups, mobile touch controls, playtest diagnostics, CI, asset bridge.
 
 What explicitly does not: springs, powered motors, gears, ropes, damage,
 saving machines, persistence, currency, inventory, multiplayer construction,
-final UI and art, Hyper3D or Blender assets.
-
-Next: Studio acceptance pass, then the first family playtest.
+Experiment 002.
