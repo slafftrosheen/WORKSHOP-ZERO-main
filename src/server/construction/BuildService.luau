@@ -73,7 +73,7 @@ end
 function BuildService.AttachWorkshop(runtime: Instance)
 	ComponentFactory.SetRuntime(runtime)
 
-	local bounds = runtime:FindFirstChild(Config.BuildBoundsName)
+	local bounds = runtime:FindFirstChild(Config.BuildBoundsName, true)
 	if bounds ~= nil and bounds:IsA("BasePart") then
 		BuildService.SetBounds(bounds.Position, bounds.Size)
 	end

@@ -47,6 +47,7 @@ local ActuatorService = require(script.Parent.Parent.construction.ActuatorServic
 local BehaviourService = require(script.Parent.Parent.construction.BehaviourService)
 local SimulationService = require(script.Parent.Parent.construction.SimulationService)
 local ExperimentRegistry = require(script.Parent.ExperimentRegistry)
+local WorkshopService = require(script.Parent.Parent.world.WorkshopService)
 
 local Config = ConstructionConfig
 
@@ -462,12 +463,8 @@ function ExperimentService.LoadExperiment(targetId: string, player: Player?): bo
 		experiment = nil
 	end
 
-	if loaded ~= nil and loaded.Workshop ~= nil then
-		if loaded.Workshop:GetAttribute(Config.AttributeGenerated) == true then
-			loaded.Workshop:Destroy()
-		end
-		loaded = nil
-	end
+	WorkshopService.ClearExperimentBay()
+	loaded = nil
 
 	BuildService.ResetPlacementMemory()
 
@@ -532,6 +529,7 @@ function ExperimentService.Start()
 		end,
 	})
 
+	WorkshopService.GetOrCreateWorkshop()
 	local defaultDef = ExperimentDefinitions.GetDefault()
 	local success = ExperimentService.LoadExperiment(defaultDef.Id)
 	if not success then

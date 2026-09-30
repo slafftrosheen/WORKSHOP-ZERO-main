@@ -304,11 +304,18 @@ function ExperimentLevelUtil.CreateSpawn(
 	return spawn
 end
 
-function ExperimentLevelUtil.CreateBuildBounds(
-	center: Vector3,
-	size: Vector3,
-	parent: Instance
-): Part
+function ExperimentLevelUtil.CreateBuildBounds(arg1: Vector3, arg2: Vector3, parent: Instance): Part
+	local center: Vector3
+	local size: Vector3
+	if math.abs(arg1.X) > 20 and math.abs(arg2.X) <= 20 then
+		-- arg1 is size, arg2 is center
+		size = arg1
+		center = arg2
+	else
+		center = arg1
+		size = arg2
+	end
+
 	local bounds = ExperimentLevelUtil.CreatePart("BuildBounds", size, CFrame.new(center), parent)
 	bounds.Transparency = 1
 	bounds.CanCollide = false
@@ -319,11 +326,63 @@ function ExperimentLevelUtil.CreateBuildBounds(
 	return bounds
 end
 
+local function createStagingGroupLabel(parent: Instance, position: Vector3, text: string)
+	local labelPart = Instance.new("Part")
+	labelPart.Name = "WZ_StagingLabel"
+	labelPart.Size = Vector3.new(0.1, 0.1, 0.1)
+	labelPart.CFrame = CFrame.new(position)
+	labelPart.Anchored = true
+	labelPart.CanCollide = false
+	labelPart.CanTouch = false
+	labelPart.CanQuery = false
+	labelPart.Transparency = 1
+	labelPart.Parent = parent
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "LabelGui"
+	billboard.Adornee = labelPart
+	billboard.Size = UDim2.fromOffset(110, 24)
+	billboard.StudsOffset = Vector3.new(0, 0.6, 0)
+	billboard.AlwaysOnTop = false
+	billboard.MaxDistance = 60
+	billboard.Active = false
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.fromScale(1, 1)
+	frame.BackgroundColor3 = Color3.fromRGB(32, 34, 38)
+	frame.BackgroundTransparency = 0.35
+	frame.BorderSizePixel = 0
+	frame.Active = false
+	frame.Parent = billboard
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 5)
+	corner.Parent = frame
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(80, 85, 95)
+	stroke.Thickness = 1
+	stroke.Parent = frame
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(240, 240, 245)
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 12
+	label.Active = false
+	label.Parent = frame
+
+	billboard.Parent = labelPart
+end
+
 --[[
 	Spawns parts on the rack according to the experiment's inventory definition.
 ]]
 function ExperimentLevelUtil.StageParts(
-	definition: ExperimentTypes.ExperimentDefinition
+	definition: ExperimentTypes.ExperimentDefinition,
+	container: Instance?
 ): { ExperimentTypes.StagedComponent }
 	local staged: { ExperimentTypes.StagedComponent } = {}
 	local geometry = definition.Geometry
@@ -349,6 +408,7 @@ function ExperimentLevelUtil.StageParts(
 			local step = spread + geometry.StagingSpacing
 			local height = componentDefinition.Size.Y * 0.5 + 0.05
 
+			local maxHeight = height
 			for slot = 1, requirement.Count do
 				local offset = (slot - (requirement.Count + 1) * 0.5) * step
 				local pivot = CFrame.new(Vector3.new(offset, padTop + height, rowZ)) * yaw
@@ -365,10 +425,50 @@ function ExperimentLevelUtil.StageParts(
 					end
 				end
 			end
+
+			-- World-space group label (e.g. "PLANK ×3")
+			if container ~= nil and requirement.Count > 0 then
+				local labelPos = Vector3.new(0, padTop + maxHeight + 1.2, rowZ)
+				local labelText = string.format(
+					"%s ×%d",
+					string.upper(requirement.ComponentType),
+					requirement.Count
+				)
+				createStagingGroupLabel(container, labelPos, labelText)
+			end
 		end
 	end
 
 	return staged
+end
+
+-- Aliases for backwards compatibility across level builders
+function ExperimentLevelUtil.BuildDuckPayload(
+	specOrDef: unknown,
+	spawn: Vector3,
+	parent: Instance
+): Model
+	local spec: ExperimentTypes.PayloadSpec
+	if typeof(specOrDef) == "table" and (specOrDef :: any).Payload ~= nil then
+		spec = (specOrDef :: any).Payload
+	else
+		spec = specOrDef :: ExperimentTypes.PayloadSpec
+	end
+	return ExperimentLevelUtil.CreateDuck(spec, spawn, parent)
+end
+
+function ExperimentLevelUtil.BuildGoalButton(
+	position: Vector3,
+	parent: Instance
+): (Model, BasePart, BasePart)
+	return ExperimentLevelUtil.CreateGoalButton(position, parent)
+end
+
+function ExperimentLevelUtil.StageInventory(
+	definition: ExperimentTypes.ExperimentDefinition,
+	container: Instance?
+): { ExperimentTypes.StagedComponent }
+	return ExperimentLevelUtil.StageParts(definition, container)
 end
 
 --[[

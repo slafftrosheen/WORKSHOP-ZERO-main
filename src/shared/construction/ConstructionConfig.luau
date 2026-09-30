@@ -27,6 +27,10 @@ local ConstructionConfig = {
 
 	-- The hand-authored workshop we must never touch, if it ever exists.
 	AuthoredWorkshopName = "Workshop",
+	ShellFolderName = "Shell",
+	ExperimentBayFolderName = "ExperimentBay",
+	AttributePersistentShell = "WZ_PersistentShell",
+	AttributeExperimentBay = "WZ_ExperimentBay",
 
 	-- Feature flags ------------------------------------------------------------
 

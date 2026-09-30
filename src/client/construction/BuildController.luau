@@ -123,7 +123,7 @@ local function findComponentsContainer(): Instance?
 	for _, name in runtimeNames do
 		local runtime = Workspace:FindFirstChild(name)
 		if runtime ~= nil then
-			local container = runtime:FindFirstChild(Config.ComponentsFolderName)
+			local container = runtime:FindFirstChild(Config.ComponentsFolderName, true)
 			if container ~= nil then
 				cachedContainer = container
 				return container
