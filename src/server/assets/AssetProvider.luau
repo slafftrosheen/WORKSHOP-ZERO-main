@@ -209,6 +209,29 @@ local function validateVisual(model: Model, label: string, entry: AssetManifest.
 			end
 		end
 	end
+
+	-- Complexity & performance check
+	local partCount = 0
+	local meshCount = 0
+	for _, descendant in model:GetDescendants() do
+		if descendant:IsA("MeshPart") then
+			meshCount += 1
+			partCount += 1
+		elseif descendant:IsA("BasePart") then
+			partCount += 1
+		end
+	end
+
+	if partCount > 25 or meshCount > 15 then
+		warn(
+			string.format(
+				"[WZ Assets] %s performance warning: high geometry count (%d parts, %d MeshParts)",
+				label,
+				partCount,
+				meshCount
+			)
+		)
+	end
 end
 
 -- Public API -------------------------------------------------------------------

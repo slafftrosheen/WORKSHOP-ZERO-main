@@ -534,6 +534,21 @@ function ExperimentController.Start(
 		board.SetUnlockedIndex(remotes.UnlockedExperimentIndex.Value)
 	end)
 
+	local function orientCameraToExperiment(geo: ExperimentTypes.LevelGeometry)
+		local camera = Workspace.CurrentCamera
+		if camera == nil then
+			return
+		end
+		local lookTarget = Vector3.new(
+			0,
+			(geo.DuckSpawn.Y + geo.ButtonPosition.Y) * 0.5 + 1.5,
+			(geo.DuckSpawn.Z + geo.ButtonPosition.Z) * 0.5
+		)
+		local eyePos =
+			Vector3.new(geo.PlayerSpawn.X - 10, geo.PlayerSpawn.Y + 14, geo.PlayerSpawn.Z - 12)
+		camera.CFrame = CFrame.lookAt(eyePos, lookTarget)
+	end
+
 	remotes.CurrentExperimentId:GetPropertyChangedSignal("Value"):Connect(function()
 		local newDef = ExperimentDefinitions.Get(remotes.CurrentExperimentId.Value)
 		if newDef ~= nil then
@@ -542,6 +557,7 @@ function ExperimentController.Start(
 			intro.SetDefinition(newDef)
 			success.SetDefinition(newDef)
 			board.SetCurrentExperimentId(newDef.Id)
+			orientCameraToExperiment(newDef.Geometry)
 			if ExperimentTypes.ToExperimentState(remotes.ExperimentState.Value) == "Build" then
 				intro.Show()
 			end
@@ -585,6 +601,7 @@ function ExperimentController.Start(
 
 	local initial = ExperimentTypes.ToExperimentState(remotes.ExperimentState.Value) or "Loading"
 	if initial == "Loading" or initial == "Build" then
+		orientCameraToExperiment(definition.Geometry)
 		intro.Show()
 	else
 		intro.Hide()

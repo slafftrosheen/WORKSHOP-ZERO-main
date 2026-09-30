@@ -550,6 +550,15 @@ local function buildPersistentShell(workshop: Instance): Instance
 	spawn.Parent = shell
 
 	spawnLocationInstance = spawn
+
+	-- 6. Semantic Ambience Sound Hook
+	local ambience = Instance.new("Sound")
+	ambience.Name = "WZ_WorkshopAmbience"
+	ambience.Looped = true
+	ambience.Volume = 0.15
+	ambience:SetAttribute("WZ_AmbienceType", "WorkshopHum")
+	ambience.Parent = shell
+
 	shell.Parent = workshop
 
 	log("Persistent Workshop Shell built successfully")
