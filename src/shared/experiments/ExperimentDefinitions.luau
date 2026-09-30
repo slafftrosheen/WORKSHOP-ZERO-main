@@ -45,6 +45,9 @@ local SAVE_THE_DUCK: ExperimentTypes.ExperimentDefinition = {
 	SuccessLine = "THE DUCK MADE IT.",
 	RestartButton = "TRY AGAIN",
 
+	DiscoveryTitle = "STRUCTURE",
+	DiscoveryBody = "Longer beams bend the problem around you.",
+
 	-- What is available on the rack. Nothing else exists in the world.
 	Inventory = {
 		{ ComponentType = "Plank", Count = 2 },
@@ -136,6 +139,9 @@ local UPHILL_DELIVERY: ExperimentTypes.ExperimentDefinition = {
 	SuccessLine = "THE DUCK MADE IT.",
 	RestartButton = "TRY AGAIN",
 
+	DiscoveryTitle = "POWER",
+	DiscoveryBody = "Rotation becomes movement when wheels can push against the ground.",
+
 	Inventory = {
 		{ ComponentType = "Plank", Count = 3 },
 		{ ComponentType = "Block", Count = 3 },
@@ -224,14 +230,116 @@ local UPHILL_DELIVERY: ExperimentTypes.ExperimentDefinition = {
 ExperimentDefinitions.SaveTheDuck = SAVE_THE_DUCK
 ExperimentDefinitions.UphillDelivery = UPHILL_DELIVERY
 
+local OVER_THE_WALL: ExperimentTypes.ExperimentDefinition = {
+	Id = "over_the_wall",
+	Number = 3,
+	Name = "OVER THE WALL",
+	Objective = "Get the duck over the wall.",
+
+	IntroTitle = "EXPERIMENT 003",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "THE DUCK MADE IT OVER.",
+	RestartButton = "TRY AGAIN",
+
+	DiscoveryTitle = "STORED ENERGY",
+	DiscoveryBody = "A compressed spring can release its energy very quickly.",
+
+	Inventory = {
+		{ ComponentType = "Plank", Count = 3 },
+		{ ComponentType = "Block", Count = 4 },
+		{ ComponentType = "Wheel", Count = 4 },
+		{ ComponentType = "Motor", Count = 1 },
+		{ ComponentType = "Spring", Count = 2 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.6,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		StartPadSize = Vector3.new(24, 0.6, 18),
+		StartPadCenter = Vector3.new(0, 0.3, -18),
+
+		GoalPadSize = Vector3.new(22, 0.6, 18),
+		GoalPadCenter = Vector3.new(0, 0.3, 18),
+
+		DuckSpawn = Vector3.new(0, 1.5, -14),
+		ButtonPosition = Vector3.new(0, 0.6, 18),
+
+		BackWallSize = Vector3.new(120, 30, 2),
+		BackWallCenter = Vector3.new(0, 15, -42),
+
+		PlayerSpawn = Vector3.new(-15, 0.5, -18),
+
+		BuildBoundsSize = Vector3.new(64, 34, 72),
+		BuildBoundsCenter = Vector3.new(0, 12, 0),
+
+		StagingRows = { -24, -21.5, -19, -16.5, -14 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		PitY = 0,
+		AwayDistance = 75,
+		FastSpeed = 45,
+		HighY = 40,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 65,
+	},
+
+	FailureMessages = {
+		WallImpact = {
+			"WALL: 1\nMACHINE: 0",
+			"THE WALL WAS UNIMPRESSED.",
+		},
+		VerticalProgress = {
+			"VERTICAL PROGRESS DETECTED.",
+			"SPRING LOADED.\nPLAN QUESTIONABLE.",
+		},
+		SpaceProgram = {
+			"ALMOST A SPACE PROGRAM.",
+			"SPACE PROGRAM STARTED.",
+		},
+		DuckTrajectory = {
+			"DUCK TRAJECTORY: CREATIVE.",
+		},
+		DuckDown = {
+			"DUCK DOWN.",
+		},
+		DuckDeparture = {
+			"UNSCHEDULED DUCK DEPARTURE.",
+		},
+		BallisticDuck = {
+			"BALLISTIC DUCK.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+		},
+	},
+}
+
+ExperimentDefinitions.OverTheWall = OVER_THE_WALL
+
 local orderedList: { ExperimentTypes.ExperimentDefinition } = {
 	SAVE_THE_DUCK,
 	UPHILL_DELIVERY,
+	OVER_THE_WALL,
 }
 
 local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
 	[SAVE_THE_DUCK.Id] = SAVE_THE_DUCK,
 	[UPHILL_DELIVERY.Id] = UPHILL_DELIVERY,
+	[OVER_THE_WALL.Id] = OVER_THE_WALL,
 }
 
 function ExperimentDefinitions.Get(id: string): ExperimentTypes.ExperimentDefinition?

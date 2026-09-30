@@ -201,6 +201,7 @@ function SimulationService.ResetToBuild(player: Player?): boolean
 	ComponentFactory.SetComponentsAnchored(true)
 	zeroVelocities()
 	restoreSnapshot()
+	ComponentFactory.ResetAllInternalState()
 
 	-- Give the anchored parts one physics step to settle before leaving the
 	-- resetting state, so nothing is still being corrected when Build resumes.

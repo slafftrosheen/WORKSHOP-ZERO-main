@@ -38,6 +38,7 @@ local ConnectorTypes = require(Shared.construction.ConnectorTypes)
 local ConstructionConfig = require(Shared.construction.ConstructionConfig)
 local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
+local SpringBuilder = require(script.Parent.builders.SpringBuilder)
 
 local Config = ConstructionConfig
 
@@ -296,31 +297,38 @@ function ComponentFactory.Create(
 	model:SetAttribute(Config.AttributeComponentId, componentId)
 	model:SetAttribute(Config.AttributeComponentType, definition.Type)
 
-	local root = Instance.new("Part")
-	root.Name = Config.RootPartName
-	root.Shape = definition.Shape
-	root.Size = definition.Size
-	root.Color = definition.Color
-	root.Material = definition.Material
-	root.Anchored = true
-	root.CanCollide = true
-	root.CanQuery = true
-	root.CanTouch = false
-	root.CastShadow = true
-	root.TopSurface = Enum.SurfaceType.Smooth
-	root.BottomSurface = Enum.SurfaceType.Smooth
-	root.CustomPhysicalProperties =
-		PhysicalProperties.new(definition.Density, definition.Friction, definition.Elasticity)
-	root.Parent = model
+	local root: Part
+	if definition.Type == "Spring" then
+		root = SpringBuilder.Build(model, componentId, definition)
+	else
+		local part = Instance.new("Part")
+		part.Name = Config.RootPartName
+		part.Shape = definition.Shape
+		part.Size = definition.Size
+		part.Color = definition.Color
+		part.Material = definition.Material
+		part.Anchored = true
+		part.CanCollide = true
+		part.CanQuery = true
+		part.CanTouch = false
+		part.CastShadow = true
+		part.TopSurface = Enum.SurfaceType.Smooth
+		part.BottomSurface = Enum.SurfaceType.Smooth
+		part.CustomPhysicalProperties =
+			PhysicalProperties.new(definition.Density, definition.Friction, definition.Elasticity)
+		part.Parent = model
 
-	for _, connector in definition.Connectors do
-		local attachment = Instance.new("Attachment")
-		attachment.Name = connector.Name
-		attachment.CFrame = connector.Offset
-		attachment:SetAttribute(Config.AttributeConnector, true)
-		attachment:SetAttribute(Config.AttributeConnectorType, connector.Type)
-		attachment:SetAttribute(Config.AttributeOccupied, false)
-		attachment.Parent = root
+		for _, connector in definition.Connectors do
+			local attachment = Instance.new("Attachment")
+			attachment.Name = connector.Name
+			attachment.CFrame = connector.Offset
+			attachment:SetAttribute(Config.AttributeConnector, true)
+			attachment:SetAttribute(Config.AttributeConnectorType, connector.Type)
+			attachment:SetAttribute(Config.AttributeOccupied, false)
+			attachment.Parent = part
+		end
+
+		root = part
 	end
 
 	root.CollisionGroup = Config.CollisionGroupComponents
@@ -420,13 +428,34 @@ end
 
 -- Only Workshop Zero components are anchored or unanchored. The floor, the
 -- build bounds and everything else in the world are left alone.
+-- Components with internal mechanics (like Spring) handle internal moving parts appropriately.
 function ComponentFactory.SetComponentsAnchored(anchored: boolean)
 	for _, model in ComponentFactory.GetComponents() do
-		for _, descendant in model:GetDescendants() do
-			if descendant:IsA("BasePart") then
-				descendant.Anchored = anchored
+		local compType = model:GetAttribute(Config.AttributeComponentType)
+		if compType == "Spring" then
+			SpringBuilder.SetAnchored(model, anchored)
+		else
+			for _, descendant in model:GetDescendants() do
+				if descendant:IsA("BasePart") then
+					descendant.Anchored = anchored
+				end
 			end
 		end
+	end
+end
+
+-- Resets internal moving parts (such as Spring plungers) without affecting
+-- user placement or construction connections.
+function ComponentFactory.ResetInternalState(model: Model)
+	local compType = model:GetAttribute(Config.AttributeComponentType)
+	if compType == "Spring" then
+		SpringBuilder.ResetInternalState(model)
+	end
+end
+
+function ComponentFactory.ResetAllInternalState()
+	for _, model in ComponentFactory.GetComponents() do
+		ComponentFactory.ResetInternalState(model)
 	end
 end
 

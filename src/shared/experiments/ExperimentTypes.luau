@@ -48,6 +48,10 @@ export type FailureEventId =
 	| "Rollback"
 	| "VehicleFlip"
 	| "HighRpm"
+	| "WallImpact"
+	| "DuckTrajectory"
+	| "VerticalProgress"
+	| "NonTouchViolation"
 
 export type FailureThresholds = {
 	-- Below this height the duck is in the pit.
