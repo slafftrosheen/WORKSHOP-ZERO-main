@@ -199,6 +199,72 @@ verify mobile visual quality
 6. Save the place. The imported mesh now lives in the Studio-owned place, not
    in Git.
 
+## Studio Import Checklist for Workshop Props
+
+When importing props for the persistent Workshop shell:
+
+```text
+1. Import GLB via Studio 3D Importer
+
+2. Rename Model exactly:
+   MakerWorkbench
+   ToolStorageRack
+   Crate
+   WorkshopWallPanel
+   ConnectorBoard
+
+3. Move under:
+   ReplicatedStorage.WorkshopZeroAssets.Props
+
+4. Verify:
+   pivot
+   scale (AssetProvider Studio diagnostics warn if off-scale)
+   materials
+   SurfaceAppearance
+   no unwanted collisions (visuals are normalized CanCollide=false, Massless=true)
+
+5. Save place
+```
+
+### Exact Component Asset Names
+
+Under `ReplicatedStorage.WorkshopZeroAssets.Components`:
+- `Components/Plank`
+- `Components/Block`
+- `Components/Wheel`
+- `Components/Motor`
+- `Components/Spring`
+- `Components/Fan`
+- `Components/Hook`
+- `Components/Winch`
+
+Under `ReplicatedStorage.WorkshopZeroAssets.Payloads`:
+- `Payloads/Duck`
+
+Under `ReplicatedStorage.WorkshopZeroAssets.Goals`:
+- `Goals/GoalButton`
+
+### Recommended Prop Pivots
+
+Setting intentional Model pivots ensures procedural placement in `WorkshopService` aligns cleanly:
+
+```text
+MakerWorkbench:
+   bottom-center pivot
+
+ToolStorageRack:
+   bottom-center pivot
+
+Crate:
+   bottom-center pivot
+
+WorkshopWallPanel:
+   center / back mounting plane
+
+ConnectorBoard:
+   center / back mounting plane
+```
+
 ## Future idea: reproducible asset import
 
 Roblox now ships an `opencloud`/asset-import path and Studio has a scriptable

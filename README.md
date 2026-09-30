@@ -7,8 +7,7 @@ Roblox. Players meet a silly problem, physically construct something to solve
 it, test it, watch it fail, change one thing, and test again. Learning happens
 through the machine, not through a quiz.
 
-**The Four Experiments Suite** is now fully playable, built on the
-construction kernel that every experiment shares:
+**The Five Experiments Suite** is now fully playable within a persistent workshop shell, built on the construction kernel that every experiment shares:
 
 ```text
 BUILD  ->  TEST  ->  RESET  ->  BUILD again
@@ -17,8 +16,9 @@ problem -> build -> TEST -> fail -> modify -> TEST again -> succeed -> discovery
 
 1. **Experiment 001 — Save the Duck**: Passive construction, beams, gap traversal, and structural physics.
 2. **Experiment 002 — Uphill Delivery**: Powered motors and driven wheels, overcoming gravity and traction up a ramp.
-3. **Experiment 003 — Over the Wall**: Stored energy and compression physics with a spring launcher to clear a 12-stud obstacle.
+3. **Experiment 003 — Over the Wall**: Stored energy and compression physics with a spring launcher to clear an obstacle.
 4. **Experiment 004 — Windy Business**: Motor-powered propeller fan generating directional airflow to glide the duck without touching it.
+5. **Experiment 005 — Lift Off**: Tension, lifting, load, rope, hook, and powered winch mechanics to hoist the duck onto a high platform.
 
 ## What is in here
 

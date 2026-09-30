@@ -1,6 +1,6 @@
 # Workshop Zero - Architecture
 
-Status: **LONG-RUN-001**. The construction kernel, powered actuators (Motor), stored energy (Spring launcher), aerodynamic thrust (Fan), and all four experiments (Save the Duck, Uphill Delivery, Over the Wall, Windy Business) are fully operational with session-local progression and discovery cards.
+Status: **LONG-RUN-002**. The persistent workshop shell (`Workspace.Workshop.Shell`), modular experiment bay (`Workspace.Workshop.ExperimentBay`), rope connector, hook, powered winch, and all five experiments (Save the Duck, Uphill Delivery, Over the Wall, Windy Business, Lift Off) are fully operational with session-local progression and discovery cards.
 
 > [!IMPORTANT]
 > **Core Architectural Invariants:**
@@ -9,22 +9,30 @@ Status: **LONG-RUN-001**. The construction kernel, powered actuators (Motor), st
 > - **Server owns authoritative game state and physics truth.**
 > - **Never encode the intended solution as the only valid solution.**
 > - **Internal component constraints are never registered as user construction connections.**
+> - **The Workshop is persistent (`Workspace.Workshop.Shell`). Experiments occupy the Experiment Bay (`Workspace.Workshop.ExperimentBay`).**
+> - **Rope is a user construction connection; internal ropes inside future components are not automatically construction topology.**
+> - **A winch pulls by changing rope target length through physics. It never teleports loads.**
 
 ## Subsystem Boundaries
 
 The system is strictly partitioned into single-responsibility boundaries:
 
-1. **`ConnectorService` — Mechanical Topology**
-   - Tracks user-constructed joints between components (`Rigid` -> `WeldConstraint`, `Axle` -> `HingeConstraint`).
-   - Owns snapping, alignment, disconnection, and the authoritative connection registry.
-   - Unaware of motors, fans, or experiment rules. Internal component constraints (e.g. spring plungers) are **never** registered here.
+1. **`WorkshopService` — Persistent Workshop Shell & Bay**
+   - Owns `Workspace.Workshop` root, persistent `Shell` (ambient lighting, workbench, tool rack, wall panels, connector board, crates, player spawn).
+   - Manages `ExperimentBay`, ensuring old experiment geometry teardown never destroys persistent workshop props.
 
-2. **`ActuatorService` — Powered Mechanical Joints**
+2. **`ConnectorService` — Mechanical Topology**
+   - Tracks user-constructed joints between components (`Rigid` -> `WeldConstraint`, `Axle` -> `HingeConstraint`, `Rope` -> `RopeConstraint`).
+   - Owns snapping, alignment, disconnection, and the authoritative connection registry.
+   - For `Rope`, maintains natural distance and slack without collapsing component transforms together.
+
+3. **`ActuatorService` — Powered Mechanical Joints**
    - Subscribes to `ConnectorService` lifecycle hooks.
-   - Detects when an `Axle` HingeConstraint connects to a `Motor` component.
+   - Differentiates `RotaryMotor` (powered `Axle` hinges) and `RopeWinch` (powered `Rope` winches).
    - Configures motor actuators (`AngularVelocity`, `MotorMaxTorque`, `AngularResponsiveness`).
+   - Powers rope winches inward during `Testing` using native `WinchTarget`, `WinchSpeed`, and `WinchForce`.
    - Cooperatively derives rotational signs so symmetric dual-motor chassis drive forward together.
-   - Enables actuators on `Testing`, disables them **before** transform restoration on `Resetting`.
+   - Enables actuators on `Testing`, disables them and restores initial rope length **before** transform restoration on `Resetting` to prevent progressive rope shortening.
 
 3. **`BehaviourService` — Component-Specific Physical Effects**
    - Manages non-joint physical environmental interactions during `Testing`.
@@ -132,10 +140,13 @@ fighting:
 ## Module map
 
 ```text
+src/shared/assets/
+    AssetManifest          central visual asset catalog, expected bounds, aliases
+
 src/shared/construction/
     ConstructionTypes      states, kinds, record shapes, wire validators
-    ConnectorTypes         connector kinds and compatibility
-    ComponentDefinitions   catalogue (Plank, Block, Wheel, Motor, Spring, Fan)
+    ConnectorTypes         connector kinds (Rigid, Axle, Rope) and compatibility
+    ComponentDefinitions   catalogue (Plank, Block, Wheel, Motor, Spring, Fan, Hook, Winch)
     ConstructionConfig     every tunable number and name
     ConstructionMath       pure motor sign, fan force, and unlock calculations
 
@@ -143,19 +154,22 @@ src/shared/experiments/
     ExperimentTypes        experiment vocabulary, report and module contracts
     ExperimentDefinitions  definitions, ordering, discovery copy, DevExperimentId
 
+src/server/world/
+    WorkshopService        persistent shell, ambient lighting, workbench/rack/crates, bay
+
 src/server/construction/
     ComponentFactory       builds components, connectors, drag detectors, indicator LEDs
     builders/
         SpringBuilder      multi-part plunger, prismatic & spring constraint setup
         FanBuilder         multi-part hub, shroud, and angled blade construction
-    ConnectorService       the connection registry, snapping, disconnecting
-    ActuatorService        powered hinge management, cooperative rotation sign, LEDs
+    ConnectorService       connection registry, snapping (welds, hinges, ropes)
+    ActuatorService        rotary motor & rope winch actuators, cooperative rotation
     BehaviourService       aerodynamic airflow cone and reaction thrust simulation
     SimulationService      the Build/Testing/Resetting state machine
-    BuildService           dragging, rotation, build-area rules
+    BuildService           dragging, rotation, return to rack, build-area rules
 
 src/server/experiments/
-    ExperimentRegistry     id-to-module directory (001 -> 004)
+    ExperimentRegistry     id-to-module directory (001 -> 005)
     ExperimentLevelUtil    shared level construction, styling, duck, goal, staging
     SaveTheDuckLevel       builds Level 001 geometry
     SaveTheDuckExperiment  Level 001 experiment lifecycle and failure observer
@@ -165,6 +179,8 @@ src/server/experiments/
     OverTheWallExperiment  Level 003 experiment lifecycle and launch failure observer
     WindyBusinessLevel     builds Level 004 low-friction glide track and hazard zone
     WindyBusinessExperiment Level 004 experiment lifecycle and non-touch observer
+    LiftOffLevel           builds Level 005 high platform and overhead gantry frame
+    LiftOffExperiment      Level 005 experiment lifecycle and rope/winch observer
     ExperimentService      attempt lifecycle, diagnostics, progression (Next/Restart/Select)
 
 src/server/
@@ -175,11 +191,11 @@ src/server/dev/
     PrototypeWorkshop      Studio-only runtime sandbox, behind a config flag
 
 src/client/construction/
-    BuildController        selection, requests, snap preview and snap pulse
+    BuildController        selection, requests, snap preview, ghost emphasis, tooltip
 src/client/experiments/
     ExperimentController   intro card, success panel with Next/Board, debug overlay
 src/client/ui/
-    PrototypeControls      action button, state line, touch controls
+    PrototypeControls      action button, state line, touch controls, return to rack
     ExperimentToast        one-line flavour notifications
     PartsTray              dynamic informational parts list & experiment header
     ExperimentBoard        modal experiment selector with locked cards & leave confirm

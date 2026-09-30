@@ -352,6 +352,7 @@ function ExperimentService.RestartExperiment(player: Player): boolean
 	end
 
 	ConnectorService.DisconnectAll()
+	ActuatorService.Clear()
 	BehaviourService.Clear()
 
 	for _, staged in active.Staged do

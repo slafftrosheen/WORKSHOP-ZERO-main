@@ -209,9 +209,25 @@ clean topology, low polygon count, no text, no logos, isolated single objects
   No environment.
   ```
 - **Blender Cleanup Notes**:
-  - Origin centered at axle socket.
-  - Airflow direction aligns along +X axis.
-  - Round protective shroud around outer perimeter.
+	- Origin centered at axle socket.
+	- Airflow direction aligns along +X axis.
+	- Round protective shroud around outer perimeter.
+
+---
+
+### P1-06 Rope Hook [STATUS: QUEUED]
+- **Purpose**: Structural rope anchor component. Provides an eyelet loop to attach rope lines to platforms, beams, or overhead gantries.
+- **Roblox Size**: `1.0 × 1.5 × 1.0` studs.
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Hook`
+- **Visual Requirements**: Chunky steel/iron lifting hook with heavy eyelet loop at top, rigid square base plate on bottom. Toy-industrial proportions, visible bevels.
+
+---
+
+### P1-07 Powered Winch [STATUS: QUEUED]
+- **Purpose**: Motorized rope tension spool. Automatically reels in attached ropes during `TEST` to lift or pull loads.
+- **Roblox Size**: `2.0 × 2.0 × 2.0` studs.
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Winch`
+- **Visual Requirements**: Heavy cylindrical cable drum housing with ribbed spool, cable guide opening, rigid mounting bracket on bottom/rear, industrial yellow/metal casing.
 
 ---
 
@@ -223,7 +239,7 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 - **Roblox Export**: `assets/export/roblox/workbench_maker_01.glb` (12,000 tris)
 - **Purpose**: Level staging and dressing background prop.
 - **Roblox Size**: `12.0 × 3.5 × 5.0` studs.
-- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.Workbench`
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.MakerWorkbench`
 
 ### P2-02 Tool Storage Rack [STATUS: EXPORTED]
 - **Source**: `assets/source/hyper3d/rack_tool_01/`
@@ -231,7 +247,7 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 - **Roblox Export**: `assets/export/roblox/rack_tool_01.glb` (10,000 tris)
 - **Purpose**: Component rack holding unused building parts.
 - **Roblox Size**: `10.0 × 4.0 × 4.0` studs.
-- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.ToolRack`
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.ToolStorageRack`
 
 ### P2-03 Workshop Wall Panel [STATUS: EXPORTED]
 - **Source**: `assets/source/hyper3d/wall_panel_01/`
@@ -239,4 +255,14 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 - **Roblox Export**: `assets/export/roblox/wall_panel_01.glb` (8,000 tris)
 - **Purpose**: Modular workshop back wall panel.
 - **Roblox Size**: `8.0 × 12.0 × 1.0` studs.
-- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.WallPanel`
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.WorkshopWallPanel`
+
+### P2-04 Workshop Storage Crate [STATUS: QUEUED]
+- **Purpose**: Industrial wooden and steel storage crate dressing.
+- **Roblox Size**: `2.4 × 2.4 × 2.4` studs.
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.Crate`
+
+### P2-05 Connector Pegboard [STATUS: QUEUED]
+- **Purpose**: Wall-mounted tool and connector board on the back wall.
+- **Roblox Size**: `10.0 × 8.0 × 0.6` studs.
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.ConnectorBoard`

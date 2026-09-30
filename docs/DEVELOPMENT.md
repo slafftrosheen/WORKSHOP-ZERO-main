@@ -84,18 +84,19 @@ By default the server builds the first experiment (`save_the_duck`) and progress
 - `"uphill_delivery"` (Experiment 002)
 - `"over_the_wall"` (Experiment 003)
 - `"windy_business"` (Experiment 004)
+- `"lift_off"` (Experiment 005)
 
-Each level is generated in `Workspace.Workshop` with `WZ_Generated = true`, protecting any hand-authored workshops:
+The Workshop structure is strictly partitioned:
 ```text
 Workspace/Workshop
-    Level-specific geometry (trenches, ramps, barrier walls, glide tracks)
-    dressing: back wall, shelves, crates, bench, toolboxes
-    BuildBounds     invisible legal build volume
-    WorkshopSpawn   player spawn, beside the rack
-    Duck            the payload (WZ_Payload), anchored while building
-    GoalButton      giant red button with an invisible trigger
-    Components      parts rack tailored to the active experiment
-    Connections     created as you snap things together
+    Shell               persistent workshop environment (workbench, rack, wall panels, board, crates, spawn)
+    ExperimentBay       swappable level container (cleared and rebuilt on experiment transition)
+        Level geometry  (trenches, ramps, barrier walls, glide tracks, high platforms & gantries)
+        BuildBounds     invisible legal build volume
+        Duck            the payload (WZ_Payload), anchored while building
+        GoalButton      giant red button with an invisible trigger
+        Components      parts rack tailored to the active experiment
+        Connections     created as you snap things together (welds, hinges, ropes)
 ```
 
 The old kernel sandbox (`Workspace/WorkshopZeroRuntime`) is still available for

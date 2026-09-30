@@ -215,33 +215,70 @@ This distinction is a core Workshop Zero principle:
 - **NEXT EXPERIMENT** (`NextExperiment`) tears down the completed workshop, clears
   the connector and actuator registries, and builds the next level in-place.
 
+### Experiment 005: Lift Off
+
+```text
+                         🔴
+                   ┌──────────────┐
+                   │ HIGH PLATFORM│
+                   └──────────────┘
+
+
+        ceiling / gantry points
+
+
+🦆
+
+
+PARTS
+```
+
+```text
+Get the duck onto the high platform.
+3 planks, 4 blocks, 2 wheels, 3 hooks, 2 winches, 1 motor.
+```
+
+#### Educational concept
+
+- **Tension**: A rope can pull a load, but it cannot push one. Ropes transmit tensile force across distance.
+- **Powered Winch**: Reels rope inward during `TEST`, lifting payloads when rigged to overhead anchors or crane frames.
+- **Rigging & Structures**: Any physical contraption that gets the duck to the button is valid — elevators, slings, cranes, counterweights.
+
+#### Inventory
+
+- 3 Planks, 4 Blocks, 2 Wheels, 3 Hooks, 2 Winches, 1 Motor.
+
+#### Discovery
+
+> **TENSION**: A rope can pull a load, but it cannot push one.
+
+---
+
 ## Components
 
 | Component | State                                                  |
 | --------- | ------------------------------------------------------ |
-| Plank     | Active (Exp 001: 2 available, Exp 002: 4 available)    |
-| Block     | Active (Exp 001: 2 available, Exp 002: 4 available)    |
-| Wheel     | Active (Exp 001: 4 available, Exp 002: 6 available)    |
-| Motor     | Active in Exp 002 (2 available, 1 rigid mount, 1 axle) |
-| Spring    | Placeholder - defined, refused by the factory          |
-
-Spring and Motor exist in the catalogue as placeholders and MUST NOT appear in
-any playable inventory until they actually do something.
+| Plank     | Active structural wooden beam                          |
+| Block     | Active modular structural cube                         |
+| Wheel     | Active heavy rubber wheel                              |
+| Motor     | Active powered rotary actuator (Exp 002+)              |
+| Spring    | Active stored-energy compression launcher (Exp 003)    |
+| Fan       | Active aerodynamic thrust propeller (Exp 004)          |
+| Hook      | Active structural rope anchor (Exp 005)                |
+| Winch     | Active powered rope tension spool (Exp 005)            |
 
 ## Interactions
 
-| Interaction | State in WZ-002                                   |
+| Interaction | State in WZ-LR2                                   |
 | ----------- | ------------------------------------------------- |
 | Grab / Move | dragging a component, with its assembly following |
 | Rotate      | `Q` / `E` in 15 degree steps, `R` to flip 90; large touch buttons on mobile |
-| Connect     | automatic snap, with preview while dragging and a pulse on the joint made |
+| Connect     | automatic snap, with preview while dragging, tooltip label (MOUNT, AXLE, ROPE), and ghost connector emphasis |
 | Disconnect  | `X` on desktop, DISCONNECT button on touch; releases every joint on the selection |
+| Return to Rack | `Backspace`/`Delete` on desktop, RETURN button on touch; resets component to staging |
 | Test        | TEST MACHINE button: unanchor everything, duck included  |
 | Reset       | RESET button: restore the exact build, zero velocity |
 | Restart     | TRY AGAIN on the success panel: full experiment restart |
-
-Delete is deliberately not implemented yet: nothing in the loop should be able
-to lose a component while the kernel is being proven.
 
 ## Construction kernel (WZ-001)
 

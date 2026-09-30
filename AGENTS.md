@@ -9,17 +9,21 @@ Workshop Zero is a Roblox physics/building game. Players solve ridiculous
 problems by building ridiculous machines, testing them, watching them fail,
 changing one thing and testing again.
 
-**Experiments 001 through 004** form the active 4-experiment playable suite:
+**Experiments 001 through 005** form the active 5-experiment playable suite:
 - **Experiment 001 - Save the Duck** (passive construction, structures, gravity)
 - **Experiment 002 - Uphill Delivery** (motors, wheels, torque, traction)
 - **Experiment 003 - Over the Wall** (stored energy, spring launcher, compression)
 - **Experiment 004 - Windy Business** (motors + fans, directional force, non-contact)
+- **Experiment 005 - Lift Off** (tension, lifting force, load, rope, hook, winch)
 
 ## Hard rules
 
 - Luau uses `--!strict`.
 - Server owns authoritative game state.
 - Client owns input, presentation and local prediction only.
+- The Workshop is persistent (`Workspace.Workshop.Shell`). Experiments occupy the Experiment Bay (`Workspace.Workshop.ExperimentBay`).
+- Rope is a user construction connection; internal ropes inside future components are not automatically construction topology.
+- A winch pulls by changing rope target length through physics. It never teleports loads.
 - Do not trust client claims for challenge completion, inventory, unlocks or
   future currency.
 - Prefer small modules.
