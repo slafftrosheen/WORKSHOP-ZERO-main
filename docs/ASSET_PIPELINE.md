@@ -39,18 +39,33 @@ AssetProvider (server runtime bridge)
    - Set origin / pivot to geometric center or connection socket.
    - Inspect and assign clean PBR materials.
    - Export optimized GLB to `assets/export/roblox/<name>.glb`.
-3. **Roblox Studio 3D Importer**:
-   - Open Studio place.
-   - Import 3D -> select `assets/export/roblox/<name>.glb`.
+3. **Roblox Studio 3D Importer (Bulk Import)**:
+   - Open `place/WorkshopZeroPrototype.rbxlx` in Roblox Studio.
+   - Click **Avatar** / **Home** tab -> **Import 3D** (or **File** -> **Import**).
+   - In the file picker, navigate to `assets/export/roblox/` and select all 9 `.glb` files at once:
+     - `block_cube_01.glb`
+     - `button_goal_red_01.glb`
+     - `duck_rubber_01.glb`
+     - `motor_electric_01.glb`
+     - `plank_beam_01.glb`
+     - `rack_tool_01.glb`
+     - `wall_panel_01.glb`
+     - `wheel_rubber_01.glb`
+     - `workbench_maker_01.glb`
+   - In the Import Queue preview dialog, click **Import** to upload them into Studio.
 4. **Organize into `ReplicatedStorage.WorkshopZeroAssets`**:
-   - Move imported `Model` into the corresponding category folder:
-     - `ReplicatedStorage.WorkshopZeroAssets.Components` (`Plank`, `Block`, `Wheel`, `Motor`, `Spring`, `Fan`)
+   - The fastest method is to run the automated script in Studio's **Command Bar** (`View -> Command Bar`):
+     ```lua
+     loadstring(game:GetService("ServerScriptService").WorkshopZero.scripts.organize or ... -- or copy contents of scripts/organize_imported_assets.luau)
+     ```
+     Or simply copy & paste the code from [organize_imported_assets.luau](file:///c:/Users/slavd/WORKSHOP-ZERO-main/scripts/organize_imported_assets.luau) directly into the Studio Command Bar!
+   - This automatically classifies, normalizes physics (`CanCollide=false, CanTouch=false, Massless=true`), sets `PrimaryPart`, and moves the models into:
+     - `ReplicatedStorage.WorkshopZeroAssets.Components` (`Plank`, `Block`, `Wheel`, `Motor`)
      - `ReplicatedStorage.WorkshopZeroAssets.Payloads` (`Duck`)
      - `ReplicatedStorage.WorkshopZeroAssets.Goals` (`GoalButton`)
-     - `ReplicatedStorage.WorkshopZeroAssets.Props`
-   - Set `Model.PrimaryPart` and verify its pivot.
+     - `ReplicatedStorage.WorkshopZeroAssets.Props` (`MakerWorkbench`, `ToolStorageRack`, `WorkshopWallPanel`)
 5. **Play**:
-   - Start Play mode. `AssetProvider` automatically discovers the asset, normalizes it, and welds it over the physics root. Studio Output confirms `[WZ Assets] <Name> custom`. If the asset is absent, the game falls back to the primitive without error.
+   - Start Play mode in Studio (`F5`). `AssetProvider` automatically discovers the custom assets, normalizes them, and welds them over the physics roots. Studio Output confirms `[WZ Assets] <Name> custom`. If any asset is absent, the game falls back cleanly to the primitive without error.
 
 ## Folder map
 

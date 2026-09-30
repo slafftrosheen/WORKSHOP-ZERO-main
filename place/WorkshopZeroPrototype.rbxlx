@@ -36,6 +36,31 @@ return ProjectInfo
         </Properties>
       </Item>
     </Item>
+    <Item class="Folder" referent="wz_assets">
+      <Properties>
+        <string name="Name">WorkshopZeroAssets</string>
+      </Properties>
+      <Item class="Folder" referent="wz_components">
+        <Properties>
+          <string name="Name">Components</string>
+        </Properties>
+      </Item>
+      <Item class="Folder" referent="wz_payloads">
+        <Properties>
+          <string name="Name">Payloads</string>
+        </Properties>
+      </Item>
+      <Item class="Folder" referent="wz_goals">
+        <Properties>
+          <string name="Name">Goals</string>
+        </Properties>
+      </Item>
+      <Item class="Folder" referent="wz_props">
+        <Properties>
+          <string name="Name">Props</string>
+        </Properties>
+      </Item>
+    </Item>
   </Item>
   <Item class="ServerScriptService" referent="3">
     <Properties>
