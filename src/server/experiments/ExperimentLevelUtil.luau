@@ -178,6 +178,11 @@ function ExperimentLevelUtil.CreateDuck(
 		Enum.Material.Neon
 	)
 
+	-- Optional custom art.  The duck's underside rests on the same floor as the
+	-- collider, so the mesh stands where the physics body stands.  No asset just
+	-- means the primitive duck, which is always playable.
+	ExperimentLevelUtil.ApplyCustomVisual(model, body, "Payloads", "Duck", nil, "Bottom")
+
 	model.Parent = parent
 
 	return model
@@ -271,6 +276,11 @@ function ExperimentLevelUtil.CreateGoalButton(
 	trigger.CastShadow = false
 	trigger.CollisionGroup = Config.CollisionGroupGoalTrigger
 	trigger:SetAttribute(Config.AttributeGoalTrigger, true)
+
+	-- Optional custom art, welded to the static base.  The cap presses under the
+	-- mesh; welding the art to the cap instead would drag the whole button,
+	-- base and all, down with every press.
+	ExperimentLevelUtil.ApplyCustomVisual(goal, base, "Goals", "GoalButton", trigger, "Bottom")
 
 	goal.Parent = parent
 
@@ -472,22 +482,50 @@ function ExperimentLevelUtil.StageInventory(
 end
 
 --[[
-	Applies a custom visual asset over a primitive collider, welding all
-	descendants to the primary physics part and hiding the primitive children.
+	Applies a custom visual asset over primitive geometry.
+
+	The clone is welded to attachToPart (the physics part that owns it) and the
+	primitives it replaced are hidden.  Placement is measured, never assumed: the
+	mesh is aligned by its own bounding box, so an export whose origin is not the
+	mesh centre cannot sink the art into the floor.
+
+	alignment
+		"Center"  the visual's centre lands on the attach part's centre
+		"Bottom"  the visual's underside rests on the attach part's underside
+		          (a payload standing on the floor, a button on its base)
+
+	Returns the cloned visual, or nil when there is no custom asset.  A missing
+	asset is never an error: the primitive stays and the experiment plays on.
 ]]
 function ExperimentLevelUtil.ApplyCustomVisual(
 	container: Model,
 	attachToPart: BasePart,
 	category: string,
 	assetName: string,
-	keepTransparentExcept: BasePart?
-)
+	keepTransparentExcept: BasePart?,
+	alignment: string?
+): Model?
 	local visual = AssetProvider.Get(category, assetName)
 	if visual == nil then
-		return
+		return nil
 	end
 
-	visual:PivotTo(container:GetPivot())
+	-- Measure and place while the parts are still free.  A WeldConstraint
+	-- captures the offset it finds when it is created, so an alignment applied
+	-- after welding would be undone by the weld.
+	local target = attachToPart.CFrame
+	local mode = "Center"
+	if alignment == "Bottom" then
+		target = target * CFrame.new(0, -attachToPart.Size.Y * 0.5, 0)
+		mode = "Bottom"
+	end
+
+	if not AssetProvider.AlignVisual(visual, target, mode) then
+		log(string.format("%s visual has no visible geometry, keeping the primitive", assetName))
+		visual:Destroy()
+		return nil
+	end
+
 	visual.Parent = container
 
 	for _, descendant in visual:GetDescendants() do
@@ -496,11 +534,13 @@ function ExperimentLevelUtil.ApplyCustomVisual(
 		end
 	end
 
-	for _, child in container:GetChildren() do
-		if child:IsA("BasePart") and child ~= keepTransparentExcept then
-			child.Transparency = 1
-		end
+	local keep: { BasePart }? = nil
+	if keepTransparentExcept ~= nil then
+		keep = { keepTransparentExcept }
 	end
+	AssetProvider.HidePrimitives(container, keep)
+
+	return visual
 end
 
 return table.freeze(ExperimentLevelUtil)

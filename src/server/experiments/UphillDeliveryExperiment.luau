@@ -33,7 +33,6 @@ local ComponentFactory = require(script.Parent.Parent.construction.ComponentFact
 local ConnectorService = require(script.Parent.Parent.construction.ConnectorService)
 local ActuatorService = require(script.Parent.Parent.construction.ActuatorService)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
-local ExperimentLevelUtil = require(script.Parent.ExperimentLevelUtil)
 local UphillDeliveryLevel = require(script.Parent.UphillDeliveryLevel)
 
 local Config = ConstructionConfig
@@ -370,20 +369,7 @@ function UphillDeliveryExperiment.Load(
 	capRestPosition = built.Handles.GoalCap.Position
 	capRestColor = built.Handles.GoalCap.Color
 
-	-- Optional custom visuals
-	ExperimentLevelUtil.ApplyCustomVisual(
-		built.Handles.Duck,
-		built.Handles.Duck.PrimaryPart :: BasePart,
-		"Payloads",
-		"Duck"
-	)
-	ExperimentLevelUtil.ApplyCustomVisual(
-		built.Handles.Goal,
-		built.Handles.GoalCap,
-		"Goals",
-		"GoalButton",
-		built.Handles.GoalTrigger
-	)
+	-- Custom duck and goal art is applied by the shared level builders.
 
 	pcall(function()
 		local sound = Instance.new("Sound")

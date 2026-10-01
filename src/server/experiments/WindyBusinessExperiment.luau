@@ -23,7 +23,6 @@ local ExperimentDefinitions = require(Shared.experiments.ExperimentDefinitions)
 local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
-local ExperimentLevelUtil = require(script.Parent.ExperimentLevelUtil)
 local WindyBusinessLevel = require(script.Parent.WindyBusinessLevel)
 
 local Config = ConstructionConfig
@@ -232,18 +231,7 @@ function WindyBusinessExperiment.Load(
 	capRestPosition = built.Handles.GoalCap.Position
 	capRestColor = built.Handles.GoalCap.Color
 
-	ExperimentLevelUtil.ApplyCustomVisual(
-		built.Handles.Duck,
-		built.Handles.Duck.PrimaryPart :: BasePart,
-		"Payloads",
-		"Duck"
-	)
-	ExperimentLevelUtil.ApplyCustomVisual(
-		built.Handles.Goal,
-		built.Handles.GoalCap,
-		"Goals",
-		"GoalButton"
-	)
+	-- Custom duck and goal art is applied by the shared level builders.
 
 	return {
 		Definition = definition,

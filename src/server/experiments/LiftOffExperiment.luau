@@ -23,7 +23,6 @@ local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
-local ExperimentLevelUtil = require(script.Parent.ExperimentLevelUtil)
 local LiftOffLevel = require(script.Parent.LiftOffLevel)
 
 local Config = ConstructionConfig
@@ -253,20 +252,7 @@ function LiftOffExperiment.Load(
 	capRestPosition = built.Handles.GoalCap.Position
 	capRestColor = built.Handles.GoalCap.Color
 
-	-- Optional custom visuals
-	ExperimentLevelUtil.ApplyCustomVisual(
-		built.Handles.Duck,
-		built.Handles.Duck.PrimaryPart :: BasePart,
-		"Payloads",
-		"Duck"
-	)
-	ExperimentLevelUtil.ApplyCustomVisual(
-		built.Handles.Goal,
-		built.Handles.GoalCap,
-		"Goals",
-		"GoalButton",
-		built.Handles.GoalTrigger
-	)
+	-- Custom duck and goal art is applied by the shared level builders.
 
 	pcall(function()
 		local sound = Instance.new("Sound")

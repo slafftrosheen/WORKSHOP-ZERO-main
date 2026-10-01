@@ -258,19 +258,36 @@ The construction kernel and experiments remain 100% playable with primitive part
 
 ```text
 ReplicatedStorage.WorkshopZeroAssets/
-    Components/       Plank, Block, Wheel
+    Components/       Plank, Block, Wheel, Motor
+                      (Spring, Fan, Hook, Winch when art exists)
     Payloads/         Duck
     Goals/            GoalButton
-    Props/
+    Props/            MakerWorkbench, ToolStorageRack, WorkshopWallPanel
+                      (Crate, ConnectorBoard when art exists)
 ```
 
-`AssetProvider.Get(category, name)` provides the bridge:
-1. It clones the imported visual model.
-2. It strips all collision and mass (`CanCollide = false`, `CanTouch = false`, `Massless = true`, `CanQuery = false`).
-3. It validates proper setup in Studio (`PrimaryPart` presence, masslessness).
-4. The caller welds the visual model to the physics `Root` part with `WeldConstraint`.
-5. The primitive `Root` is made transparent (`Transparency = 1`), revealing the visual mesh while preserving the exact physics contract.
-6. If the asset is missing, the game falls back to the procedural primitive without error.
+The bridge is a small, boring API:
+
+1. `AssetProvider.Get(category, name)` clones the imported visual model.
+2. It strips collision, touch, shadow, mass and anchors (`CanCollide = false`,
+   `CanTouch = false`, `Massless = true`, `CanQuery = false`, `Anchored = false`).
+3. `AssetProvider.AlignVisual(model, target, mode)` places the clone by its
+   measured bounding box, never by its pivot: components align centre to
+   centre, payloads, goals and props rest their underside on the support
+   surface.
+4. The caller welds the visual to the physics part with `WeldConstraint` -
+   after the alignment, because a weld captures the offset it finds.
+5. `AssetProvider.HidePrimitives(container, keep)` hides the primitive geometry
+   the visual replaced, leaving `CanQuery` alone so the physics part keeps
+   receiving raycasts and the server-owned DragDetector keeps working.
+6. If the asset is missing, the game falls back to the procedural primitive
+   without error.
+
+Each asset class has exactly one place that applies art, so no experiment can
+forget it: `ComponentFactory` for components, `ExperimentLevelUtil.CreateDuck`
+and `CreateGoalButton` for payloads and goals, and `WorkshopService` for the
+persistent shell's props.  Missing art still leaves a fully playable machine,
+and never changes a mass, a collider or a connector.
 
 ## Connector contract
 

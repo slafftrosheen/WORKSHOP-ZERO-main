@@ -340,52 +340,9 @@ function SaveTheDuckExperiment.Load(
 	capRestPosition = built.Handles.GoalCap.Position
 	capRestColor = built.Handles.GoalCap.Color
 
-	-- Optional: replace the duck appearance with a custom imported visual.
-	-- The physics collider (Duck/Body) is untouched; only appearance changes.
-	local duckVisual = AssetProvider.Get("Payloads", "Duck")
-	if duckVisual ~= nil then
-		duckVisual:PivotTo(built.Handles.Duck:GetPivot())
-		duckVisual.Parent = built.Handles.Duck
-		local root = built.Handles.Duck.PrimaryPart
-		if root ~= nil then
-			for _, descendant in duckVisual:GetDescendants() do
-				if descendant:IsA("BasePart") then
-					local weld = Instance.new("WeldConstraint")
-					weld.Name = "WZ_VisualWeld"
-					weld.Part0 = root
-					weld.Part1 = descendant
-					weld.Parent = descendant
-				end
-			end
-		end
-		for _, child in built.Handles.Duck:GetChildren() do
-			if child:IsA("BasePart") then
-				child.Transparency = 1
-			end
-		end
-	end
-
-	-- Optional: replace the goal button appearance with a custom imported visual.
-	local goalVisual = AssetProvider.Get("Goals", "GoalButton")
-	if goalVisual ~= nil then
-		goalVisual:PivotTo(built.Handles.Goal:GetPivot())
-		goalVisual.Parent = built.Handles.Goal
-		local cap = built.Handles.GoalCap
-		for _, descendant in goalVisual:GetDescendants() do
-			if descendant:IsA("BasePart") then
-				local weld = Instance.new("WeldConstraint")
-				weld.Name = "WZ_VisualWeld"
-				weld.Part0 = cap
-				weld.Part1 = descendant
-				weld.Parent = descendant
-			end
-		end
-		for _, child in built.Handles.Goal:GetChildren() do
-			if child:IsA("BasePart") and child ~= built.Handles.GoalTrigger then
-				child.Transparency = 1
-			end
-		end
-	end
+	-- Custom duck and goal art is applied inside the shared level builders, so
+	-- every experiment gets the same treatment without repeating it here.
+	-- The physics colliders are untouched; only appearance is swapped.
 
 	-- Attempt to play a button sound on success.  rbxasset:// sounds are not
 	-- guaranteed to exist forever; wrap in pcall so a missing asset does not

@@ -347,26 +347,51 @@ end
 
 -- Prop placement helpers ------------------------------------------------------
 
+-- How each prop is planted, and whether a player can walk into it.
+--
+--   "Bottom"  the pivot is a floor point and the art stands up from it
+--   "Center"  the pivot is the prop's own centre, as wall dressing hangs
+--
+-- `collidable` adds an invisible collider sized from the same measurement as
+-- the art.  Wall dressing is not collidable on purpose: it hangs on a wall and
+-- nothing should bump it.
+local PROP_PLACEMENT: { [string]: { alignment: string, collidable: boolean } } = {
+	MakerWorkbench = { alignment = "Bottom", collidable = true },
+	ToolStorageRack = { alignment = "Bottom", collidable = true },
+	Crate = { alignment = "Bottom", collidable = true },
+	WorkshopWallPanel = { alignment = "Center", collidable = false },
+	ConnectorBoard = { alignment = "Center", collidable = false },
+}
+
+local DEFAULT_PROP_PLACEMENT = { alignment = "Center", collidable = false }
+
 local function placeProp(
 	parent: Instance,
 	propName: string,
 	pivot: CFrame,
 	fallbackBuilder: (parent: Instance, pivot: CFrame) -> ()
 )
+	local placement = PROP_PLACEMENT[propName] or DEFAULT_PROP_PLACEMENT
 	local visual = AssetProvider.GetOrNil("Props", propName)
-	if visual ~= nil then
+
+	-- Placement is measured, not trusted: the pivot an export carries can no
+	-- longer bury a bench in the floor or float a wall panel off its brackets.
+	if visual ~= nil and AssetProvider.AlignVisual(visual, pivot, placement.alignment) then
 		prepCustomVisual(visual)
-		visual:PivotTo(pivot)
 		visual.Parent = parent
 
-		-- Simple invisible collider for props that players might bump into
-		local extents = visual:GetExtentsSize()
-		local boundingBoxCFrame = visual:GetPivot()
-		if propName == "MakerWorkbench" or propName == "ToolStorageRack" or propName == "Crate" then
-			createInvisibleCollider(propName, extents, boundingBoxCFrame, parent)
+		if placement.collidable then
+			local bounds, size = AssetProvider.GetVisualBounds(visual)
+			if bounds ~= nil then
+				createInvisibleCollider(propName, size, bounds, parent)
+			end
 		end
 		log(string.format("Placed custom prop: %s", propName))
 	else
+		if visual ~= nil then
+			-- No visible geometry in the model: keep the procedural prop.
+			visual:Destroy()
+		end
 		fallbackBuilder(parent, pivot)
 		log(string.format("Placed procedural fallback for prop: %s", propName))
 	end
@@ -562,6 +587,11 @@ local function buildPersistentShell(workshop: Instance): Instance
 	shell.Parent = workshop
 
 	log("Persistent Workshop Shell built successfully")
+
+	-- One place reports the whole visual bridge: which assets are live art and
+	-- which fall back to primitives.  Idempotent, and Studio-only.
+	AssetProvider.PrintDiagnostics()
+
 	return shell
 end
 

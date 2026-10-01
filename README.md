@@ -235,6 +235,20 @@ clean exports are renamed properly (`wheel_rubber_01`, not `mesh3`).
 
 Details, budgets and the Studio import checklist: `docs/ASSET_PIPELINE.md`.
 
+Art is optional. Every experiment plays on procedural primitives, so nothing
+breaks while a model is missing. To see the imported art in game instead, do
+one Studio pass:
+
+```text
+1. File -> Import 3D, select everything in assets/export/roblox/
+2. Paste scripts/organize_imported_assets.luau into the Studio Command Bar
+3. Delete the importer's leftovers in Workspace and save the place
+```
+
+That is the whole switch. `AssetProvider` discovers the models at runtime,
+normalizes them, measures them onto the physics contracts, and reports the
+result in Output - there is no flag to enable and no code to touch.
+
 ## Repository rules in one glance
 
 - Luau uses `--!strict`. The server is authoritative; the client presents.

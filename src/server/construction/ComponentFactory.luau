@@ -377,23 +377,39 @@ function ComponentFactory.Create(
 	model.PrimaryPart = root
 
 	-- Optional visual asset bridge: if a custom imported model exists for this
-	-- component, clone and weld it over the Root collider, then make the Root
-	-- primitive transparent. Root remains the authoritative physics body.
+	-- component, weld it over the Root collider, then hide the primitive.  The
+	-- Root stays the authoritative physics body and the DragDetector target.
 	local visual = AssetProvider.Get("Components", definition.DisplayName)
 	if visual ~= nil then
-		visual:PivotTo(root.CFrame)
-		for _, descendant in visual:GetDescendants() do
-			if descendant:IsA("BasePart") then
-				local weld = Instance.new("WeldConstraint")
-				weld.Name = "WZ_VisualWeld"
-				weld.Part0 = root
-				weld.Part1 = descendant
-				weld.Parent = descendant
+		-- Align before welding: a WeldConstraint captures the offset it finds and
+		-- would undo an alignment applied afterwards.  Measuring the mesh means
+		-- the exporter's pivot choice cannot float the art off its sockets.
+		if AssetProvider.AlignVisual(visual, root.CFrame, "Center") then
+			visual.Parent = model
+
+			for _, descendant in visual:GetDescendants() do
+				if descendant:IsA("BasePart") then
+					local weld = Instance.new("WeldConstraint")
+					weld.Name = "WZ_VisualWeld"
+					weld.Part0 = root
+					weld.Part1 = descendant
+					weld.Parent = descendant
+				end
 			end
+
+			AssetProvider.HidePrimitives(model)
+		else
+			visual:Destroy()
+			log(
+				string.format(
+					"%s custom visual has no visible geometry, using primitive",
+					definition.DisplayName
+				)
+			)
 		end
-		visual.Parent = model
-		root.Transparency = 1
-	else
+	end
+
+	if visual == nil or visual.Parent == nil then
 		-- Procedural accents when custom visual is not present
 		if definition.Type == "Hook" then
 			local hookClaw = Instance.new("Part")

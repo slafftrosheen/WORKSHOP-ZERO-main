@@ -23,10 +23,61 @@ ReplicatedStorage.WorkshopZeroAssets/<category>/<AssetName>
 AssetProvider (server runtime bridge)
        |
        +---> Clones visual model
-       +---> Normalizes physics (CanCollide=false, CanTouch=false, Massless=true)
-       +---> Welds visual to authoritative Root Part
-       `---> Hides primitive Root Part (or falls back cleanly to primitive if missing)
+       +---> Normalizes physics (CanCollide=false, CanTouch=false, Massless=true, Anchored=false)
+       +---> Measures the mesh and aligns it (never trusts the export pivot)
+       +---> Welds visual to authoritative physics part
+       `---> Hides primitive geometry (or falls back cleanly to primitive if missing)
 ```
+
+## Where the bridge is called
+
+Nothing has to "turn the assets on".  Each asset class has exactly one place
+that applies art, so no experiment can forget it:
+
+| Asset class | Applied by | Alignment |
+| ----------- | ---------- | --------- |
+| `Components/*` | `ComponentFactory.Create`, for every component ever spawned | centre on the physics Root |
+| `Payloads/Duck` | `ExperimentLevelUtil.CreateDuck`, shared by all five experiments | underside on the collider's underside |
+| `Goals/GoalButton` | `ExperimentLevelUtil.CreateGoalButton`, shared by all five experiments | underside on the static base |
+| `Props/*` | `WorkshopService.buildPersistentShell` | underside on the floor pivot |
+
+## Pivots and alignment
+
+An imported model's pivot is whatever Blender last set, and guessing wrong used
+to mean a workbench buried in the floor or a duck floating over its collider.
+The bridge therefore measures instead of assuming:
+
+```text
+AssetProvider.GetVisualBounds(model)        world-space box of the visible parts
+AssetProvider.AlignVisual(model, cf, mode)  "Center" | "Bottom" placement
+AssetProvider.HidePrimitives(container)     hide what the art replaced
+```
+
+```text
+Components   bbox centre  -> physics Root centre
+Payloads     bbox bottom  -> underside of the collider
+Goals        bbox bottom  -> underside of the static base part
+Props        bbox bottom  -> the floor pivot the shell passes in
+```
+
+Consequences worth knowing:
+
+* A Blender pivot set to "bottom centre" or "geometric centre" both work.  The
+  only thing that has to be right is the model's **orientation** and **scale**.
+* A visual is aligned **before** it is welded.  A `WeldConstraint` captures the
+  offset it finds when it is created, so aligning afterwards would be undone.
+* Components are aligned on their physics Root.  For a `Spring`, the Root is the
+  base plate rather than the model centre, so spring art should be authored
+  around its base plate.
+* Visual parts are cloned with `Anchored = false`.  Props are anchored when they
+  are placed, components follow the build/test anchoring of their machine, and
+  an anchored mesh part must never pin a moving assembly.
+* `HidePrimitives` changes transparency and shadow only.  It never touches
+  `CanQuery`, because the physics Root must keep receiving raycasts for the
+  server-owned `DragDetector` under the mesh.
+* The goal mesh is welded to the **base**, not the cap: the cap presses 0.4 studs
+  under the art, and a mesh welded to the cap would drag the whole button down
+  with it.
 
 ### Exact step-by-step workflow
 
@@ -54,18 +105,62 @@ AssetProvider (server runtime bridge)
      - `workbench_maker_01.glb`
    - In the Import Queue preview dialog, click **Import** to upload them into Studio.
 4. **Organize into `ReplicatedStorage.WorkshopZeroAssets`**:
-   - The fastest method is to run the automated script in Studio's **Command Bar** (`View -> Command Bar`):
-     ```lua
-     loadstring(game:GetService("ServerScriptService").WorkshopZero.scripts.organize or ... -- or copy contents of scripts/organize_imported_assets.luau)
-     ```
-     Or simply copy & paste the code from [organize_imported_assets.luau](file:///c:/Users/slavd/WORKSHOP-ZERO-main/scripts/organize_imported_assets.luau) directly into the Studio Command Bar!
-   - This automatically classifies, normalizes physics (`CanCollide=false, CanTouch=false, Massless=true`), sets `PrimaryPart`, and moves the models into:
+   - Open [organize_imported_assets.luau](../scripts/organize_imported_assets.luau), copy the
+     whole file, paste it into Studio's **Command Bar** (`View -> Command Bar`) and press Enter.
+   - It is safe to run twice, and it does not care where the importer dropped the models -
+     `Workspace`, a folder inside it, or `ReplicatedStorage` are all searched.
+   - It renames and classifies each model, normalizes physics
+     (`CanCollide=false`, `CanTouch=false`, `Massless=true`, `Anchored=false`), guarantees a
+     `PrimaryPart`, reports the measured size against `AssetManifest`, and files the models into:
      - `ReplicatedStorage.WorkshopZeroAssets.Components` (`Plank`, `Block`, `Wheel`, `Motor`)
      - `ReplicatedStorage.WorkshopZeroAssets.Payloads` (`Duck`)
      - `ReplicatedStorage.WorkshopZeroAssets.Goals` (`GoalButton`)
      - `ReplicatedStorage.WorkshopZeroAssets.Props` (`MakerWorkbench`, `ToolStorageRack`, `WorkshopWallPanel`)
+   - Delete the importer's leftovers in `Workspace`, then **save the place**.
 5. **Play**:
-   - Start Play mode in Studio (`F5`). `AssetProvider` automatically discovers the custom assets, normalizes them, and welds them over the physics roots. Studio Output confirms `[WZ Assets] <Name> custom`. If any asset is absent, the game falls back cleanly to the primitive without error.
+   - Start Play mode in Studio (`F5`). `AssetProvider` finds the custom assets, normalizes
+     them, measures them, and welds them over the physics parts. If any asset is absent, the
+     game falls back cleanly to the primitive without error.
+   - Studio Output reports the whole bridge once per session, at the moment the persistent
+     Workshop shell is built:
+
+     ```text
+     [WZ Assets]
+
+     Components
+       Block              custom
+       Fan                primitive
+       Hook               primitive
+       Motor              custom
+       Plank              custom
+       Spring             primitive
+       Wheel              custom
+       Winch              primitive
+
+     Payloads
+       Duck               custom
+
+     Goals
+       GoalButton         custom
+
+     Props
+       ConnectorBoard     primitive
+       Crate              primitive
+       MakerWorkbench     custom
+       ToolStorageRack    custom
+       WorkshopWallPanel  custom
+
+     9/17 visuals are custom art, 8 fall back to primitives
+     ```
+
+   - `primitive` is not an error.  It means no art exists for that asset yet and the
+     procedural stand-in is doing its job.  Art currently exists for: `Plank`, `Block`,
+     `Wheel`, `Motor`, `Duck`, `GoalButton`, `MakerWorkbench`, `ToolStorageRack`,
+     `WorkshopWallPanel`.  Still waiting on art: `Spring`, `Fan`, `Hook`, `Winch`,
+     `Crate`, `ConnectorBoard`.
+   - Studio warnings from the bridge are worth reading: they report `CanCollide` that
+     survived normalization, missing `PrimaryPart`, high geometry counts, and an export
+     whose size deviates from `AssetManifest.ExpectedBounds`.
 
 ## Folder map
 
