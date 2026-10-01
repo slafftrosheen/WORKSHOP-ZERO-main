@@ -64,6 +64,16 @@ The system is strictly partitioned into single-responsibility boundaries:
    - Pure, deterministic Luau functions free of side-effects.
    - Derives motor rotation signs, fan aerodynamic falloff, and unlock checks.
 
+9. **`WorkshopPresentationService` — What The Workshop Says**
+   - Builds the WORKSHOP ZERO sign, the dynamic experiment wall, the component
+     display wall, the physical TEST/RESET console, the physical EXPERIMENTS
+     panel and two accent lamps, on top of the shell `WorkshopService` owns.
+   - Renders replicated values only. It decides nothing and owns no state.
+   - The console's two prompts call the same `ExperimentService` funnel the HUD
+     calls: a second button, never a second action path.
+   - Presentation may communicate construction state, but it must never own
+     construction state.
+
 ## The two phases
 
 Everything in this repository exists to serve one loop:
@@ -156,6 +166,7 @@ src/shared/experiments/
 
 src/server/world/
     WorkshopService        persistent shell, ambient lighting, workbench/rack/crates, bay
+    WorkshopPresentationService  sign, experiment wall, component wall, console, panel
 
 src/server/construction/
     ComponentFactory       builds components, connectors, drag detectors, indicator LEDs
@@ -169,7 +180,7 @@ src/server/construction/
     BuildService           dragging, rotation, return to rack, build-area rules
 
 src/server/experiments/
-    ExperimentRegistry     id-to-module directory (001 -> 005)
+    ExperimentRegistry     id-to-module directory (001 -> 005, plus Open Workshop)
     ExperimentLevelUtil    shared level construction, styling, duck, goal, staging
     SaveTheDuckLevel       builds Level 001 geometry
     SaveTheDuckExperiment  Level 001 experiment lifecycle and failure observer
@@ -181,6 +192,8 @@ src/server/experiments/
     WindyBusinessExperiment Level 004 experiment lifecycle and non-touch observer
     LiftOffLevel           builds Level 005 high platform and overhead gantry frame
     LiftOffExperiment      Level 005 experiment lifecycle and rope/winch observer
+    OpenWorkshopLevel      builds the free-build bay (flat floor, pad, duck, full rack)
+    OpenWorkshopExperiment free build: no goal, no success, ordinary physics flavour
     ExperimentService      attempt lifecycle, diagnostics, progression (Next/Restart/Select)
 
 src/server/
@@ -383,6 +396,7 @@ ReplicatedStorage/WorkshopZeroRemotes
 
     RequestExperimentAction   RemoteEvent  client -> server  "Restart"
     FailureToast              RemoteEvent  server -> client  flavour line
+    OpenExperimentBoard       RemoteEvent  server -> client  wall panel asked for the board
     ExperimentState           StringValue  server -> all      the challenge phase
     ExperimentAttempt         IntValue     server -> all      attempts this session
     ExperimentPartsUsed       IntValue     server -> all      parts used, last test
@@ -502,6 +516,36 @@ previous `WZ_Generated` workshop and never touching a hand-authored one.
 Both are development harnesses in the sense that nothing is ever written back
 into the place file - the level is rebuilt every session, and Workspace stays
 Studio-owned.
+
+## Open Workshop (free build)
+
+Open Workshop is a mode, not an experiment, and it is deliberately not an
+engine of its own.
+
+```text
+ExperimentDefinitions   Id = "open_workshop", Number = 0
+                        in the catalogue, never in GetOrdered()
+ExperimentRegistry      open_workshop -> OpenWorkshopExperiment
+OpenWorkshopLevel       flat floor, one taped pad, the duck, all eight parts
+```
+
+Rules:
+
+- **Open Workshop reuses the same physics kernel as experiments. It is not a
+  separate sandbox engine.** Same `ComponentFactory`, `ConnectorService`,
+  `ActuatorService`, `BehaviourService`, `SimulationService` and the same
+  `ExperimentModule` contract.
+- It has no goal button, so `report.Success` is never called: it cannot
+  succeed, cannot fail, and cannot unlock or renumber anything.
+- `Number = 0` keeps it out of `GetOrdered()` / `GetNext()`, so the numbered
+  sequence and the "EXPERIMENT 00N" copy never see it. It is selected by id
+  like any other definition, and `SelectExperiment` refuses it until
+  `IsOpenWorkshopUnlocked` (every numbered experiment finished).
+- CLEAR WORKSHOP is the ordinary experiment-layer restart wearing a label a
+  child can read: disconnect, clear actuators and behaviours, pivot every
+  staged part back. There is no second cleanup path.
+- The duck stays as a toy payload. With no goal trigger, nothing in free
+  build can finish anything.
 
 ## Deliberately absent
 
