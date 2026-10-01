@@ -75,6 +75,8 @@ local ConstructionConfig = {
 	-- Experiment layer: the challenge lifecycle and its feedback.
 	RemoteExperimentAction = "RequestExperimentAction",
 	RemoteFailureToast = "FailureToast",
+	-- Server -> one client: the physical EXPERIMENTS panel asked for the board.
+	RemoteOpenExperimentBoard = "OpenExperimentBoard",
 	ExperimentStateValueName = "ExperimentState",
 	CurrentExperimentValueName = "CurrentExperimentId",
 	AttemptValueName = "ExperimentAttempt",

@@ -179,6 +179,7 @@ export type ExperimentRemotes = {
 	SimulationState: StringValue,
 	RequestExperimentAction: RemoteEvent,
 	FailureToast: RemoteEvent,
+	OpenExperimentBoard: RemoteEvent,
 	ExperimentState: StringValue,
 	CurrentExperimentId: StringValue,
 	ExperimentAttempt: IntValue,

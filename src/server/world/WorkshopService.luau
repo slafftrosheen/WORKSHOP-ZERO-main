@@ -539,13 +539,17 @@ local function buildPersistentShell(workshop: Instance): Instance
 	placeProp(propsFolder, "ToolStorageRack", rackPivot, buildFallbackToolRack)
 
 	-- Wall Panels & Connector Board on Back Wall
+	--
+	-- The centre of the back wall belongs to the experiment display built by
+	-- WorkshopPresentationService, so the pegboard hangs to the right of it,
+	-- under nothing, with the component wall mirrored on the left.
 	local leftPanelPivot = CFrame.new(-18, 14, -40.5)
 	placeProp(propsFolder, "WorkshopWallPanel", leftPanelPivot, buildFallbackWallPanel)
 
 	local rightPanelPivot = CFrame.new(18, 14, -40.5)
 	placeProp(propsFolder, "WorkshopWallPanel", rightPanelPivot, buildFallbackWallPanel)
 
-	local boardPivot = CFrame.new(0, 14, -40.5)
+	local boardPivot = CFrame.new(34, 14, -40.5)
 	placeProp(propsFolder, "ConnectorBoard", boardPivot, buildFallbackConnectorBoard)
 
 	-- Crates

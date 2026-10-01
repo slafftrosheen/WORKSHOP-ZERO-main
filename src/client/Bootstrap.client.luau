@@ -82,6 +82,7 @@ local requestReturnToRack = waitForRemoteEvent(remotesFolder, Config.RemoteRetur
 local dragStateChanged = waitForRemoteEvent(remotesFolder, Config.RemoteDragState)
 local requestExperimentAction = waitForRemoteEvent(remotesFolder, Config.RemoteExperimentAction)
 local failureToast = waitForRemoteEvent(remotesFolder, Config.RemoteFailureToast)
+local openExperimentBoard = waitForRemoteEvent(remotesFolder, Config.RemoteOpenExperimentBoard)
 
 local simulationState = waitForStringValue(remotesFolder, Config.StateValueName)
 local experimentState = waitForStringValue(remotesFolder, Config.ExperimentStateValueName)
@@ -98,6 +99,7 @@ if
 	or dragStateChanged == nil
 	or requestExperimentAction == nil
 	or failureToast == nil
+	or openExperimentBoard == nil
 	or simulationState == nil
 	or experimentState == nil
 	or currentExperimentId == nil
@@ -118,6 +120,7 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 
 	RequestExperimentAction = requestExperimentAction,
 	FailureToast = failureToast,
+	OpenExperimentBoard = openExperimentBoard,
 	ExperimentState = experimentState,
 	CurrentExperimentId = currentExperimentId,
 	ExperimentAttempt = attemptValue,

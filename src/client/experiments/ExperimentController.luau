@@ -525,6 +525,10 @@ function ExperimentController.Start(
 
 	local partsTray = PartsTray.Create(definition, function()
 		board.Show()
+	end, function()
+		-- CLEAR WORKSHOP is the ordinary experiment-layer restart wearing a
+		-- different label, so the rack always comes back the same way.
+		remotes.RequestExperimentAction:FireServer("Restart")
 	end)
 
 	board.SetUnlockedIndex(remotes.UnlockedExperimentIndex.Value)
@@ -568,6 +572,12 @@ function ExperimentController.Start(
 		if type(message) == "string" then
 			toast.Show(message)
 		end
+	end)
+
+	-- The physical EXPERIMENTS panel on the wall asked for the board. The
+	-- server decided which client; this only draws what it was asked for.
+	remotes.OpenExperimentBoard.OnClientEvent:Connect(function()
+		board.Show()
 	end)
 
 	local function applyExperimentState(value: string)

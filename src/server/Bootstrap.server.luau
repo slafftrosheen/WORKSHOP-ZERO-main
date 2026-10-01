@@ -29,6 +29,7 @@ local SimulationService = require(script.Parent.construction.SimulationService)
 local CollisionGroups = require(script.Parent.CollisionGroups)
 local ExperimentService = require(script.Parent.experiments.ExperimentService)
 local PrototypeWorkshop = require(script.Parent.dev.PrototypeWorkshop)
+local WorkshopPresentationService = require(script.Parent.world.WorkshopPresentationService)
 
 local Config = ConstructionConfig
 
@@ -95,8 +96,9 @@ remotesFolder.Parent = ReplicatedStorage
 		DragStateChanged          server -> client   componentId | nil
 		SimulationState           replicated value   the physics phase
 
-		RequestExperimentAction   client -> server   "Restart"
+		RequestExperimentAction   client -> server   "Restart" | "Next" | "Select"
 		FailureToast              server -> client   flavour line
+		OpenExperimentBoard       server -> client   the physical panel asked for the board
 		ExperimentState           replicated value   the challenge phase
 		ExperimentAttempt         replicated value   attempts this session
 		ExperimentPartsUsed       replicated value   parts used in the last test
@@ -115,6 +117,7 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 
 	RequestExperimentAction = ensureRemoteEvent(remotesFolder, Config.RemoteExperimentAction),
 	FailureToast = ensureRemoteEvent(remotesFolder, Config.RemoteFailureToast),
+	OpenExperimentBoard = ensureRemoteEvent(remotesFolder, Config.RemoteOpenExperimentBoard),
 	ExperimentState = ensureStringValue(remotesFolder, Config.ExperimentStateValueName),
 	CurrentExperimentId = ensureStringValue(remotesFolder, Config.CurrentExperimentValueName),
 	ExperimentAttempt = ensureIntValue(remotesFolder, Config.AttemptValueName),
@@ -160,5 +163,9 @@ if Config.EnablePrototypeWorkshop then
 		BuildService.AttachWorkshop(runtime)
 	end
 else
+	-- The presentation layer hangs off the shell, and reads whatever state the
+	-- server has already published, so it is built before the first experiment
+	-- fills the bay.
+	WorkshopPresentationService.Start(remotes)
 	ExperimentService.Start()
 end

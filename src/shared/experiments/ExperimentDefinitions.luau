@@ -515,6 +515,128 @@ local LIFT_OFF: ExperimentTypes.ExperimentDefinition = {
 
 ExperimentDefinitions.LiftOff = LIFT_OFF
 
+--[[
+	Open Workshop: free build. It is deliberately NOT one of the numbered
+	experiments:
+
+		* Number is 0, so GetOrdered / GetNext and the "EXPERIMENT 00N" copy
+		  never see it, and it cannot advance or renumber the session
+		* it is still a normal entry in the catalogue, so server and client
+		  resolve it by id exactly like every other definition
+		* it has no goal button, so there is no success path: it can never
+		  unlock anything or finish
+
+	Everything else - the physics kernel, TEST, RESET, the failure flavour -
+	is the ordinary one. Open Workshop reuses the same physics kernel as
+	experiments; it is not a separate sandbox engine.
+]]
+local OPEN_WORKSHOP: ExperimentTypes.ExperimentDefinition = {
+	Id = "open_workshop",
+	Number = 0,
+	Name = "OPEN WORKSHOP",
+	Objective = "Build anything.",
+
+	IntroTitle = "FREE BUILD",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "THE DUCK MADE IT.",
+	RestartButton = "CLEAR WORKSHOP",
+
+	DiscoveryTitle = "NO RULES",
+	DiscoveryBody = "Nothing here can win or lose. It just runs.",
+
+	-- Every component type, in the order the component wall shows them.
+	Inventory = {
+		{ ComponentType = "Plank", Count = 4 },
+		{ ComponentType = "Block", Count = 4 },
+		{ ComponentType = "Wheel", Count = 6 },
+		{ ComponentType = "Motor", Count = 3 },
+		{ ComponentType = "Spring", Count = 3 },
+		{ ComponentType = "Fan", Count = 3 },
+		{ ComponentType = "Hook", Count = 3 },
+		{ ComponentType = "Winch", Count = 2 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.6,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		-- A flat floor. No trench, no gap, nothing to fall into: the point of
+		-- free build is that the ground behaves the same everywhere.
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		-- One wide wooden build pad. It has to hold eight staging rows and
+		-- still leave room in front of them for the duck.
+		StartPadSize = Vector3.new(52, 0.6, 46),
+		StartPadCenter = Vector3.new(0, 0.3, -4),
+
+		-- There is no goal pad and no button, but the camera aims at the
+		-- midpoint of DuckSpawn and ButtonPosition, so these two still have
+		-- to describe a sensible view of the bay.
+		GoalPadSize = Vector3.new(18, 0.6, 16),
+		GoalPadCenter = Vector3.new(0, 0.3, 14),
+
+		DuckSpawn = Vector3.new(0, 1.5, -22),
+		ButtonPosition = Vector3.new(0, 0.6, 14),
+
+		BackWallSize = Vector3.new(120, 30, 2),
+		BackWallCenter = Vector3.new(0, 15, -42),
+
+		-- Kept well clear of the back wall: the camera eye is this minus
+		-- (10, -14, 12), and inside the wall it would render black.
+		PlayerSpawn = Vector3.new(-14, 0.5, -20),
+
+		BuildBoundsSize = Vector3.new(64, 34, 64),
+		BuildBoundsCenter = Vector3.new(0, 10, -4),
+
+		-- One row per component type, back of the pad first.
+		StagingRows = { -18, -15, -12, -9, -6, -3, 0, 3 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		-- No pit, so anything this low fell off the world entirely.
+		PitY = -10,
+		AwayDistance = 70,
+		FastSpeed = 45,
+		HighY = 32,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 60,
+	},
+
+	-- Generic physics flavour only. There is no goal and no failure
+	-- condition: these are the same funny observations the experiments make.
+	FailureMessages = {
+		DuckDown = {
+			"DUCK DOWN.",
+			"GRAVITY REMAINS EMPLOYED.",
+		},
+		DuckDeparture = {
+			"UNSCHEDULED DUCK DEPARTURE.",
+		},
+		BallisticDuck = {
+			"BALLISTIC DUCK.",
+		},
+		SpaceProgram = {
+			"SPACE PROGRAM STARTED.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+			"CONFIDENCE: HIGH\nSTRUCTURAL INTEGRITY: LESS HIGH.",
+		},
+	},
+}
+
+ExperimentDefinitions.OpenWorkshop = OPEN_WORKSHOP
+
 local orderedList: { ExperimentTypes.ExperimentDefinition } = {
 	SAVE_THE_DUCK,
 	UPHILL_DELIVERY,
@@ -529,6 +651,9 @@ local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
 	[OVER_THE_WALL.Id] = OVER_THE_WALL,
 	[WINDY_BUSINESS.Id] = WINDY_BUSINESS,
 	[LIFT_OFF.Id] = LIFT_OFF,
+	-- In the catalogue so both sides can resolve the id, but never in
+	-- orderedList, so it stays outside the numbered sequence.
+	[OPEN_WORKSHOP.Id] = OPEN_WORKSHOP,
 }
 
 function ExperimentDefinitions.Get(id: string): ExperimentTypes.ExperimentDefinition?
@@ -551,6 +676,46 @@ end
 
 function ExperimentDefinitions.GetOrdered(): { ExperimentTypes.ExperimentDefinition }
 	return orderedList
+end
+
+function ExperimentDefinitions.GetOpenWorkshop(): ExperimentTypes.ExperimentDefinition
+	return OPEN_WORKSHOP
+end
+
+function ExperimentDefinitions.IsOpenWorkshopId(id: string?): boolean
+	return id ~= nil and id == OPEN_WORKSHOP.Id
+end
+
+--[[
+	Open Workshop unlocks only after every numbered experiment has been
+	finished, which is exactly when UnlockedExperimentIndex moves past the
+	last one.
+]]
+function ExperimentDefinitions.IsOpenWorkshopUnlocked(unlockedIndex: number): boolean
+	return unlockedIndex > #orderedList
+end
+
+--[[
+	The first experiment that puts a component on the rack.
+
+	Derived from the inventories rather than a hand-written table, so a new
+	experiment that introduces a part moves the component wall by itself.
+	Nil means no experiment stages it (nothing today).
+]]
+function ExperimentDefinitions.GetComponentIntroducedAt(componentType: string): number?
+	local found: number? = nil
+
+	for _, def in orderedList do
+		for _, requirement in def.Inventory do
+			if requirement.ComponentType == componentType then
+				if found == nil or def.Number < found then
+					found = def.Number
+				end
+			end
+		end
+	end
+
+	return found
 end
 
 -- The experiment this build loads by default.

@@ -31,6 +31,18 @@ export type PartsTrayHandle = {
 	Destroy: () -> (),
 }
 
+--[[
+	Free build is not a numbered experiment, so it does not get the
+	"EXPERIMENT 000" line that would fall out of its Number of 0.
+]]
+local function titleFor(definition: ExperimentTypes.ExperimentDefinition): string
+	if definition.Number > 0 then
+		return string.format("EXPERIMENT %03d: %s", definition.Number, definition.Name)
+	end
+
+	return definition.Name
+end
+
 local function createSwatch(parent: Instance, componentType: string, layoutOrder: number): Frame
 	local definition = ComponentDefinitions.Get(componentType)
 	local color = if definition ~= nil then definition.Color else Color3.fromRGB(150, 150, 150)
@@ -90,7 +102,8 @@ end
 
 function PartsTray.Create(
 	definition: ExperimentTypes.ExperimentDefinition,
-	onOpenBoard: (() -> ())?
+	onOpenBoard: (() -> ())?,
+	onClear: (() -> ())?
 ): PartsTrayHandle
 	local playerGui = player:WaitForChild("PlayerGui")
 
@@ -164,7 +177,7 @@ function PartsTray.Create(
 	expTitle.TextSize = 13
 	expTitle.TextColor3 = Color3.fromRGB(255, 214, 92)
 	expTitle.TextXAlignment = Enum.TextXAlignment.Left
-	expTitle.Text = string.format("EXPERIMENT %03d: %s", definition.Number, definition.Name)
+	expTitle.Text = titleFor(definition)
 	expTitle.Parent = infoBox
 
 	local expObjective = Instance.new("TextLabel")
@@ -201,6 +214,35 @@ function PartsTray.Create(
 		end)
 	end
 
+	-- CLEAR WORKSHOP exists only in free build. It is the ordinary
+	-- experiment-layer restart wearing a label a child can read, so the rack
+	-- comes back clean without a second cleanup path.
+	local clearButton: TextButton? = nil
+	if onClear ~= nil then
+		local button = Instance.new("TextButton")
+		button.Name = "ClearBtn"
+		button.LayoutOrder = 3
+		button.Size = UDim2.fromOffset(122, 26)
+		button.BackgroundColor3 = Color3.fromRGB(96, 58, 44)
+		button.BorderSizePixel = 0
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 10
+		button.TextColor3 = Color3.fromRGB(250, 236, 226)
+		button.Text = "CLEAR WORKSHOP"
+		button.Visible = definition.Number == 0
+		button.Parent = header
+
+		local buttonCorner = Instance.new("UICorner")
+		buttonCorner.CornerRadius = UDim.new(0, 6)
+		buttonCorner.Parent = button
+
+		button.Activated:Connect(function()
+			onClear()
+		end)
+
+		clearButton = button
+	end
+
 	-- Divider
 	local divider = Instance.new("Frame")
 	divider.Name = "Divider"
@@ -226,10 +268,13 @@ function PartsTray.Create(
 
 	return {
 		SetDefinition = function(newDefinition: ExperimentTypes.ExperimentDefinition)
-			expTitle.Text =
-				string.format("EXPERIMENT %03d: %s", newDefinition.Number, newDefinition.Name)
+			expTitle.Text = titleFor(newDefinition)
 			expObjective.Text = newDefinition.Objective
 			populateRows(panel, newDefinition)
+
+			if clearButton ~= nil then
+				clearButton.Visible = newDefinition.Number == 0
+			end
 		end,
 		SetVisible = function(visible: boolean)
 			gui.Enabled = visible
