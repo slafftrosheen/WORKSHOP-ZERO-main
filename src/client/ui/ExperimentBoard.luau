@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local ExperimentDefinitions = require(Shared.experiments.ExperimentDefinitions)
+local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local player = Players.LocalPlayer
 
@@ -35,6 +36,8 @@ export type BoardHandle = {
 local CARD_BG = Color3.fromRGB(24, 26, 32)
 local UNLOCKED_ITEM_BG = Color3.fromRGB(36, 40, 50)
 local LOCKED_ITEM_BG = Color3.fromRGB(28, 30, 36)
+-- Free build reads as its own kind of thing, not a sixth experiment.
+local FREE_ITEM_BG = Color3.fromRGB(38, 52, 44)
 local TITLE_COLOR = Color3.fromRGB(255, 214, 92)
 local TEXT_COLOR = Color3.fromRGB(230, 234, 242)
 local MUTED_COLOR = Color3.fromRGB(130, 136, 150)
@@ -288,15 +291,34 @@ function ExperimentBoard.Create(config: BoardConfig): BoardHandle
 		end
 
 		local ordered = ExperimentDefinitions.GetOrdered()
-		for index, def in ordered do
-			local isUnlocked = def.Number <= currentUnlockedIndex
+
+		-- The numbered experiments, then Open Workshop as a separate row.
+		-- It is always listed so a child can see it exists, and playable only
+		-- once every numbered experiment is finished.
+		local rows: { { Definition: ExperimentTypes.ExperimentDefinition, IsFree: boolean } } = {}
+		for _, def in ordered do
+			table.insert(rows, { Definition = def, IsFree = false })
+		end
+		table.insert(rows, { Definition = ExperimentDefinitions.GetOpenWorkshop(), IsFree = true })
+
+		for index, row in rows do
+			local def = row.Definition
+			local isUnlocked = if row.IsFree
+				then ExperimentDefinitions.IsOpenWorkshopUnlocked(currentUnlockedIndex)
+				else def.Number <= currentUnlockedIndex
 			local isCurrent = def.Id == currentActiveId
 
 			local item = Instance.new("Frame")
-			item.Name = string.format("Item_%d", def.Number)
+			item.Name = string.format("Item_%s", def.Id)
 			item.LayoutOrder = index
 			item.Size = UDim2.new(1, 0, 0, 56)
-			item.BackgroundColor3 = if isUnlocked then UNLOCKED_ITEM_BG else LOCKED_ITEM_BG
+			if not isUnlocked then
+				item.BackgroundColor3 = LOCKED_ITEM_BG
+			elseif row.IsFree then
+				item.BackgroundColor3 = FREE_ITEM_BG
+			else
+				item.BackgroundColor3 = UNLOCKED_ITEM_BG
+			end
 			item.BorderSizePixel = 0
 			item.Parent = itemsList
 
@@ -318,7 +340,7 @@ function ExperimentBoard.Create(config: BoardConfig): BoardHandle
 			numLabel.TextSize = 14
 			numLabel.TextColor3 = if isUnlocked then TITLE_COLOR else MUTED_COLOR
 			numLabel.TextXAlignment = Enum.TextXAlignment.Left
-			numLabel.Text = string.format("%03d", def.Number)
+			numLabel.Text = if row.IsFree then "FREE" else string.format("%03d", def.Number)
 			numLabel.Parent = item
 
 			local textContainer = Instance.new("Frame")

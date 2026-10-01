@@ -19,6 +19,7 @@ local UphillDeliveryExperiment = require(script.Parent.UphillDeliveryExperiment)
 local OverTheWallExperiment = require(script.Parent.OverTheWallExperiment)
 local WindyBusinessExperiment = require(script.Parent.WindyBusinessExperiment)
 local LiftOffExperiment = require(script.Parent.LiftOffExperiment)
+local OpenWorkshopExperiment = require(script.Parent.OpenWorkshopExperiment)
 
 local registry: { [string]: ExperimentTypes.ExperimentModule } = {
 	save_the_duck = SaveTheDuckExperiment,
@@ -26,6 +27,10 @@ local registry: { [string]: ExperimentTypes.ExperimentModule } = {
 	over_the_wall = OverTheWallExperiment,
 	windy_business = WindyBusinessExperiment,
 	lift_off = LiftOffExperiment,
+	-- Free build. Registered here so it loads like any other mode, but never
+	-- listed in ExperimentDefinitions.GetOrdered(), so it stays out of the
+	-- numbered sequence.
+	open_workshop = OpenWorkshopExperiment,
 }
 
 local ExperimentRegistry = {}

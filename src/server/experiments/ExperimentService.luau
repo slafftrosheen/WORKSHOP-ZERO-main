@@ -384,7 +384,17 @@ function ExperimentService.SelectExperiment(player: Player, targetId: string): b
 		return false
 	end
 
-	if not ConstructionMath.IsExperimentUnlocked(targetDef.Number, unlockedIndex) then
+	-- Open Workshop sits outside the numbered sequence, so the ordinary
+	-- "number <= unlockedIndex" rule would let it through from the first
+	-- experiment. It unlocks only once every numbered one is finished.
+	local isUnlocked: boolean
+	if ExperimentDefinitions.IsOpenWorkshopId(targetId) then
+		isUnlocked = ExperimentDefinitions.IsOpenWorkshopUnlocked(unlockedIndex)
+	else
+		isUnlocked = ConstructionMath.IsExperimentUnlocked(targetDef.Number, unlockedIndex)
+	end
+
+	if not isUnlocked then
 		warn(
 			string.format(
 				"[WZ] Player %s requested locked experiment '%s' (#%d, max unlocked #%d)",
