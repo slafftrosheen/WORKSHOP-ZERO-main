@@ -215,7 +215,8 @@ end
 local function createSuccess(
 	onRestart: () -> (),
 	onNext: () -> (),
-	onOpenBoard: () -> ()
+	onOpenBoard: () -> (),
+	getUnlockedIndex: () -> number
 ): SuccessHandle
 	local gui = createScreenGui("WorkshopZeroSuccess", 40)
 	gui.Enabled = false
@@ -290,8 +291,7 @@ local function createSuccess(
 	local nextButton = createCardButton(card, 7, "NEXT EXPERIMENT", Color3.fromRGB(52, 132, 84))
 	local boardButton = createCardButton(card, 8, "EXPERIMENTS", Color3.fromRGB(48, 54, 68))
 	local again = createCardButton(card, 9, definition.RestartButton, Color3.fromRGB(154, 96, 44))
-	local moreSoonLabel =
-		createLine(card, 10, 24, "MORE EXPERIMENTS SOON", 14, Color3.fromRGB(150, 156, 170), false)
+	local moreSoonLabel = createLine(card, 10, 24, "", 14, Color3.fromRGB(150, 156, 170), false)
 
 	nextButton.Activated:Connect(function()
 		gui.Enabled = false
@@ -322,8 +322,17 @@ local function createSuccess(
 			boardButton.Text = "EXPERIMENTS"
 		else
 			nextButton.Visible = false
-			moreSoonLabel.Visible = true
 			boardButton.Text = "ALL EXPERIMENTS"
+
+			-- "MORE EXPERIMENTS SOON" was a lie the moment Open Workshop
+			-- and the automation experiments existed: past the last numbered
+			-- one there is always free build waiting.
+			if ExperimentDefinitions.IsOpenWorkshopUnlocked(getUnlockedIndex()) then
+				moreSoonLabel.Text = "THE OPEN WORKSHOP IS YOURS. BUILD ANYTHING."
+			else
+				moreSoonLabel.Text = "MORE EXPERIMENTS SOON"
+			end
+			moreSoonLabel.Visible = true
 		end
 	end
 
@@ -521,6 +530,8 @@ function ExperimentController.Start(
 		remotes.RequestExperimentAction:FireServer("Next")
 	end, function()
 		board.Show()
+	end, function()
+		return remotes.UnlockedExperimentIndex.Value
 	end)
 
 	local partsTray = PartsTray.Create(definition, function()

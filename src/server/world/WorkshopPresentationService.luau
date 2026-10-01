@@ -1018,7 +1018,7 @@ local function refresh()
 	end
 
 	-- Experiment wall ------------------------------------------------------
-	if currentDefinition.Number > 0 then
+	if not ExperimentDefinitions.IsOpenWorkshopId(currentDefinition.Id) then
 		current.Wall.NumberLabel.Text = string.format("%02d", currentDefinition.Number)
 	else
 		-- Open Workshop is not a number, and must not read as experiment 000.

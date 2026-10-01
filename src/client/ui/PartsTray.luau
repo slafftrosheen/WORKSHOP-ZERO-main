@@ -16,6 +16,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local ComponentDefinitions = require(Shared.construction.ComponentDefinitions)
+local ExperimentDefinitions = require(Shared.experiments.ExperimentDefinitions)
 local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local player = Players.LocalPlayer
@@ -33,10 +34,11 @@ export type PartsTrayHandle = {
 
 --[[
 	Free build is not a numbered experiment, so it does not get the
-	"EXPERIMENT 000" line that would fall out of its Number of 0.
+	"EXPERIMENT 000" line. The id check (not the Number field) is the
+	authoritative "this is Open Workshop" test everywhere.
 ]]
 local function titleFor(definition: ExperimentTypes.ExperimentDefinition): string
-	if definition.Number > 0 then
+	if not ExperimentDefinitions.IsOpenWorkshopId(definition.Id) then
 		return string.format("EXPERIMENT %03d: %s", definition.Number, definition.Name)
 	end
 
@@ -229,7 +231,7 @@ function PartsTray.Create(
 		button.TextSize = 10
 		button.TextColor3 = Color3.fromRGB(250, 236, 226)
 		button.Text = "CLEAR WORKSHOP"
-		button.Visible = definition.Number == 0
+		button.Visible = ExperimentDefinitions.IsOpenWorkshopId(definition.Id)
 		button.Parent = header
 
 		local buttonCorner = Instance.new("UICorner")
@@ -273,7 +275,7 @@ function PartsTray.Create(
 			populateRows(panel, newDefinition)
 
 			if clearButton ~= nil then
-				clearButton.Visible = newDefinition.Number == 0
+				clearButton.Visible = ExperimentDefinitions.IsOpenWorkshopId(newDefinition.Id)
 			end
 		end,
 		SetVisible = function(visible: boolean)

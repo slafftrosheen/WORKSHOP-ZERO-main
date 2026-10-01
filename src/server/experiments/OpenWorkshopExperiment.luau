@@ -26,6 +26,7 @@ local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
 local ConnectorService = require(script.Parent.Parent.construction.ConnectorService)
 local OpenWorkshopLevel = require(script.Parent.OpenWorkshopLevel)
+local FlavourObserver = require(script.Parent.FlavourObserver)
 
 local OpenWorkshopExperiment = {}
 
@@ -38,7 +39,6 @@ local report: ExperimentTypes.ExperimentReport? = nil
 local live = false
 local currentAttempt = 1
 local sampler: RBXScriptConnection? = nil
-local fired: { [ExperimentTypes.FailureEventId]: boolean } = {}
 
 -- Captured at the start of an attempt: enough to tell "the machine went over"
 -- from "a wheel is spinning freely on its axle".
@@ -50,6 +50,21 @@ local function log(message: string)
 		print(string.format("[WZ OpenWorkshop] %s", message))
 	end
 end
+
+-- Shared once-per-attempt flavour plumbing; see FlavourObserver.
+local flavour = FlavourObserver.Create({
+	GetDefinition = function()
+		return definition
+	end,
+	GetReport = function()
+		return report
+	end,
+	GetAttempt = function()
+		return currentAttempt
+	end,
+	Log = log,
+})
+local notify = flavour.Fire
 
 -- Duck helpers ---------------------------------------------------------------
 
@@ -100,20 +115,6 @@ local function restoreDuck()
 end
 
 -- Flavour -------------------------------------------------------------------
-
-local function notify(eventId: ExperimentTypes.FailureEventId)
-	if fired[eventId] == true then
-		return
-	end
-	fired[eventId] = true
-
-	local message = ExperimentDefinitions.FailureMessage(definition, eventId, currentAttempt)
-	if report ~= nil then
-		report.Toast(message)
-	end
-
-	log(string.format("Flavour event %s: %s", eventId, message))
-end
 
 local function checkDuck()
 	local level = built
@@ -257,7 +258,7 @@ function OpenWorkshopExperiment.StartAttempt(attempt: number)
 
 	currentAttempt = attempt
 	live = true
-	table.clear(fired)
+	flavour.Clear()
 
 	captureBuildState()
 	setPayloadAnchored(false)
@@ -274,7 +275,7 @@ end
 function OpenWorkshopExperiment.Restart()
 	live = false
 	stopSampler()
-	table.clear(fired)
+	flavour.Clear()
 	table.clear(builtUp)
 	table.clear(rigidParts)
 	restoreDuck()
@@ -284,7 +285,7 @@ function OpenWorkshopExperiment.Unload()
 	live = false
 	stopSampler()
 
-	table.clear(fired)
+	flavour.Clear()
 	table.clear(builtUp)
 	table.clear(rigidParts)
 

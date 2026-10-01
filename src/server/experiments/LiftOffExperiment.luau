@@ -24,6 +24,7 @@ local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 local ComponentFactory = require(script.Parent.Parent.construction.ComponentFactory)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
 local LiftOffLevel = require(script.Parent.LiftOffLevel)
+local FlavourObserver = require(script.Parent.FlavourObserver)
 
 local Config = ConstructionConfig
 local BUTTON_SOUND = "rbxasset://sounds/electronicpingshort.wav"
@@ -43,13 +44,27 @@ local currentAttempt = 1
 local attemptStartTime = 0
 local sampler: RBXScriptConnection? = nil
 local goalConnection: RBXScriptConnection? = nil
-local fired: { [ExperimentTypes.FailureEventId]: boolean } = {}
 
 local function log(message: string)
 	if RunService:IsStudio() then
 		print(string.format("[WZ 005] %s", message))
 	end
 end
+
+-- Shared once-per-attempt flavour plumbing; see FlavourObserver.
+local flavour = FlavourObserver.Create({
+	GetDefinition = function()
+		return definition
+	end,
+	GetReport = function()
+		return report
+	end,
+	GetAttempt = function()
+		return currentAttempt
+	end,
+	Log = log,
+})
+local notify = flavour.Fire
 
 -- Payload helpers -------------------------------------------------------------
 
@@ -136,21 +151,6 @@ local function pressButton()
 	end)
 end
 
-local function notify(eventId: ExperimentTypes.FailureEventId)
-	if fired[eventId] then
-		return
-	end
-
-	fired[eventId] = true
-
-	if report ~= nil then
-		local text = ExperimentDefinitions.FailureMessage(definition, eventId, currentAttempt)
-		if text ~= "" then
-			report.Toast(text)
-		end
-	end
-end
-
 local function onGoalTouched(other: BasePart)
 	local level = handles
 	if level == nil or not live or succeeded then
@@ -208,24 +208,30 @@ local function startSampler()
 		local speed = vel.Magnitude
 
 		-- Space program
-		if (pos.Y > definition.Thresholds.HighY or speed > 60) and not fired.SpaceProgram then
+		if
+			(pos.Y > definition.Thresholds.HighY or speed > 60)
+			and not flavour.IsFired("SpaceProgram")
+		then
 			notify("SpaceProgram")
 		end
 
 		-- Ballistic duck
-		if speed > definition.Thresholds.FastSpeed and not fired.BallisticDuck then
+		if speed > definition.Thresholds.FastSpeed and not flavour.IsFired("BallisticDuck") then
 			notify("BallisticDuck")
 		end
 
 		-- Duck departure (fell far away horizontally)
 		local offset = pos - active.Center
 		local horizontalDist = Vector2.new(offset.X, offset.Z).Magnitude
-		if horizontalDist > definition.Thresholds.AwayDistance and not fired.DuckDeparture then
+		if
+			horizontalDist > definition.Thresholds.AwayDistance
+			and not flavour.IsFired("DuckDeparture")
+		then
 			notify("DuckDeparture")
 		end
 
 		-- Duck down in pit (below ground)
-		if pos.Y < definition.Thresholds.PitY and not fired.DuckDown then
+		if pos.Y < definition.Thresholds.PitY and not flavour.IsFired("DuckDown") then
 			notify("DuckDown")
 		end
 	end)
@@ -286,7 +292,7 @@ function LiftOffExperiment.StartAttempt(attempt: number)
 	live = true
 	succeeded = false
 	attemptStartTime = os.clock()
-	table.clear(fired)
+	flavour.Clear()
 
 	setPayloadAnchored(false)
 	zeroPayloadVelocity()
@@ -303,7 +309,7 @@ function LiftOffExperiment.Restart()
 	live = false
 	succeeded = false
 	stopSampler()
-	table.clear(fired)
+	flavour.Clear()
 
 	local level = handles
 	if level ~= nil then
@@ -325,7 +331,7 @@ function LiftOffExperiment.Unload()
 		goalConnection = nil
 	end
 
-	table.clear(fired)
+	flavour.Clear()
 	handles = nil
 	report = nil
 	AssetProvider.ResetDiagnostics()

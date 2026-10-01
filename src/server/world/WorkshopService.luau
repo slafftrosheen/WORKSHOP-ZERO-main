@@ -404,16 +404,49 @@ local function buildPersistentShell(workshop: Instance): Instance
 	shell.Name = Config.ShellFolderName
 	shell:SetAttribute(Config.AttributePersistentShell, true)
 
-	-- 1. Workshop perimeter floor
-	local floor = createPart(
-		"PerimeterFloor",
+	-- 1. Workshop floor.
+	--
+	-- The shell owns a PERIMETER RING around the ExperimentBay (which spans
+	-- X/Z -60..60), plus a deep safety slab far below everything. The bay
+	-- interior is floored by each experiment's own level geometry, never by
+	-- the shell: a single 130x130 slab at Y=0 was exactly coplanar with
+	-- every level floor (z-fighting across the whole bay) and filled
+	-- Experiment 001's trench with invisible floor, letting the duck walk
+	-- straight across the gap the challenge is built around.
+	--
+	-- The ring strips are 6 studs tall so their inner faces close the
+	-- trench sides at X/Z = +-60 down past the pit floor: nothing can crawl
+	-- out of a trench sideways underneath the ring. The safety slab only
+	-- ever matters if a level fails to load; normally it is hidden under
+	-- the level floors and the pit.
+	for _, strip in
+		{
+			{ "PerimeterFloorLeft", Vector3.new(5, 6, 130), Vector3.new(-62.5, -3, 0) },
+			{ "PerimeterFloorRight", Vector3.new(5, 6, 130), Vector3.new(62.5, -3, 0) },
+			{ "PerimeterFloorBack", Vector3.new(120, 6, 5), Vector3.new(0, -3, -62.5) },
+			{ "PerimeterFloorFront", Vector3.new(120, 6, 5), Vector3.new(0, -3, 62.5) },
+		}
+	do
+		local ringStrip = createPart(
+			strip[1],
+			strip[2],
+			CFrame.new(strip[3]),
+			shell,
+			COLORS.Floor,
+			Enum.Material.Concrete
+		)
+		ringStrip.CanCollide = true
+	end
+
+	local safetyFloor = createPart(
+		"BaySafetyFloor",
 		Vector3.new(130, 2, 130),
-		CFrame.new(0, -1, 0),
+		CFrame.new(0, -7.2, 0),
 		shell,
-		COLORS.Floor,
+		COLORS.FloorTrim,
 		Enum.Material.Concrete
 	)
-	floor.CanCollide = true
+	safetyFloor.CanCollide = true
 
 	-- Perimeter boundary curb / trim
 	for _, x in { -64, 64 } do
@@ -552,13 +585,15 @@ local function buildPersistentShell(workshop: Instance): Instance
 	local boardPivot = CFrame.new(34, 14, -40.5)
 	placeProp(propsFolder, "ConnectorBoard", boardPivot, buildFallbackConnectorBoard)
 
-	-- Crates
+	-- Crates. Kept at Z <= -9: Experiment 001's trench runs from Z=-8 to
+	-- Z=6 across the whole bay, and shell props standing over it would
+	-- float above the pit now that the shell no longer fills the trench.
 	local cratePositions = {
-		CFrame.new(-34, 0, -6),
-		CFrame.new(-34, 2.5, -6) * CFrame.Angles(0, math.rad(15), 0),
-		CFrame.new(34, 0, -6),
+		CFrame.new(-34, 0, -11),
+		CFrame.new(-34, 2.5, -11) * CFrame.Angles(0, math.rad(15), 0),
 		CFrame.new(34, 0, -10),
-		CFrame.new(34, 2.5, -8) * CFrame.Angles(0, math.rad(-10), 0),
+		CFrame.new(34, 0, -14),
+		CFrame.new(34, 2.5, -12) * CFrame.Angles(0, math.rad(-10), 0),
 	}
 	for _, cPivot in cratePositions do
 		placeProp(propsFolder, "Crate", cPivot, buildFallbackCrate)

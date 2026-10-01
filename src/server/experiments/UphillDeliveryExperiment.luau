@@ -34,6 +34,7 @@ local ConnectorService = require(script.Parent.Parent.construction.ConnectorServ
 local ActuatorService = require(script.Parent.Parent.construction.ActuatorService)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
 local UphillDeliveryLevel = require(script.Parent.UphillDeliveryLevel)
+local FlavourObserver = require(script.Parent.FlavourObserver)
 
 local Config = ConstructionConfig
 local BUTTON_SOUND = "rbxasset://sounds/electronicpingshort.wav"
@@ -53,7 +54,6 @@ local succeeded = false
 local currentAttempt = 1
 local sampler: RBXScriptConnection? = nil
 local goalConnection: RBXScriptConnection? = nil
-local fired: { [ExperimentTypes.FailureEventId]: boolean } = {}
 
 -- Machine tracking for failure flavour detection
 local attemptStartTime = 0
@@ -67,6 +67,21 @@ local function log(message: string)
 		print(string.format("[WZ 002] %s", message))
 	end
 end
+
+-- Shared once-per-attempt flavour plumbing; see FlavourObserver.
+local flavour = FlavourObserver.Create({
+	GetDefinition = function()
+		return definition
+	end,
+	GetReport = function()
+		return report
+	end,
+	GetAttempt = function()
+		return currentAttempt
+	end,
+	Log = log,
+})
+local notify = flavour.Fire
 
 -- Payload helpers -------------------------------------------------------------
 
@@ -172,21 +187,6 @@ local function onGoalTouched(other: BasePart)
 end
 
 -- Failure flavour --------------------------------------------------------------
-
-local function notify(eventId: ExperimentTypes.FailureEventId)
-	if fired[eventId] == true then
-		return
-	end
-
-	fired[eventId] = true
-
-	local message = ExperimentDefinitions.FailureMessage(definition, eventId, currentAttempt)
-	if report ~= nil and message ~= "" then
-		report.Toast(message)
-	end
-
-	log(string.format("Flavour event %s: %s", eventId, message))
-end
 
 local function checkDuck()
 	local level = handles
@@ -404,7 +404,7 @@ function UphillDeliveryExperiment.StartAttempt(attempt: number)
 	succeeded = false
 	attemptStartTime = os.clock()
 	maxAttainedDuckY = 0
-	table.clear(fired)
+	flavour.Clear()
 
 	captureBuildState()
 	setPayloadAnchored(false)
@@ -422,7 +422,7 @@ function UphillDeliveryExperiment.Restart()
 	live = false
 	succeeded = false
 	stopSampler()
-	table.clear(fired)
+	flavour.Clear()
 	table.clear(builtUp)
 	table.clear(rigidParts)
 	table.clear(initialMachinePositions)
@@ -447,7 +447,7 @@ function UphillDeliveryExperiment.Unload()
 		goalConnection = nil
 	end
 
-	table.clear(fired)
+	flavour.Clear()
 	table.clear(builtUp)
 	table.clear(rigidParts)
 	table.clear(initialMachinePositions)

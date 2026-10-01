@@ -38,6 +38,7 @@ local ComponentFactory = require(script.Parent.Parent.construction.ComponentFact
 local ConnectorService = require(script.Parent.Parent.construction.ConnectorService)
 local SaveTheDuckLevel = require(script.Parent.SaveTheDuckLevel)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
+local FlavourObserver = require(script.Parent.FlavourObserver)
 
 local Config = ConstructionConfig
 
@@ -60,7 +61,6 @@ local succeeded = false
 local currentAttempt = 1
 local sampler: RBXScriptConnection? = nil
 local goalConnection: RBXScriptConnection? = nil
-local fired: { [ExperimentTypes.FailureEventId]: boolean } = {}
 
 -- Captured at the start of an attempt: enough to tell "the machine went over"
 -- from "a wheel is spinning freely on its axle".
@@ -72,6 +72,21 @@ local function log(message: string)
 		print(string.format("[WZ] %s", message))
 	end
 end
+
+-- Shared once-per-attempt flavour plumbing; see FlavourObserver.
+local flavour = FlavourObserver.Create({
+	GetDefinition = function()
+		return definition
+	end,
+	GetReport = function()
+		return report
+	end,
+	GetAttempt = function()
+		return currentAttempt
+	end,
+	Log = log,
+})
+local notify = flavour.Fire
 
 -- Payload helpers ---------------------------------------------------------------
 
@@ -186,21 +201,6 @@ local function onGoalTouched(other: BasePart)
 end
 
 -- Failure flavour --------------------------------------------------------------
-
-local function notify(eventId: ExperimentTypes.FailureEventId)
-	if fired[eventId] == true then
-		return
-	end
-
-	fired[eventId] = true
-
-	local message = ExperimentDefinitions.FailureMessage(definition, eventId, currentAttempt)
-	if report ~= nil then
-		report.Toast(message)
-	end
-
-	log(string.format("Flavour event %s: %s", eventId, message))
-end
 
 local function checkDuck()
 	local level = handles
@@ -386,7 +386,7 @@ function SaveTheDuckExperiment.StartAttempt(attempt: number)
 	currentAttempt = attempt
 	live = true
 	succeeded = false
-	table.clear(fired)
+	flavour.Clear()
 
 	captureBuildState()
 	setPayloadAnchored(false)
@@ -409,7 +409,7 @@ function SaveTheDuckExperiment.Restart()
 	live = false
 	succeeded = false
 	stopSampler()
-	table.clear(fired)
+	flavour.Clear()
 	table.clear(builtUp)
 	table.clear(rigidParts)
 
@@ -438,7 +438,7 @@ function SaveTheDuckExperiment.Unload()
 		goalConnection = nil
 	end
 
-	table.clear(fired)
+	flavour.Clear()
 	table.clear(builtUp)
 	table.clear(rigidParts)
 

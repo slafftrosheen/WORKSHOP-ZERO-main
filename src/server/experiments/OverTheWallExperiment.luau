@@ -23,6 +23,7 @@ local ExperimentDefinitions = require(Shared.experiments.ExperimentDefinitions)
 local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local OverTheWallLevel = require(script.Parent.OverTheWallLevel)
+local FlavourObserver = require(script.Parent.FlavourObserver)
 
 local Config = ConstructionConfig
 local BUTTON_SOUND = "rbxasset://sounds/electronicpingshort.wav"
@@ -42,7 +43,6 @@ local currentAttempt = 1
 local sampler: RBXScriptConnection? = nil
 local goalConnection: RBXScriptConnection? = nil
 local wallConnection: RBXScriptConnection? = nil
-local fired: { [ExperimentTypes.FailureEventId]: boolean } = {}
 
 local function log(message: string)
 	if RunService:IsStudio() then
@@ -50,20 +50,20 @@ local function log(message: string)
 	end
 end
 
-local function fireToast(eventId: ExperimentTypes.FailureEventId)
-	if fired[eventId] then
-		return
-	end
-
-	fired[eventId] = true
-
-	if report ~= nil then
-		local text = ExperimentDefinitions.FailureMessage(definition, eventId, currentAttempt)
-		if text ~= "" then
-			report.Toast(text)
-		end
-	end
-end
+-- Shared once-per-attempt flavour plumbing; see FlavourObserver.
+local flavour = FlavourObserver.Create({
+	GetDefinition = function()
+		return definition
+	end,
+	GetReport = function()
+		return report
+	end,
+	GetAttempt = function()
+		return currentAttempt
+	end,
+	Log = log,
+})
+local fireToast = flavour.Fire
 
 local function stopMonitors()
 	if sampler ~= nil then
@@ -112,31 +112,37 @@ local function startMonitors()
 		local speed = vel.Magnitude
 
 		-- High vertical launch
-		if pos.Y > 24 and not fired.VerticalProgress then
+		if pos.Y > 24 and not flavour.IsFired("VerticalProgress") then
 			if pos.Z < 0 then
 				fireToast("VerticalProgress")
 			end
 		end
 
 		-- Space program
-		if (pos.Y > definition.Thresholds.HighY or speed > 60) and not fired.SpaceProgram then
+		if
+			(pos.Y > definition.Thresholds.HighY or speed > 60)
+			and not flavour.IsFired("SpaceProgram")
+		then
 			fireToast("SpaceProgram")
 		end
 
 		-- Ballistic duck
-		if speed > definition.Thresholds.FastSpeed and not fired.BallisticDuck then
+		if speed > definition.Thresholds.FastSpeed and not flavour.IsFired("BallisticDuck") then
 			fireToast("BallisticDuck")
 		end
 
 		-- Duck departure
 		local offset = pos - active.Center
 		local horizontalDist = Vector2.new(offset.X, offset.Z).Magnitude
-		if horizontalDist > definition.Thresholds.AwayDistance and not fired.DuckDeparture then
+		if
+			horizontalDist > definition.Thresholds.AwayDistance
+			and not flavour.IsFired("DuckDeparture")
+		then
 			fireToast("DuckDeparture")
 		end
 
 		-- Duck down in pit
-		if pos.Y < definition.Thresholds.PitY and not fired.DuckDown then
+		if pos.Y < definition.Thresholds.PitY and not flavour.IsFired("DuckDown") then
 			fireToast("DuckDown")
 			duckRoot.Anchored = true
 		end
@@ -230,7 +236,7 @@ function OverTheWallExperiment.StartAttempt(attemptNumber: number)
 	currentAttempt = attemptNumber
 	live = true
 	succeeded = false
-	fired = {}
+	flavour.Clear()
 
 	local active = handles
 	if active ~= nil and active.Duck.PrimaryPart ~= nil then
@@ -255,7 +261,7 @@ function OverTheWallExperiment.RestoreToBuild()
 		root.Anchored = true
 	end
 
-	fired = {}
+	flavour.Clear()
 	log("Restored to build")
 end
 
@@ -278,7 +284,7 @@ function OverTheWallExperiment.Restart()
 		active.GoalCap.Color = capRestColor
 	end
 
-	fired = {}
+	flavour.Clear()
 	log("Restarted")
 end
 
@@ -294,7 +300,7 @@ function OverTheWallExperiment.Unload()
 
 	handles = nil
 	report = nil
-	fired = {}
+	flavour.Clear()
 	log("Unloaded")
 end
 
