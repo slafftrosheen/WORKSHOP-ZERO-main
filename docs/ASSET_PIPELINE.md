@@ -171,9 +171,14 @@ assets/export/roblox/                 clean, correctly named exports
 assets/references/                    sketches, photos, inspiration
 ```
 
-Large binaries (`*.blend`, `*.glb`, `*.gltf`, `*.fbx`, `*.obj`, `*.stl`,
-`*.psd`, `*.exr`) are stored through Git LFS. Small PNG/JPG art stays as normal
-Git objects on purpose.
+Art is committed directly as regular Git objects, textures included. Git LFS
+routing was removed because the GitHub account's LFS budget is exhausted, which
+blocks every LFS push with "This repository exceeded its LFS budget". Direct
+objects cost nothing and work for any single file under GitHub's 100 MB
+per-file push limit; the largest asset today is `wall_panel_01/base.obj` at
+about 53 MB. Keep individual art files under that limit. If a file above
+100 MB is ever needed, restore `filter=lfs` for that format and fix the
+account's LFS budget first.
 
 ## Hyper3D / Rodin
 

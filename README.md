@@ -49,7 +49,7 @@ models to be dropped in without changing physics code. See **Experiment 001 - Sa
 | Need                | Why                                    |
 | ------------------- | -------------------------------------- |
 | Windows 10/11       | primary development machine            |
-| Git + Git LFS       | version control, large art files       |
+| Git + Git LFS       | version control; LFS hooks stay installed |
 | Rokit               | manages every Roblox tool below        |
 | Roblox Studio       | opening the place, testing in Play     |
 | Blender             | asset cleanup before Roblox import     |
@@ -230,8 +230,11 @@ Two-way sync / syncback in the Rojo plugin also stays off.
 | Roblox-ready exports (GLB)   | `assets/export/roblox/`       |
 | Sketches and references      | `assets/references/`          |
 
-Large binaries are stored through Git LFS. Origins are never overwritten, and
-clean exports are renamed properly (`wheel_rubber_01`, not `mesh3`).
+Art is committed directly as regular Git objects, textures included. Git LFS
+routing was removed because the account's LFS budget is exhausted and blocks
+every LFS push; keep individual art files under GitHub's 100 MB per-file limit.
+Origins are never overwritten, and clean exports are renamed properly
+(`wheel_rubber_01`, not `mesh3`).
 
 Details, budgets and the Studio import checklist: `docs/ASSET_PIPELINE.md`.
 
