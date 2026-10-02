@@ -962,6 +962,8 @@ local OPEN_WORKSHOP: ExperimentTypes.ExperimentDefinition = {
 		{ ComponentType = "Fan", Count = 3 },
 		{ ComponentType = "Hook", Count = 3 },
 		{ ComponentType = "Winch", Count = 2 },
+		{ ComponentType = "Servo", Count = 4 },
+		{ ComponentType = "Piston", Count = 4 },
 		{ ComponentType = "Switch", Count = 4 },
 		{ ComponentType = "PressureSensor", Count = 4 },
 		{ ComponentType = "ProximitySensor", Count = 4 },
@@ -1006,7 +1008,26 @@ local OPEN_WORKSHOP: ExperimentTypes.ExperimentDefinition = {
 		BuildBoundsCenter = Vector3.new(0, 10, -4),
 
 		-- One row per component type, back of the pad first.
-		StagingRows = { -28, -25, -22, -19, -16, -13, -10, -7, -4, -1, 2, 5, 8, 11, 14, 17 },
+		StagingRows = {
+			-28,
+			-25.5,
+			-23,
+			-20.5,
+			-18,
+			-15.5,
+			-13,
+			-10.5,
+			-8,
+			-5.5,
+			-3,
+			-0.5,
+			2,
+			4.5,
+			7,
+			9.5,
+			12,
+			14.5,
+		},
 		StagingSpacing = 1,
 	},
 
@@ -1102,11 +1123,11 @@ function ExperimentDefinitions.IsOpenWorkshopId(id: string?): boolean
 end
 
 --[[
-	Open Workshop unlocks after Experiment 005 is finished (unlockedIndex >= 6).
+	Open Workshop unlocks after Experiment 005 is finished (unlockedIndex > 5).
 	Completing Experiment 005 unlocks both Open Workshop and Experiment 006.
 ]]
 function ExperimentDefinitions.IsOpenWorkshopUnlocked(unlockedIndex: number): boolean
-	return unlockedIndex >= 6
+	return unlockedIndex > ConstructionConfig.OpenWorkshopUnlockAfterExperiment
 end
 
 --[[

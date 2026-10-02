@@ -134,13 +134,23 @@ function ExperimentBoard.Create(config: BoardConfig): BoardHandle
 	closeBtnCorner.Parent = closeBtn
 
 	-- List of experiment items
-	local itemsList = Instance.new("Frame")
+	local itemsList = Instance.new("ScrollingFrame")
 	itemsList.Name = "ItemsList"
 	itemsList.LayoutOrder = 2
-	itemsList.Size = UDim2.fromScale(1, 0)
-	itemsList.AutomaticSize = Enum.AutomaticSize.Y
+	itemsList.Size = UDim2.new(1, 0, 0, 360)
+	itemsList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	itemsList.CanvasSize = UDim2.new(0, 0, 0, 0)
+	itemsList.ScrollBarThickness = 6
+	itemsList.ScrollBarImageColor3 = Color3.fromRGB(80, 85, 100)
+	itemsList.BorderSizePixel = 0
 	itemsList.BackgroundTransparency = 1
+	itemsList.ScrollingDirection = Enum.ScrollingDirection.Y
+	itemsList.Selectable = false
 	itemsList.Parent = card
+
+	local itemsPadding = Instance.new("UIPadding")
+	itemsPadding.PaddingRight = UDim.new(0, 8)
+	itemsPadding.Parent = itemsList
 
 	local itemsLayout = Instance.new("UIListLayout")
 	itemsLayout.FillDirection = Enum.FillDirection.Vertical

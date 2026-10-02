@@ -424,16 +424,56 @@ local function countBehaviourComponents(): number
 	return count
 end
 
-local function countLogicStats(): (number, number, number, number)
+local function countActuators(): (number, number, number, number, number)
 	local runtime = findRuntimeFolder()
 	if runtime == nil then
-		return 0, 0, 0, 0
+		return 0, 0, 0, 0, 0
+	end
+
+	local rotaryMotors = 0
+	local servos = 0
+	local winches = 0
+	local pistons = 0
+	local controlledActuators = 0
+
+	for _, descendant in runtime:GetDescendants() do
+		if descendant:IsA("Model") then
+			local compType = descendant:GetAttribute(Config.AttributeComponentType)
+			if compType == "Motor" then
+				rotaryMotors += 1
+			elseif compType == "Servo" then
+				servos += 1
+			elseif compType == "Winch" then
+				winches += 1
+			elseif compType == "Piston" then
+				pistons += 1
+			end
+
+			if
+				(
+					compType == "Motor"
+					or compType == "Winch"
+					or compType == "Servo"
+					or compType == "Piston"
+				) and descendant:GetAttribute("WZ_ActuatorControlled") == true
+			then
+				controlledActuators += 1
+			end
+		end
+	end
+
+	return rotaryMotors, servos, winches, pistons, controlledActuators
+end
+
+local function countLogicStats(): (number, number, number)
+	local runtime = findRuntimeFolder()
+	if runtime == nil then
+		return 0, 0, 0
 	end
 
 	local logicNodes = 0
 	local wires = 0
 	local activeSignals = 0
-	local controlledActuators = 0
 
 	for _, descendant in runtime:GetDescendants() do
 		if descendant:IsA("Model") then
@@ -450,12 +490,6 @@ local function countLogicStats(): (number, number, number, number)
 			then
 				logicNodes += 1
 			end
-			if
-				(compType == "Motor" or compType == "Winch")
-				and descendant:GetAttribute("WZ_ActuatorControlled") == true
-			then
-				controlledActuators += 1
-			end
 		elseif descendant:IsA("Beam") and descendant:GetAttribute("WZ_ControlWire") == true then
 			wires += 1
 		elseif
@@ -468,7 +502,7 @@ local function countLogicStats(): (number, number, number, number)
 		end
 	end
 
-	return logicNodes, wires, activeSignals, controlledActuators
+	return logicNodes, wires, activeSignals
 end
 
 --[[
@@ -482,7 +516,7 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 	local label = Instance.new("TextLabel")
 	label.Name = "Readout"
 	label.Position = UDim2.fromOffset(16, 220)
-	label.Size = UDim2.fromOffset(260, 270)
+	label.Size = UDim2.fromOffset(260, 320)
 	label.BackgroundColor3 = Color3.fromRGB(12, 14, 18)
 	label.BackgroundTransparency = 0.3
 	label.BorderSizePixel = 0
@@ -519,10 +553,11 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 
 		local totalConns, poweredAxles = countConnections()
 		local activeBehaviours = countBehaviourComponents()
-		local logicNodes, wires, activeSignals, controlledActuators = countLogicStats()
+		local logicNodes, wires, activeSignals = countLogicStats()
+		local rotaryMotors, servos, winches, pistons, controlledActuators = countActuators()
 
 		label.Text = string.format(
-			"EXPERIMENT (F8)\nExperiment: %s\nExperimentState: %s\nSimulationState: %s\nAttempt: %d\nParts used: %d\nConnections: %d\nPowered axles: %d\nActive behaviour: %d\nLogic nodes: %d\nSignal wires: %d\nActive signals: %d\nControlled actuators: %d\nLogic tick rate: %d Hz\nDuck speed: %.1f\nDuck height: %.1f",
+			"EXPERIMENT (F8)\nExperiment: %s\nExperimentState: %s\nSimulationState: %s\nAttempt: %d\nParts used: %d\nConnections: %d\nPowered axles: %d\nActive behaviour: %d\nRotary motors: %d\nServos: %d\nWinches: %d\nPistons: %d\nControlled actuators: %d\nLogic nodes: %d\nSignal wires: %d\nActive signals: %d\nLogic tick rate: %d Hz\nDuck speed: %.1f\nDuck height: %.1f",
 			definition.Id,
 			remotes.ExperimentState.Value,
 			remotes.SimulationState.Value,
@@ -531,10 +566,14 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 			totalConns,
 			poweredAxles,
 			activeBehaviours,
+			rotaryMotors,
+			servos,
+			winches,
+			pistons,
+			controlledActuators,
 			logicNodes,
 			wires,
 			activeSignals,
-			controlledActuators,
 			LogicConfig.LogicTickRate,
 			speed,
 			height

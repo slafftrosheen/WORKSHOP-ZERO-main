@@ -118,7 +118,7 @@ type PanelSpec = {
 
 local SIGN: PanelSpec = { X = 0, Y = 26, Width = 26, Height = 8, Thickness = 0.6 }
 local EXPERIMENT_WALL: PanelSpec = { X = 0, Y = 13, Width = 24, Height = 14, Thickness = 0.6 }
-local COMPONENT_WALL: PanelSpec = { X = -34, Y = 13, Width = 12, Height = 14, Thickness = 0.6 }
+local COMPONENT_WALL: PanelSpec = { X = -34, Y = 15, Width = 12, Height = 18, Thickness = 0.6 }
 local EXPERIMENTS_PANEL: PanelSpec = { X = 34, Y = 6.5, Width = 10, Height = 3, Thickness = 0.4 }
 
 local CONSOLE = { X = -11, Z = -38, Width = 8, Depth = 4 }
@@ -127,15 +127,15 @@ local CONSOLE = { X = -11, Z = -38, Width = 8, Depth = 4 }
 -- SurfaceGui never stretches its type.
 local SIGN_CANVAS = Vector2.new(1300, 400)
 local EXPERIMENT_CANVAS = Vector2.new(1200, 700)
-local COMPONENT_CANVAS = Vector2.new(900, 1080)
+local COMPONENT_CANVAS = Vector2.new(900, 1350)
 local PANEL_CANVAS = Vector2.new(1000, 300)
 
 local CELL_COLUMNS = 4
 local CELL_WIDTH = 210
 local GRID_X = 30
 
--- The order the wall shows the catalogue in, split across two categories:
--- Mechanical parts and Automation modules.
+-- The order the wall shows the catalogue in, split across three categories:
+-- Mechanical parts, Automation modules, and Robotics actuators.
 local MECHANICAL_ORDER = { "Plank", "Block", "Wheel", "Motor", "Spring", "Fan", "Hook", "Winch" }
 local AUTOMATION_ORDER = {
 	"Switch",
@@ -147,6 +147,7 @@ local AUTOMATION_ORDER = {
 	"NOT",
 	"SignalLamp",
 }
+local ROBOTICS_ORDER = { "Servo", "Piston" }
 
 -- Runtime state --------------------------------------------------------------
 
@@ -690,7 +691,8 @@ local function buildComponentWall(shell: Instance): { ComponentCell }
 	end
 
 	local nextY = addSection("MECHANICAL", COLORS.Yellow, MECHANICAL_ORDER, 60)
-	addSection("AUTOMATION", Color3.fromRGB(70, 170, 255), AUTOMATION_ORDER, nextY + 10)
+	nextY = addSection("AUTOMATION", Color3.fromRGB(70, 170, 255), AUTOMATION_ORDER, nextY + 10)
+	addSection("ROBOTICS", Color3.fromRGB(120, 240, 180), ROBOTICS_ORDER, nextY + 10)
 
 	return cells
 end
