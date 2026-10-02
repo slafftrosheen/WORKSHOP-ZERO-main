@@ -29,6 +29,15 @@ export type ComponentType =
 	| "Fan"
 	| "Hook"
 	| "Winch"
+	-- Automation layer components.
+	| "Switch"
+	| "PressureSensor"
+	| "ProximitySensor"
+	| "Timer"
+	| "AND"
+	| "OR"
+	| "NOT"
+	| "SignalLamp"
 
 export type RotationOperation = "YawLeft" | "YawRight" | "Flip"
 
@@ -36,6 +45,14 @@ export type RotationOperation = "YawLeft" | "YawRight" | "Flip"
 export type ConnectorDefinition = {
 	Name: string,
 	Type: ConnectorType,
+	Offset: CFrame,
+}
+
+-- A signal port as described by a component definition, relative to the root
+-- part. Direction is explicit; never inferred from the port name.
+export type SignalPortDefinition = {
+	Name: string,
+	Direction: "Input" | "Output",
 	Offset: CFrame,
 }
 
@@ -53,6 +70,9 @@ export type ComponentDefinition = {
 	-- False for components that exist as placeholders but cannot be spawned yet.
 	Spawnable: boolean,
 	Connectors: { ConnectorDefinition },
+	-- Optional signal ports (for automation-layer components). Mechanical-only
+	-- components omit this field entirely.
+	SignalPorts: { SignalPortDefinition }?,
 }
 
 -- One logical joint between two components. The physical constraint is only one
@@ -150,6 +170,36 @@ function ConstructionTypes.ToComponentType(value: unknown): ComponentType?
 	end
 
 	if value == "Hook" or value == "Winch" then
+		return value
+	end
+
+	-- Automation layer components.
+	if
+		value == "Switch"
+		or value == "PressureSensor"
+		or value == "ProximitySensor"
+		or value == "Timer"
+		or value == "AND"
+		or value == "OR"
+		or value == "NOT"
+		or value == "SignalLamp"
+	then
+		return value
+	end
+
+	return nil
+end
+
+--[[
+	Validates a signal port direction value.
+	Returns the direction string or nil.
+]]
+function ConstructionTypes.ToSignalPortDirection(value: unknown): "Input" | "Output"?
+	if type(value) ~= "string" then
+		return nil
+	end
+
+	if value == "Input" or value == "Output" then
 		return value
 	end
 

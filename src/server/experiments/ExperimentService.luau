@@ -46,6 +46,8 @@ local ConnectorService = require(script.Parent.Parent.construction.ConnectorServ
 local ActuatorService = require(script.Parent.Parent.construction.ActuatorService)
 local BehaviourService = require(script.Parent.Parent.construction.BehaviourService)
 local SimulationService = require(script.Parent.Parent.construction.SimulationService)
+local LogicService = require(script.Parent.Parent.logic.LogicService)
+local WiringService = require(script.Parent.Parent.logic.WiringService)
 local ExperimentRegistry = require(script.Parent.ExperimentRegistry)
 local WorkshopService = require(script.Parent.Parent.world.WorkshopService)
 
@@ -352,6 +354,8 @@ function ExperimentService.RestartExperiment(player: Player): boolean
 	end
 
 	ConnectorService.DisconnectAll()
+	WiringService.Clear()
+	LogicService.Clear()
 	ActuatorService.Clear()
 	BehaviourService.Clear()
 
@@ -465,6 +469,8 @@ function ExperimentService.LoadExperiment(targetId: string, player: Player?): bo
 
 	stopSampler()
 	ConnectorService.DisconnectAll()
+	WiringService.Clear()
+	LogicService.Clear()
 	ActuatorService.Clear()
 	BehaviourService.Clear()
 	ComponentFactory.Clear()

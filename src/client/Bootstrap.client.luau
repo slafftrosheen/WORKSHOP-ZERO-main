@@ -24,6 +24,7 @@ local ProjectInfo = require(Shared.ProjectInfo)
 local BuildController = require(script.Parent.construction.BuildController)
 local ExperimentController = require(script.Parent.experiments.ExperimentController)
 local PrototypeControls = require(script.Parent.ui.PrototypeControls)
+local WireController = require(script.Parent.logic.WireController)
 
 local Config = ConstructionConfig
 local WAIT_TIMEOUT = 30
@@ -83,6 +84,8 @@ local dragStateChanged = waitForRemoteEvent(remotesFolder, Config.RemoteDragStat
 local requestExperimentAction = waitForRemoteEvent(remotesFolder, Config.RemoteExperimentAction)
 local failureToast = waitForRemoteEvent(remotesFolder, Config.RemoteFailureToast)
 local openExperimentBoard = waitForRemoteEvent(remotesFolder, Config.RemoteOpenExperimentBoard)
+local requestWireConnect = waitForRemoteEvent(remotesFolder, Config.RemoteWireConnect)
+local requestWireDisconnect = waitForRemoteEvent(remotesFolder, Config.RemoteWireDisconnect)
 
 local simulationState = waitForStringValue(remotesFolder, Config.StateValueName)
 local experimentState = waitForStringValue(remotesFolder, Config.ExperimentStateValueName)
@@ -100,6 +103,8 @@ if
 	or requestExperimentAction == nil
 	or failureToast == nil
 	or openExperimentBoard == nil
+	or requestWireConnect == nil
+	or requestWireDisconnect == nil
 	or simulationState == nil
 	or experimentState == nil
 	or currentExperimentId == nil
@@ -126,6 +131,9 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 	ExperimentAttempt = attemptValue,
 	ExperimentPartsUsed = partsUsedValue,
 	UnlockedExperimentIndex = unlockedIndexValue,
+
+	RequestWireConnect = requestWireConnect,
+	RequestWireDisconnect = requestWireDisconnect,
 }
 
 -- The panel asks the controller to act on the current selection; it never
@@ -147,3 +155,4 @@ local controls = PrototypeControls.Create({
 
 BuildController.Start(remotes, controls)
 ExperimentController.Start(remotes, controls)
+WireController.Start(remotes)

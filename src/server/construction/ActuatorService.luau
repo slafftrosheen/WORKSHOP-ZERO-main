@@ -64,7 +64,10 @@ export type RopeWinchEntry = {
 
 export type ActuatorEntry = RotaryMotorEntry | RopeWinchEntry
 
+export type ControlProvider = (componentId: string) -> (boolean, boolean)
+
 local actuators: { [string]: ActuatorEntry } = {}
+local controlProvider: ControlProvider? = nil
 
 local INDICATOR_OFF_COLOR = Color3.fromRGB(50, 55, 65)
 local INDICATOR_ON_COLOR = Color3.fromRGB(80, 240, 120)
@@ -340,9 +343,45 @@ local function computeMotorSign(entry: RotaryMotorEntry, refDirection: Vector3?)
 	return ConstructionMath.ComputeMotorSign(axle, up, refDirection)
 end
 
+function ActuatorService.SetControlProvider(provider: ControlProvider)
+	controlProvider = provider
+end
+
+function ActuatorService.SetActuatorSignal(componentId: string, enabled: boolean)
+	local entry = ActuatorService.GetActuatorForComponent(componentId)
+	if entry == nil then
+		return
+	end
+
+	if entry.Kind == "RotaryMotor" then
+		if entry.Hinge.Parent ~= nil then
+			if enabled then
+				local sign = computeMotorSign(entry, nil)
+				local targetSpeed = Config.MotorAngularVelocity * sign
+				entry.Hinge.ActuatorType = Enum.ActuatorType.Motor
+				entry.Hinge.AngularVelocity = targetSpeed
+				entry.Hinge.MotorMaxTorque = Config.MotorMaxTorque
+				entry.Hinge.AngularResponsiveness = Config.MotorAngularResponsiveness
+			else
+				entry.Hinge.ActuatorType = Enum.ActuatorType.None
+				entry.Hinge.AngularVelocity = 0
+				entry.Hinge.MotorMaxTorque = 0
+			end
+		end
+		setIndicatorPowered(entry.MotorComponentId, enabled)
+	elseif entry.Kind == "RopeWinch" then
+		if entry.Rope.Parent ~= nil then
+			entry.Rope.WinchEnabled = enabled
+		end
+		setIndicatorPowered(entry.WinchComponentId, enabled)
+	end
+end
+
 --[[
 	BUILD -> TEST
 	Activates all registered powered HingeConstraints and RopeConstraints.
+	Actuators with a connected Control signal are only enabled if signal is true.
+	Unconnected actuators retain automatic legacy behaviour.
 ]]
 function ActuatorService.EnableActuators(): number
 	local motorEntries: { RotaryMotorEntry } = {}
@@ -362,29 +401,65 @@ function ActuatorService.EnableActuators(): number
 	if #motorEntries > 0 then
 		local _, refDirection = computeMotorSign(motorEntries[1], nil)
 		for _, entry in motorEntries do
+			local isControlled = false
+			local signal = false
+			if controlProvider ~= nil then
+				isControlled, signal = controlProvider(entry.MotorComponentId)
+			end
+
 			local sign = computeMotorSign(entry, refDirection)
 			local targetSpeed = Config.MotorAngularVelocity * sign
 
-			entry.Hinge.ActuatorType = Enum.ActuatorType.Motor
-			entry.Hinge.AngularVelocity = targetSpeed
-			entry.Hinge.MotorMaxTorque = Config.MotorMaxTorque
-			entry.Hinge.AngularResponsiveness = Config.MotorAngularResponsiveness
-
-			setIndicatorPowered(entry.MotorComponentId, true)
-			enabledCount += 1
+			if isControlled then
+				if signal then
+					entry.Hinge.ActuatorType = Enum.ActuatorType.Motor
+					entry.Hinge.AngularVelocity = targetSpeed
+					entry.Hinge.MotorMaxTorque = Config.MotorMaxTorque
+					entry.Hinge.AngularResponsiveness = Config.MotorAngularResponsiveness
+					setIndicatorPowered(entry.MotorComponentId, true)
+					enabledCount += 1
+				else
+					entry.Hinge.ActuatorType = Enum.ActuatorType.None
+					entry.Hinge.AngularVelocity = 0
+					entry.Hinge.MotorMaxTorque = 0
+					setIndicatorPowered(entry.MotorComponentId, false)
+				end
+			else
+				-- Unconnected: legacy automatic behaviour
+				entry.Hinge.ActuatorType = Enum.ActuatorType.Motor
+				entry.Hinge.AngularVelocity = targetSpeed
+				entry.Hinge.MotorMaxTorque = Config.MotorMaxTorque
+				entry.Hinge.AngularResponsiveness = Config.MotorAngularResponsiveness
+				setIndicatorPowered(entry.MotorComponentId, true)
+				enabledCount += 1
+			end
 		end
 	end
 
 	-- 2. Enable powered rope winches
 	for _, entry in winchEntries do
-		entry.Rope.WinchEnabled = true
+		local isControlled = false
+		local signal = false
+		if controlProvider ~= nil then
+			isControlled, signal = controlProvider(entry.WinchComponentId)
+		end
+
 		entry.Rope.WinchSpeed = Config.WinchSpeed
 		entry.Rope.WinchForce = Config.WinchForce
 		entry.Rope.WinchResponsiveness = Config.WinchResponsiveness
 		entry.Rope.WinchTarget = Config.WinchTargetLength
 
-		setIndicatorPowered(entry.WinchComponentId, true)
-		enabledCount += 1
+		if isControlled then
+			entry.Rope.WinchEnabled = signal
+			setIndicatorPowered(entry.WinchComponentId, signal)
+			if signal then
+				enabledCount += 1
+			end
+		else
+			entry.Rope.WinchEnabled = true
+			setIndicatorPowered(entry.WinchComponentId, true)
+			enabledCount += 1
+		end
 	end
 
 	if enabledCount > 0 then

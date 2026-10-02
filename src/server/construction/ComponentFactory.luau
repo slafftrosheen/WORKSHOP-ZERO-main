@@ -40,6 +40,7 @@ local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
 local SpringBuilder = require(script.Parent.builders.SpringBuilder)
 local FanBuilder = require(script.Parent.builders.FanBuilder)
+local LogicConfig = require(Shared.logic.LogicConfig)
 
 local Config = ConstructionConfig
 
@@ -146,6 +147,78 @@ local function createConnectorMarker(
 		holeWeld.Part1 = hole
 		holeWeld.Parent = hole
 	end
+end
+
+--[[
+	Visible signal socket geometry so a child can see where a signal port lives.
+	Shape distinguishes Input (Block) from Output (Cylinder). Markers are welded
+	to the root, massless, non-colliding and invisible to raycasts, so they are
+	presentation and never physics.
+]]
+local function createSignalSocketMarker(attachment: Attachment, direction: "Input" | "Output")
+	if not LogicConfig.ShowSignalMarkers then
+		return
+	end
+
+	local root = attachment.Parent
+	if root == nil or not root:IsA("BasePart") then
+		return
+	end
+
+	local isInput = direction == "Input"
+	local shape = if isInput
+		then LogicConfig.SignalMarkerInputShape
+		else LogicConfig.SignalMarkerOutputShape
+
+	local marker = Instance.new("Part")
+	marker.Name = string.format("%s_%s", LogicConfig.SignalMarkerName, attachment.Name)
+	marker.Shape = shape
+	marker.Size = LogicConfig.SignalMarkerSize
+	marker.Color = LogicConfig.SignalSocketColor
+	marker.Material = Enum.Material.SmoothPlastic
+	marker.Anchored = false
+	marker.CanCollide = false
+	marker.CanQuery = true
+	marker.CanTouch = false
+	marker.CastShadow = false
+	marker.Massless = true
+	marker.CollisionGroup = Config.CollisionGroupComponents
+
+	local markerCFrame = attachment.WorldCFrame
+	marker.CFrame = markerCFrame
+	marker:SetAttribute("WZ_SignalSocketMarker", true)
+	marker:SetAttribute(Config.AttributeSignalDirection, direction)
+	marker:SetAttribute(Config.AttributeSignalPortName, attachment.Name)
+	marker.Parent = root.Parent or root
+
+	local weld = Instance.new("WeldConstraint")
+	weld.Name = "WZ_SignalSocketWeld"
+	weld.Part0 = root
+	weld.Part1 = marker
+	weld.Parent = marker
+
+	-- Recessed center hole
+	local hole = Instance.new("Part")
+	hole.Name = "Hole"
+	hole.Shape = shape
+	hole.Size = LogicConfig.SignalMarkerSize * Vector3.new(0.5, 1.2, 0.5)
+	hole.Color = Color3.fromRGB(15, 20, 35)
+	hole.Material = Enum.Material.SmoothPlastic
+	hole.Anchored = false
+	hole.CanCollide = false
+	hole.CanQuery = false
+	hole.CanTouch = false
+	hole.CastShadow = false
+	hole.Massless = true
+	hole.CollisionGroup = Config.CollisionGroupComponents
+	hole.CFrame = markerCFrame
+	hole.Parent = marker
+
+	local holeWeld = Instance.new("WeldConstraint")
+	holeWeld.Name = "WZ_SignalSocketHoleWeld"
+	holeWeld.Part0 = marker
+	holeWeld.Part1 = hole
+	holeWeld.Parent = hole
 end
 
 local function ensureFolder(parent: Instance, name: string): Instance
@@ -265,6 +338,45 @@ function ComponentFactory.GetConnectors(model: Model): { Attachment }
 	return result
 end
 
+-- Signal ports ---------------------------------------------------------------
+
+function ComponentFactory.GetSignalPorts(model: Model): { Attachment }
+	local result: { Attachment } = {}
+	for _, descendant in model:GetDescendants() do
+		if
+			descendant:IsA("Attachment")
+			and descendant:GetAttribute(Config.AttributeSignalPort) == true
+		then
+			table.insert(result, descendant)
+		end
+	end
+
+	return result
+end
+
+function ComponentFactory.GetSignalPortDirection(attachment: Attachment): "Input" | "Output"?
+	local value = attachment:GetAttribute(Config.AttributeSignalDirection)
+	if type(value) == "string" then
+		return ConstructionTypes.ToSignalPortDirection(value)
+	end
+
+	return nil
+end
+
+function ComponentFactory.GetSignalPort(model: Model, portName: string): Attachment?
+	for _, descendant in model:GetDescendants() do
+		if
+			descendant:IsA("Attachment")
+			and descendant:GetAttribute(Config.AttributeSignalPort) == true
+			and descendant:GetAttribute(Config.AttributeSignalPortName) == portName
+		then
+			return descendant
+		end
+	end
+
+	return nil
+end
+
 function ComponentFactory.GetConnector(model: Model, connectorName: string): Attachment?
 	local descendant = model:FindFirstChild(connectorName, true)
 	if descendant ~= nil and descendant:IsA("Attachment") then
@@ -376,6 +488,20 @@ function ComponentFactory.Create(
 	root.CollisionGroup = Config.CollisionGroupComponents
 	model.PrimaryPart = root
 
+	-- Signal ports (for automation-layer components). Mechanical-only
+	-- components omit this field, so the loop is skipped entirely.
+	if definition.SignalPorts ~= nil then
+		for _, signalPort in definition.SignalPorts do
+			local attachment = Instance.new("Attachment")
+			attachment.Name = signalPort.Name
+			attachment.CFrame = signalPort.Offset
+			attachment:SetAttribute(Config.AttributeSignalPort, true)
+			attachment:SetAttribute(Config.AttributeSignalDirection, signalPort.Direction)
+			attachment:SetAttribute(Config.AttributeSignalPortName, signalPort.Name)
+			attachment.Parent = root
+		end
+	end
+
 	-- Optional visual asset bridge: if a custom imported model exists for this
 	-- component, weld it over the Root collider, then hide the primitive.  The
 	-- Root stays the authoritative physics body and the DragDetector target.
@@ -486,6 +612,16 @@ function ComponentFactory.Create(
 			local attachment = root:FindFirstChild(connector.Name)
 			if attachment ~= nil and attachment:IsA("Attachment") then
 				createConnectorMarker(attachment, connector.Type)
+			end
+		end
+	end
+
+	-- Signal socket markers (for automation-layer components).
+	if LogicConfig.ShowSignalMarkers and definition.SignalPorts ~= nil then
+		for _, signalPort in definition.SignalPorts do
+			local attachment = root:FindFirstChild(signalPort.Name)
+			if attachment ~= nil and attachment:IsA("Attachment") then
+				createSignalSocketMarker(attachment, signalPort.Direction)
 			end
 		end
 	end

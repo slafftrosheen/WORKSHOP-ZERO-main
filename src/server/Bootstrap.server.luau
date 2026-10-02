@@ -26,10 +26,13 @@ local ProjectInfo = require(Shared.ProjectInfo)
 
 local BuildService = require(script.Parent.construction.BuildService)
 local SimulationService = require(script.Parent.construction.SimulationService)
+local ActuatorService = require(script.Parent.construction.ActuatorService)
 local CollisionGroups = require(script.Parent.CollisionGroups)
 local ExperimentService = require(script.Parent.experiments.ExperimentService)
 local PrototypeWorkshop = require(script.Parent.dev.PrototypeWorkshop)
 local WorkshopPresentationService = require(script.Parent.world.WorkshopPresentationService)
+local WiringService = require(script.Parent.logic.WiringService)
+local LogicService = require(script.Parent.logic.LogicService)
 
 local Config = ConstructionConfig
 
@@ -123,6 +126,8 @@ local remotes: ExperimentTypes.ExperimentRemotes = {
 	ExperimentAttempt = ensureIntValue(remotesFolder, Config.AttemptValueName),
 	ExperimentPartsUsed = ensureIntValue(remotesFolder, Config.PartsUsedValueName),
 	UnlockedExperimentIndex = ensureIntValue(remotesFolder, Config.UnlockedExperimentValueName),
+	RequestWireConnect = ensureRemoteEvent(remotesFolder, Config.RemoteWireConnect),
+	RequestWireDisconnect = ensureRemoteEvent(remotesFolder, Config.RemoteWireDisconnect),
 }
 
 remotes.UnlockedExperimentIndex.Value = 1
@@ -130,6 +135,14 @@ remotes.UnlockedExperimentIndex.Value = 1
 SimulationService.SetRemotes(remotes)
 BuildService.SetRemotes(remotes)
 ExperimentService.SetRemotes(remotes)
+WiringService.SetRemotes(remotes)
+
+ActuatorService.SetControlProvider(function(componentId: string)
+	return LogicService.GetActuatorControl(componentId)
+end)
+LogicService.SetActuatorSignalHandler(function(componentId: string, enabled: boolean)
+	ActuatorService.SetActuatorSignal(componentId, enabled)
+end)
 
 -- 3. Requests -----------------------------------------------------------------
 

@@ -185,6 +185,9 @@ export type ExperimentRemotes = {
 	ExperimentAttempt: IntValue,
 	ExperimentPartsUsed: IntValue,
 	UnlockedExperimentIndex: IntValue,
+	-- Automation layer: control wire requests (semantic IDs only).
+	RequestWireConnect: RemoteEvent,
+	RequestWireDisconnect: RemoteEvent,
 }
 
 local ExperimentTypes = {}

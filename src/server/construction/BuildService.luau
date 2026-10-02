@@ -31,6 +31,7 @@ local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 local ComponentFactory = require(script.Parent.ComponentFactory)
 local ConnectorService = require(script.Parent.ConnectorService)
 local SimulationService = require(script.Parent.SimulationService)
+local WiringService = require(script.Parent.Parent.logic.WiringService)
 
 local Config = ConstructionConfig
 
@@ -468,8 +469,9 @@ function BuildService.RequestReturnToRack(player: Player, payload: unknown): boo
 		return false
 	end
 
-	-- 1. Disconnect all joints
+	-- 1. Disconnect all joints and signal wires
 	ConnectorService.Disconnect(componentId)
+	WiringService.DisconnectComponent(componentId)
 
 	-- 2. Restore staging transform
 	local spawnPivot = model:GetAttribute("WZ_SpawnPivot")

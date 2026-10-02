@@ -83,6 +83,10 @@ local ConstructionConfig = {
 	PartsUsedValueName = "ExperimentPartsUsed",
 	UnlockedExperimentValueName = "UnlockedExperimentIndex",
 
+	-- Automation layer: control wire requests (client -> server, semantic IDs only).
+	RemoteWireConnect = "RequestWireConnect",
+	RemoteWireDisconnect = "RequestWireDisconnect",
+
 	-- Attributes --------------------------------------------------------------
 
 	AttributeComponent = "WZ_Component",
@@ -91,6 +95,11 @@ local ConstructionConfig = {
 	AttributeConnector = "WZ_Connector",
 	AttributeConnectorType = "WZ_ConnectorType",
 	AttributeOccupied = "WZ_Occupied",
+
+	-- Signal port attributes (never overload mechanical connector attributes).
+	AttributeSignalPort = "WZ_SignalPort",
+	AttributeSignalDirection = "WZ_SignalDirection",
+	AttributeSignalPortName = "WZ_SignalPortName",
 
 	-- Payload and level attributes. A payload is the thing an experiment asks
 	-- the player to move; it is never a construction component.
@@ -109,6 +118,11 @@ local ConstructionConfig = {
 	AxleMarkerSize = Vector3.new(0.35, 1.5, 1.5),
 	RopeMarkerSize = Vector3.new(0.35, 1.2, 1.2),
 	ConnectorMarkerName = "Socket",
+
+	-- Signal port socket markers: distinct from mechanical sockets by shape
+	-- and colour. Blue keyed socket.
+	SignalMarkerName = "SignalSocket",
+	SignalMarkerSize = Vector3.new(0.45, 0.15, 0.45),
 
 	-- Component structure -----------------------------------------------------
 
