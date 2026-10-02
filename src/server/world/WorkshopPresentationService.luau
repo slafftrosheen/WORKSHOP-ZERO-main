@@ -127,18 +127,26 @@ local CONSOLE = { X = -11, Z = -38, Width = 8, Depth = 4 }
 -- SurfaceGui never stretches its type.
 local SIGN_CANVAS = Vector2.new(1300, 400)
 local EXPERIMENT_CANVAS = Vector2.new(1200, 700)
-local COMPONENT_CANVAS = Vector2.new(900, 1050)
+local COMPONENT_CANVAS = Vector2.new(900, 1080)
 local PANEL_CANVAS = Vector2.new(1000, 300)
 
 local CELL_COLUMNS = 4
 local CELL_WIDTH = 210
-local CELL_HEIGHT = 440
 local GRID_X = 30
-local GRID_Y = 130
 
--- The order the wall shows the catalogue in. Which parts are *discovered* is
--- derived from the experiment inventories, never written here.
-local COMPONENT_ORDER = { "Plank", "Block", "Wheel", "Motor", "Spring", "Fan", "Hook", "Winch" }
+-- The order the wall shows the catalogue in, split across two categories:
+-- Mechanical parts and Automation modules.
+local MECHANICAL_ORDER = { "Plank", "Block", "Wheel", "Motor", "Spring", "Fan", "Hook", "Winch" }
+local AUTOMATION_ORDER = {
+	"Switch",
+	"PressureSensor",
+	"ProximitySensor",
+	"Timer",
+	"AND",
+	"OR",
+	"NOT",
+	"SignalLamp",
+}
 
 -- Runtime state --------------------------------------------------------------
 
@@ -567,9 +575,9 @@ local function buildComponentWall(shell: Instance): { ComponentCell }
 	createLabel(
 		gui,
 		"Header",
-		Vector2.new(GRID_X, 40),
-		Vector2.new(840, 60),
-		46,
+		Vector2.new(GRID_X, 16),
+		Vector2.new(840, 40),
+		36,
 		COLORS.Muted,
 		"COMPONENTS",
 		true
@@ -577,83 +585,112 @@ local function buildComponentWall(shell: Instance): { ComponentCell }
 
 	local cells: { ComponentCell } = {}
 
-	for index, componentType in COMPONENT_ORDER do
-		local column = (index - 1) % CELL_COLUMNS
-		local row = math.floor((index - 1) / CELL_COLUMNS)
-
-		local cell = Instance.new("Frame")
-		cell.Name = componentType
-		cell.Position = UDim2.fromOffset(GRID_X + column * CELL_WIDTH, GRID_Y + row * CELL_HEIGHT)
-		cell.Size = UDim2.fromOffset(CELL_WIDTH, CELL_HEIGHT)
-		cell.BackgroundTransparency = 1
-		cell.Parent = gui
-
-		local card = Instance.new("Frame")
-		card.Name = "Card"
-		card.Position = UDim2.fromOffset(5, 5)
-		card.Size = UDim2.fromOffset(CELL_WIDTH - 10, CELL_HEIGHT - 30)
-		card.BackgroundColor3 = COLORS.PanelInset
-		card.BorderSizePixel = 0
-		card.Parent = cell
-
-		local cardCorner = Instance.new("UICorner")
-		cardCorner.CornerRadius = UDim.new(0, 10)
-		cardCorner.Parent = card
-
-		local viewport = Instance.new("ViewportFrame")
-		viewport.Name = "Viewport"
-		viewport.Position = UDim2.fromOffset(10, 10)
-		viewport.Size = UDim2.fromOffset(CELL_WIDTH - 30, 300)
-		viewport.BackgroundColor3 = COLORS.PanelInset
-		viewport.Ambient = Color3.fromRGB(158, 158, 168)
-		viewport.LightColor = Color3.fromRGB(255, 250, 242)
-		viewport.BorderSizePixel = 0
-		viewport.Parent = card
-
-		local camera = Instance.new("Camera")
-		camera.Parent = viewport
-		viewport.CurrentCamera = camera
-
-		local world = Instance.new("WorldModel")
-		world.Parent = viewport
-
-		local nameLabel = createLabel(
-			card,
-			"Name",
-			Vector2.new(10, 330),
-			Vector2.new(CELL_WIDTH - 30, 60),
-			40,
-			COLORS.Text,
-			string.upper(componentType),
+	local function addSection(
+		title: string,
+		titleColor: Color3,
+		components: { string },
+		startY: number
+	): number
+		local sectionLabel = createLabel(
+			gui,
+			title .. "_Header",
+			Vector2.new(GRID_X, startY),
+			Vector2.new(840, 26),
+			22,
+			titleColor,
+			title,
 			true
 		)
-		centreText(nameLabel)
+		sectionLabel.TextTransparency = 0.15
 
-		local model, records = buildDisplayModel(componentType)
-		model.Parent = world
+		local cardY = startY + 30
+		local cardHeight = 215
+		local rowSpacing = 222
 
-		-- Centre it in front of the camera, imported art origin or not.
-		local bounds, measured = AssetProvider.GetVisualBounds(model)
-		if bounds ~= nil then
-			local pivot = model:GetPivot()
-			model:PivotTo(pivot + (Vector3.zero - bounds.Position))
+		for index, componentType in components do
+			local column = (index - 1) % CELL_COLUMNS
+			local row = math.floor((index - 1) / CELL_COLUMNS)
+
+			local cell = Instance.new("Frame")
+			cell.Name = componentType
+			cell.Position = UDim2.fromOffset(GRID_X + column * CELL_WIDTH, cardY + row * rowSpacing)
+			cell.Size = UDim2.fromOffset(CELL_WIDTH, cardHeight)
+			cell.BackgroundTransparency = 1
+			cell.Parent = gui
+
+			local card = Instance.new("Frame")
+			card.Name = "Card"
+			card.Position = UDim2.fromOffset(5, 5)
+			card.Size = UDim2.fromOffset(CELL_WIDTH - 10, cardHeight - 10)
+			card.BackgroundColor3 = COLORS.PanelInset
+			card.BorderSizePixel = 0
+			card.Parent = cell
+
+			local cardCorner = Instance.new("UICorner")
+			cardCorner.CornerRadius = UDim.new(0, 10)
+			cardCorner.Parent = card
+
+			local viewport = Instance.new("ViewportFrame")
+			viewport.Name = "Viewport"
+			viewport.Position = UDim2.fromOffset(10, 10)
+			viewport.Size = UDim2.fromOffset(CELL_WIDTH - 30, 135)
+			viewport.BackgroundColor3 = COLORS.PanelInset
+			viewport.Ambient = Color3.fromRGB(158, 158, 168)
+			viewport.LightColor = Color3.fromRGB(255, 250, 242)
+			viewport.BorderSizePixel = 0
+			viewport.Parent = card
+
+			local camera = Instance.new("Camera")
+			camera.Parent = viewport
+			viewport.CurrentCamera = camera
+
+			local world = Instance.new("WorldModel")
+			world.Parent = viewport
+
+			local nameLabel = createLabel(
+				card,
+				"Name",
+				Vector2.new(10, 150),
+				Vector2.new(CELL_WIDTH - 30, 45),
+				22,
+				COLORS.Text,
+				string.upper(componentType),
+				true
+			)
+			centreText(nameLabel)
+
+			local model, records = buildDisplayModel(componentType)
+			model.Parent = world
+
+			-- Centre it in front of the camera, imported art origin or not.
+			local bounds, measured = AssetProvider.GetVisualBounds(model)
+			if bounds ~= nil then
+				local pivot = model:GetPivot()
+				model:PivotTo(pivot + (Vector3.zero - bounds.Position))
+			end
+
+			local definition = ComponentDefinitions.Get(componentType)
+			local fallback = if definition ~= nil then definition.Size else Vector3.new(2, 2, 2)
+			local size = if measured.Magnitude > 0.05 then measured else fallback
+
+			local radius = math.max(size.Magnitude * 0.5, 1.5)
+			local direction = Vector3.new(0.55, 0.4, -0.73).Unit
+			camera.CFrame = CFrame.lookAt(direction * (radius * 2.8), Vector3.zero)
+
+			table.insert(cells, {
+				ComponentType = componentType,
+				NameLabel = nameLabel,
+				Parts = records,
+				Locked = false,
+			})
 		end
 
-		local definition = ComponentDefinitions.Get(componentType)
-		local fallback = if definition ~= nil then definition.Size else Vector3.new(2, 2, 2)
-		local size = if measured.Magnitude > 0.05 then measured else fallback
-
-		local radius = math.max(size.Magnitude * 0.5, 1.5)
-		local direction = Vector3.new(0.55, 0.4, -0.73).Unit
-		camera.CFrame = CFrame.lookAt(direction * (radius * 2.8), Vector3.zero)
-
-		table.insert(cells, {
-			ComponentType = componentType,
-			NameLabel = nameLabel,
-			Parts = records,
-			Locked = false,
-		})
+		local numRows = math.ceil(#components / CELL_COLUMNS)
+		return cardY + numRows * rowSpacing
 	end
+
+	local nextY = addSection("MECHANICAL", COLORS.Yellow, MECHANICAL_ORDER, 60)
+	addSection("AUTOMATION", Color3.fromRGB(70, 170, 255), AUTOMATION_ORDER, nextY + 10)
 
 	return cells
 end
@@ -1052,7 +1089,12 @@ local function refresh()
 	-- Component wall -------------------------------------------------------
 	for _, cell in current.Cells do
 		local introducedAt = ExperimentDefinitions.GetComponentIntroducedAt(cell.ComponentType)
-		local discovered = introducedAt == nil or unlockedIndex >= introducedAt
+		local discovered = false
+		if introducedAt ~= nil then
+			discovered = unlockedIndex >= introducedAt
+		else
+			discovered = unlockedIndex >= 6
+		end
 		applyCellLock(cell, not discovered)
 	end
 end

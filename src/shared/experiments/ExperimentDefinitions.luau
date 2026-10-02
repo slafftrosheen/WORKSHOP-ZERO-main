@@ -515,6 +515,202 @@ local LIFT_OFF: ExperimentTypes.ExperimentDefinition = {
 
 ExperimentDefinitions.LiftOff = LIFT_OFF
 
+local DONT_HIT_THE_WALL: ExperimentTypes.ExperimentDefinition = {
+	Id = "dont_hit_the_wall",
+	Number = 6,
+	Name = "DON'T HIT THE WALL",
+	Objective = "Get the duck into the target. Stop before the wall.",
+
+	IntroTitle = "EXPERIMENT 006",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "STOPPED IN TIME.",
+	RestartButton = "TRY AGAIN",
+
+	DiscoveryTitle = "FEEDBACK",
+	DiscoveryBody = "A sensor can change what a machine does while it is running.",
+
+	Inventory = {
+		{ ComponentType = "Plank", Count = 2 },
+		{ ComponentType = "Block", Count = 3 },
+		{ ComponentType = "Wheel", Count = 4 },
+		{ ComponentType = "Motor", Count = 2 },
+		{ ComponentType = "ProximitySensor", Count = 2 },
+		{ ComponentType = "NOT", Count = 2 },
+		{ ComponentType = "SignalLamp", Count = 1 },
+		{ ComponentType = "Switch", Count = 1 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.6,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		StartPadSize = Vector3.new(24, 0.6, 18),
+		StartPadCenter = Vector3.new(0, 0.3, -22),
+
+		GoalPadSize = Vector3.new(22, 0.6, 14),
+		GoalPadCenter = Vector3.new(0, 0.3, 10),
+
+		DuckSpawn = Vector3.new(0, 1.5, -20),
+		ButtonPosition = Vector3.new(0, 0.6, 10),
+
+		BackWallSize = Vector3.new(120, 30, 2),
+		BackWallCenter = Vector3.new(0, 15, -42),
+
+		PlayerSpawn = Vector3.new(-15, 0.5, -22),
+
+		BuildBoundsSize = Vector3.new(64, 34, 72),
+		BuildBoundsCenter = Vector3.new(0, 12, 0),
+
+		StagingRows = { -28, -25.5, -23, -20.5, -18, -15.5, -13, -10.5 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		PitY = 0,
+		AwayDistance = 75,
+		FastSpeed = 45,
+		HighY = 40,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 65,
+	},
+
+	FailureMessages = {
+		WallImpact = {
+			"BRAKES: OPTIONAL, APPARENTLY.",
+			"WALL DETECTED.\nSLIGHTLY LATE.",
+		},
+		DuckDown = {
+			"DUCK DOWN.",
+		},
+		DuckDeparture = {
+			"UNSCHEDULED DUCK DEPARTURE.",
+		},
+		BallisticDuck = {
+			"BALLISTIC DUCK.",
+		},
+		SpaceProgram = {
+			"SPACE PROGRAM STARTED.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+		},
+	},
+}
+
+ExperimentDefinitions.DontHitTheWall = DONT_HIT_THE_WALL
+
+local TWO_TO_GO: ExperimentTypes.ExperimentDefinition = {
+	Id = "two_to_go",
+	Number = 7,
+	Name = "TWO TO GO",
+	Objective = "Lift the duck to the platform.",
+
+	IntroTitle = "EXPERIMENT 007",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "THE DUCK REACHED THE TOP.",
+	RestartButton = "TRY AGAIN",
+
+	DiscoveryTitle = "AND",
+	DiscoveryBody = "An AND signal turns on only when all of its inputs are on.",
+
+	Inventory = {
+		{ ComponentType = "Block", Count = 6 },
+		{ ComponentType = "Plank", Count = 3 },
+		{ ComponentType = "Hook", Count = 2 },
+		{ ComponentType = "Winch", Count = 1 },
+		{ ComponentType = "PressureSensor", Count = 2 },
+		{ ComponentType = "AND", Count = 2 },
+		{ ComponentType = "SignalLamp", Count = 2 },
+		{ ComponentType = "Switch", Count = 2 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.6,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		StartPadSize = Vector3.new(32, 0.6, 22),
+		StartPadCenter = Vector3.new(0, 0.3, -14),
+
+		GoalPadSize = Vector3.new(18, 0.8, 16),
+		GoalPadCenter = Vector3.new(0, 14.4, 14),
+
+		DuckSpawn = Vector3.new(0, 1.5, -8),
+		ButtonPosition = Vector3.new(0, 14.8, 14),
+
+		BackWallSize = Vector3.new(120, 36, 2),
+		BackWallCenter = Vector3.new(0, 18, -42),
+
+		PlayerSpawn = Vector3.new(-16, 0.5, -16),
+
+		BuildBoundsSize = Vector3.new(64, 40, 72),
+		BuildBoundsCenter = Vector3.new(0, 16, 0),
+
+		StagingRows = { -22, -19.5, -17, -14.5, -12, -9.5, -7, -4.5 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		PitY = 0,
+		AwayDistance = 75,
+		FastSpeed = 45,
+		HighY = 48,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 65,
+	},
+
+	FailureMessages = {
+		OneOutOfTwo = {
+			"ONE OUT OF TWO.",
+			"HALF THE PLAN IS WORKING.",
+			"LOGIC: ALMOST.",
+			"THE WINCH HAS CONDITIONS.",
+		},
+		DuckDown = {
+			"DUCK DOWN.",
+			"ROPE HAS OPINIONS.",
+			"GRAVITY REMAINS EMPLOYED.",
+		},
+		DuckDeparture = {
+			"LOAD TEST: INTERESTING.",
+			"DUCK ELEVATOR: TEMPORARILY OUT OF SERVICE.",
+		},
+		BallisticDuck = {
+			"THAT IS TECHNICALLY A CRANE.",
+			"BALLISTIC DUCK.",
+		},
+		SpaceProgram = {
+			"SPACE PROGRAM STARTED.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+		},
+	},
+}
+
+ExperimentDefinitions.TwoToGo = TWO_TO_GO
+
 --[[
 	Open Workshop: free build. It is deliberately NOT one of the numbered
 	experiments:
@@ -545,7 +741,7 @@ local OPEN_WORKSHOP: ExperimentTypes.ExperimentDefinition = {
 	DiscoveryTitle = "NO RULES",
 	DiscoveryBody = "Nothing here can win or lose. It just runs.",
 
-	-- Every component type, in the order the component wall shows them.
+	-- Every component type, mechanical and automation.
 	Inventory = {
 		{ ComponentType = "Plank", Count = 4 },
 		{ ComponentType = "Block", Count = 4 },
@@ -555,6 +751,14 @@ local OPEN_WORKSHOP: ExperimentTypes.ExperimentDefinition = {
 		{ ComponentType = "Fan", Count = 3 },
 		{ ComponentType = "Hook", Count = 3 },
 		{ ComponentType = "Winch", Count = 2 },
+		{ ComponentType = "Switch", Count = 4 },
+		{ ComponentType = "PressureSensor", Count = 4 },
+		{ ComponentType = "ProximitySensor", Count = 4 },
+		{ ComponentType = "Timer", Count = 4 },
+		{ ComponentType = "AND", Count = 4 },
+		{ ComponentType = "OR", Count = 4 },
+		{ ComponentType = "NOT", Count = 4 },
+		{ ComponentType = "SignalLamp", Count = 6 },
 	},
 
 	Payload = {
@@ -572,32 +776,26 @@ local OPEN_WORKSHOP: ExperimentTypes.ExperimentDefinition = {
 		FloorCenter = Vector3.new(0, -1, 0),
 		PitFloorTopY = -4,
 
-		-- One wide wooden build pad. It has to hold eight staging rows and
-		-- still leave room in front of them for the duck.
-		StartPadSize = Vector3.new(52, 0.6, 46),
-		StartPadCenter = Vector3.new(0, 0.3, -4),
+		-- Wide wooden build pad accommodating mechanical and automation rows.
+		StartPadSize = Vector3.new(56, 0.6, 52),
+		StartPadCenter = Vector3.new(0, 0.3, -6),
 
-		-- There is no goal pad and no button, but the camera aims at the
-		-- midpoint of DuckSpawn and ButtonPosition, so these two still have
-		-- to describe a sensible view of the bay.
 		GoalPadSize = Vector3.new(18, 0.6, 16),
 		GoalPadCenter = Vector3.new(0, 0.3, 14),
 
-		DuckSpawn = Vector3.new(0, 1.5, -22),
+		DuckSpawn = Vector3.new(0, 1.5, -29),
 		ButtonPosition = Vector3.new(0, 0.6, 14),
 
 		BackWallSize = Vector3.new(120, 30, 2),
 		BackWallCenter = Vector3.new(0, 15, -42),
 
-		-- Kept well clear of the back wall: the camera eye is this minus
-		-- (10, -14, 12), and inside the wall it would render black.
 		PlayerSpawn = Vector3.new(-14, 0.5, -20),
 
 		BuildBoundsSize = Vector3.new(64, 34, 64),
 		BuildBoundsCenter = Vector3.new(0, 10, -4),
 
 		-- One row per component type, back of the pad first.
-		StagingRows = { -18, -15, -12, -9, -6, -3, 0, 3 },
+		StagingRows = { -28, -25, -22, -19, -16, -13, -10, -7, -4, -1, 2, 5, 8, 11, 14, 17 },
 		StagingSpacing = 1,
 	},
 
@@ -612,8 +810,6 @@ local OPEN_WORKSHOP: ExperimentTypes.ExperimentDefinition = {
 		StructuralTiltDegrees = 60,
 	},
 
-	-- Generic physics flavour only. There is no goal and no failure
-	-- condition: these are the same funny observations the experiments make.
 	FailureMessages = {
 		DuckDown = {
 			"DUCK DOWN.",
@@ -643,6 +839,8 @@ local orderedList: { ExperimentTypes.ExperimentDefinition } = {
 	OVER_THE_WALL,
 	WINDY_BUSINESS,
 	LIFT_OFF,
+	DONT_HIT_THE_WALL,
+	TWO_TO_GO,
 }
 
 local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
@@ -651,6 +849,8 @@ local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
 	[OVER_THE_WALL.Id] = OVER_THE_WALL,
 	[WINDY_BUSINESS.Id] = WINDY_BUSINESS,
 	[LIFT_OFF.Id] = LIFT_OFF,
+	[DONT_HIT_THE_WALL.Id] = DONT_HIT_THE_WALL,
+	[TWO_TO_GO.Id] = TWO_TO_GO,
 	-- In the catalogue so both sides can resolve the id, but never in
 	-- orderedList, so it stays outside the numbered sequence.
 	[OPEN_WORKSHOP.Id] = OPEN_WORKSHOP,
@@ -687,12 +887,11 @@ function ExperimentDefinitions.IsOpenWorkshopId(id: string?): boolean
 end
 
 --[[
-	Open Workshop unlocks only after every numbered experiment has been
-	finished, which is exactly when UnlockedExperimentIndex moves past the
-	last one.
+	Open Workshop unlocks after Experiment 005 is finished (unlockedIndex >= 6).
+	Completing Experiment 005 unlocks both Open Workshop and Experiment 006.
 ]]
 function ExperimentDefinitions.IsOpenWorkshopUnlocked(unlockedIndex: number): boolean
-	return unlockedIndex > #orderedList
+	return unlockedIndex >= 6
 end
 
 --[[

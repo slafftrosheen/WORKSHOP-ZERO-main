@@ -25,6 +25,7 @@ local ConstructionConfig = require(Shared.construction.ConstructionConfig)
 local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 local ExperimentDefinitions = require(Shared.experiments.ExperimentDefinitions)
 local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
+local LogicConfig = require(Shared.logic.LogicConfig)
 
 local ExperimentToast = require(script.Parent.Parent.ui.ExperimentToast)
 local PartsTray = require(script.Parent.Parent.ui.PartsTray)
@@ -423,6 +424,53 @@ local function countBehaviourComponents(): number
 	return count
 end
 
+local function countLogicStats(): (number, number, number, number)
+	local runtime = findRuntimeFolder()
+	if runtime == nil then
+		return 0, 0, 0, 0
+	end
+
+	local logicNodes = 0
+	local wires = 0
+	local activeSignals = 0
+	local controlledActuators = 0
+
+	for _, descendant in runtime:GetDescendants() do
+		if descendant:IsA("Model") then
+			local compType = descendant:GetAttribute(Config.AttributeComponentType)
+			if
+				compType == "Switch"
+				or compType == "PressureSensor"
+				or compType == "ProximitySensor"
+				or compType == "Timer"
+				or compType == "AND"
+				or compType == "OR"
+				or compType == "NOT"
+				or compType == "SignalLamp"
+			then
+				logicNodes += 1
+			end
+			if
+				(compType == "Motor" or compType == "Winch")
+				and descendant:GetAttribute("WZ_ActuatorControlled") == true
+			then
+				controlledActuators += 1
+			end
+		elseif descendant:IsA("Beam") and descendant:GetAttribute("WZ_ControlWire") == true then
+			wires += 1
+		elseif
+			descendant:IsA("Attachment")
+			and descendant:GetAttribute(LogicConfig.AttributeSignalPort) == true
+		then
+			if descendant:GetAttribute("WZ_SignalValue") == true then
+				activeSignals += 1
+			end
+		end
+	end
+
+	return logicNodes, wires, activeSignals, controlledActuators
+end
+
 --[[
 	F8, Studio only: the numbers a person watching a playtest wants. This is not
 	for players, so it is never created on a real client.
@@ -434,7 +482,7 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 	local label = Instance.new("TextLabel")
 	label.Name = "Readout"
 	label.Position = UDim2.fromOffset(16, 220)
-	label.Size = UDim2.fromOffset(260, 200)
+	label.Size = UDim2.fromOffset(260, 270)
 	label.BackgroundColor3 = Color3.fromRGB(12, 14, 18)
 	label.BackgroundTransparency = 0.3
 	label.BorderSizePixel = 0
@@ -471,9 +519,10 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 
 		local totalConns, poweredAxles = countConnections()
 		local activeBehaviours = countBehaviourComponents()
+		local logicNodes, wires, activeSignals, controlledActuators = countLogicStats()
 
 		label.Text = string.format(
-			"EXPERIMENT (F8)\nExperiment: %s\nExperimentState: %s\nSimulationState: %s\nAttempt: %d\nParts used: %d\nConnections: %d\nPowered axles: %d\nActive behaviour: %d\nDuck speed: %.1f\nDuck height: %.1f",
+			"EXPERIMENT (F8)\nExperiment: %s\nExperimentState: %s\nSimulationState: %s\nAttempt: %d\nParts used: %d\nConnections: %d\nPowered axles: %d\nActive behaviour: %d\nLogic nodes: %d\nSignal wires: %d\nActive signals: %d\nControlled actuators: %d\nLogic tick rate: %d Hz\nDuck speed: %.1f\nDuck height: %.1f",
 			definition.Id,
 			remotes.ExperimentState.Value,
 			remotes.SimulationState.Value,
@@ -482,6 +531,11 @@ local function startDebugOverlay(remotes: ExperimentTypes.ExperimentRemotes): ()
 			totalConns,
 			poweredAxles,
 			activeBehaviours,
+			logicNodes,
+			wires,
+			activeSignals,
+			controlledActuators,
+			LogicConfig.LogicTickRate,
 			speed,
 			height
 		)
