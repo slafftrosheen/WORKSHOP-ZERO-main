@@ -57,6 +57,7 @@ export type FailureEventId =
 	| "DuckTrajectory"
 	| "VerticalProgress"
 	| "NonTouchViolation"
+	| "OneOutOfTwo"
 
 export type FailureThresholds = {
 	-- Below this height the duck is in the pit.
