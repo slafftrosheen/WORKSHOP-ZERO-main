@@ -7,7 +7,7 @@ Roblox. Players meet a silly problem, physically construct something to solve
 it, test it, watch it fail, change one thing, and test again. Learning happens
 through the machine, not through a quiz.
 
-**The Playable Suite** is fully playable within a persistent workshop shell, featuring 7 numbered experiments plus free-build Open Workshop:
+**The Playable Suite** is fully playable within a persistent workshop shell, featuring 9 numbered experiments plus free-build Open Workshop:
 
 ```text
 BUILD  ->  TEST  ->  RESET  ->  BUILD again
@@ -21,14 +21,20 @@ problem -> build -> TEST -> fail -> modify -> TEST again -> succeed -> discovery
 5. **Experiment 005 — Lift Off**: Tension, lifting, load, rope, hook, and powered winch mechanics to hoist the duck onto a high platform.
 6. **Experiment 006 — Don't Hit the Wall**: Sensors, feedback, logic inversion (NOT gate), and actuator control to stop a powered cart before a crash barrier.
 7. **Experiment 007 — Two to Go**: Dual pressure sensors, logic AND gates, and conditional winch activation.
-8. **Open Workshop**: Free sandbox building with all 16 mechanical and automation components unlocked.
+8. **Experiment 008 — Open Sesame**: Rotary servo actuators, angular positioning, and automatic sensor-controlled gate arm opening.
+9. **Experiment 009 — Make Room**: Linear piston actuators, straight-line force, and pushing heavy obstacle crates off the track.
+10. **Open Workshop**: Free sandbox building with all 18 mechanical, automation, and robotics components unlocked.
 
-### Automation & Logic Layer
+### Automation, Logic & Robotics Layer
 
-Workshop Zero features an educational control logic layer over the mechanical physics sandbox:
+Workshop Zero features an educational control logic and robotics layer over the mechanical physics sandbox:
 - **Topology Separation**: Mechanical joints (`ConnectorService`) and control signals (`WiringService`) are distinct systems. Wires are massless, collisionless Beams representing information flow.
 - **Port Contracts**: Explicit `Input` and `Output` ports with visual socket markers and fan-in rules (1 wire per input).
-- **Actuator Control**: Actuators (`Motor`, `Winch`) auto-run if unwired for legacy backwards compatibility, or become strictly controlled when a wire connects to their `Control` input port.
+- **Actuator Policies**:
+  - Legacy actuators (`Motor`, `Winch`) auto-run if unwired, or follow ON/OFF control when wired.
+  - Positional actuators (`Servo`, `Piston`) hold rest (0°, 0 studs) when unwired or `false`; actuate to active (90°, stroke studs) on `true`.
+- **Pure Physics Constraints**: Actuators use Roblox `HingeConstraint` and `PrismaticConstraint` in `Servo` mode. Never scripted CFrame motion.
+- **Electrical Preview in BUILD**: Indicators immediately reflect signal states while physical actuation waits until TEST.
 - **Deterministic 15 Hz Evaluation**: Double-buffered central logic tick that safely handles loops and cycles without stack overflow or recursion.
 
 ## What is in here

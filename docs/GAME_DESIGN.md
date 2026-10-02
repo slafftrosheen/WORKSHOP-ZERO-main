@@ -301,6 +301,50 @@ dual pressure triggers
 
 ---
 
+### Experiment 008: Open Sesame
+
+```text
+Get the duck through the gate.
+3 planks, 4 blocks, 4 wheels, 2 motors, 2 servos, 2 proximity sensors, 1 switch, 1 signal lamp, 1 NOT gate.
+```
+
+#### Educational concept
+
+```text
+approaching vehicle
+  -> proximity sensor triggers
+  -> servo actuator (angular positioning)
+  -> gate arm rotates 90 degrees open
+```
+
+#### Discovery
+
+> **POSITION**: A servo moves to a target angle instead of spinning continuously.
+
+---
+
+### Experiment 009: Make Room
+
+```text
+Get the duck past the obstacle.
+2 planks, 4 blocks, 4 wheels, 1 motor, 2 pistons, 1 proximity sensor, 2 pressure sensors, 2 switches, 1 timer, 1 signal lamp.
+```
+
+#### Educational concept
+
+```text
+sensor / switch / timer trigger
+  -> linear piston actuator (straight-line force)
+  -> heavy obstacle crate pushed sideways into alcove
+  -> clear path to goal
+```
+
+#### Discovery
+
+> **LINEAR MOTION**: A piston turns control into straight-line movement.
+
+---
+
 ## Components
 
 | Component | State |
@@ -316,11 +360,13 @@ dual pressure triggers
 | Switch    | Active manual toggle signal source (Exp 006+) |
 | PressureSensor | Active physical contact / load sensor (Exp 007+) |
 | ProximitySensor | Active forward ray/box detection sensor (Exp 006+) |
-| Timer     | Active signal delay module (Open Workshop) |
+| Timer     | Active signal delay module (Exp 009+) |
 | AND       | Active dual-input logic AND gate (Exp 007+) |
 | OR        | Active dual-input logic OR gate (Open Workshop) |
 | NOT       | Active logic inverter gate (Exp 006+) |
 | SignalLamp| Active visual signal indicator (Exp 006+) |
+| Servo     | Active rotary angular position actuator (Exp 008+) |
+| Piston    | Active linear push actuator (Exp 009+) |
 
 ## Interactions
 

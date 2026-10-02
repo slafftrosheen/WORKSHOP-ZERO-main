@@ -9,7 +9,7 @@ Workshop Zero is a Roblox physics/building game. Players solve ridiculous
 problems by building ridiculous machines, testing them, watching them fail,
 changing one thing and testing again.
 
-**Experiments 001 through 007** form the active 7-experiment playable suite:
+**Experiments 001 through 009** form the active 9-experiment playable suite:
 - **Experiment 001 - Save the Duck** (passive construction, structures, gravity)
 - **Experiment 002 - Uphill Delivery** (motors, wheels, torque, traction)
 - **Experiment 003 - Over the Wall** (stored energy, spring launcher, compression)
@@ -17,7 +17,9 @@ changing one thing and testing again.
 - **Experiment 005 - Lift Off** (tension, lifting force, load, rope, hook, winch)
 - **Experiment 006 - Don't Hit the Wall** (sensors, feedback, logic inversion)
 - **Experiment 007 - Two to Go** (logic AND, dual conditions, automation)
-- **Open Workshop** (free sandbox, full mechanical and automation catalogue)
+- **Experiment 008 - Open Sesame** (servo, angular position, gate arm automation)
+- **Experiment 009 - Make Room** (piston, linear force, obstacle pushing, automation)
+- **Open Workshop** (free sandbox, full mechanical, automation, and robotics catalogue)
 
 ## Hard rules
 
@@ -117,6 +119,17 @@ Do not break these without an explicit decision:
 - Workshop Zero simulates control logic, not electrical power distribution (no short circuits, voltages, or battery limits).
 - Logic cycles must remain safe and deterministic (15 Hz tick evaluation, double-buffered state updates, non-recursive).
 - RESET restores logic state and zeros velocities, but preserves signal wires; RESTART / CLEAR removes wires and resets inventory to rack.
+
+## Robotics & Actuator invariants (WZ-LR4)
+
+- Positional actuators use Roblox servo constraints. Never animate Servo or Piston motion through CFrame.
+- Do not extend the Axle abstraction into a transmission graph until shaft coupling is deliberately redesigned.
+- Legacy actuators (`RotaryMotor`, `RopeWinch`) retain automatic run policy when unwired.
+- Positional actuators (`RotaryServo`, `LinearPiston`) hold their REST state (0°, retracted 0 studs) when unwired or receiving a `false` signal; they actuate to ACTIVE target (90°, stroke studs) on a `true` signal.
+- In BUILD mode, actuator physics constraints remain inactive (`ActuatorType = None`). Control signals preview electrically on indicators without physical movement.
+- Physical limits are strictly enforced on constraints (Servo 0° to 90°, Piston 0 to `PistonStroke`). Plungers must never separate from housings.
+- Internal moving parts (e.g. Piston Plunger) are anchored during BUILD, unanchored during TEST, and restored to exact relative rest transform on RESET with zero velocity.
+- Open Workshop unlock milestone is explicit (`ConstructionConfig.OpenWorkshopUnlockAfterExperiment = 5`), unlocking after completing Experiment 005 rather than depending on total experiment count.
 
 ## Repository map
 

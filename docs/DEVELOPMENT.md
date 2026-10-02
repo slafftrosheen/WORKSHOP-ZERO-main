@@ -79,12 +79,17 @@ Everything below happens in Studio, in Play mode.
 
 ### The Levels
 
-By default the server builds the first experiment (`save_the_duck`) and progresses through the suite. You can also override the starting experiment in Studio by setting `DevExperimentId` in `src/shared/experiments/ExperimentDefinitions.luau`:
+By default the server builds the first experiment (`save_the_duck`) and progresses through the suite. You can also override the starting experiment in Studio by setting `DevExperimentId` in `src/shared/construction/ConstructionConfig.luau`:
 - `"save_the_duck"` (Experiment 001)
 - `"uphill_delivery"` (Experiment 002)
 - `"over_the_wall"` (Experiment 003)
 - `"windy_business"` (Experiment 004)
 - `"lift_off"` (Experiment 005)
+- `"dont_hit_the_wall"` (Experiment 006)
+- `"two_to_go"` (Experiment 007)
+- `"open_sesame"` (Experiment 008)
+- `"make_room"` (Experiment 009)
+- `"open_workshop"` (Open Workshop free build)
 
 The Workshop structure is strictly partitioned:
 ```text

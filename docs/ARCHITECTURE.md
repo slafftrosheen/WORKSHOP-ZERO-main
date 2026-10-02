@@ -25,24 +25,31 @@ The system is strictly partitioned into single-responsibility boundaries:
    - Tracks user-constructed joints between components (`Rigid` -> `WeldConstraint`, `Axle` -> `HingeConstraint`, `Rope` -> `RopeConstraint`).
    - Owns snapping, alignment, disconnection, and the authoritative connection registry.
    - For `Rope`, maintains natural distance and slack without collapsing component transforms together.
+   - For `Axle`, supports `RotaryMotor` (when Motor attached) or `RotaryServo` (when Servo attached). Warns on unsupported `Motor <-> Servo` axle connections.
 
-3. **`ActuatorService` — Powered Mechanical Joints**
-   - Subscribes to `ConnectorService` lifecycle hooks.
-   - Differentiates `RotaryMotor` (powered `Axle` hinges) and `RopeWinch` (powered `Rope` winches).
-   - Configures motor actuators (`AngularVelocity`, `MotorMaxTorque`, `AngularResponsiveness`).
-   - Powers rope winches inward during `Testing` using native `WinchTarget`, `WinchSpeed`, and `WinchForce`.
-   - Cooperatively derives rotational signs so symmetric dual-motor chassis drive forward together.
-   - Enables actuators on `Testing`, disables them and restores initial rope length **before** transform restoration on `Resetting` to prevent progressive rope shortening.
+3. **`ActuatorService` — Powered Joints & Actuators**
+   - Subscribes to `ConnectorService` lifecycle hooks and discovers self-contained components (`Piston`).
+   - Manages four distinct actuator types:
+     - `RotaryMotor`: continuous angular rotation (`HingeConstraint`, `ActuatorType = Motor`).
+     - `RopeWinch`: distance pull via physics (`RopeConstraint`, `WinchEnabled`).
+     - `RotaryServo`: angular positioning (`HingeConstraint`, `ActuatorType = Servo`, limits 0°–90°).
+     - `LinearPiston`: self-contained straight-line stroke (`PrismaticConstraint`, `ActuatorType = Servo`, limits 0–`PistonStroke`).
+   - Actuator Control Policies:
+     - Legacy actuators (`Motor`, `Winch`) auto-run when unwired during `Testing`; follow ON/OFF control when wired.
+     - Positional actuators (`Servo`, `Piston`) hold rest (0°, 0 studs) when unwired or receiving `false`; actuate to active (90°, stroke studs) on `true`.
+   - Never uses scripted CFrame animation: all motion is pure Roblox constraint physics.
+   - Enables actuators on `Testing`, disables them and restores rest transforms and rope lengths **before** transform restoration on `Resetting` to prevent progressive drift.
 
-3. **`BehaviourService` — Component-Specific Physical Effects**
+4. **`BehaviourService` — Component-Specific Physical Effects**
    - Manages non-joint physical environmental interactions during `Testing`.
    - Simulates aerodynamic airflow cones and reaction thrust for powered `Fan` components using `VectorForce` primitives.
    - Runs a single shared, mobile-friendly Heartbeat loop during `Testing` only.
    - Tears down all dynamic attachments and forces cleanly on `Resetting` or level change.
 
-4. **`ExperimentService` — Experiment Lifecycle & Progression**
+5. **`ExperimentService` — Experiment Lifecycle & Progression**
    - Owns the `ExperimentState` state machine (`Loading`, `Build`, `Testing`, `Success`).
-   - Validates session-local unlocks (001 -> 004) without persistent storage.
+   - Validates session-local unlocks across Experiments 001–009 without persistent storage.
+   - Enforces explicit Open Workshop unlock milestone (`ConstructionConfig.OpenWorkshopUnlockAfterExperiment = 5`), ensuring free build unlocks after completing Experiment 005.
    - Coordinates level loading, clean workshop teardown, counter publication, and experiment selection.
 
 5. **`Experiment Modules` — Challenge-Specific Rules**

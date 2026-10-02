@@ -351,6 +351,8 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 
 ---
 
+---
+
 ### P3-06 Signal Lamp [STATUS: QUEUED]
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.SignalLamp`
 - **Roblox Size**: `1.4 × 1.6 × 1.4` studs.
@@ -363,4 +365,49 @@ clean topology, low polygon count, no text, no logos, isolated single objects
   Strong silhouette.
   No cables.
   ```
+
+---
+
+## Priority 4 Asset Queue (Robotics Actuators)
+
+### P4-01 Rotary Servo Actuator [STATUS: QUEUED]
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Servo`
+- **Roblox Size**: `2.2 × 2.2 × 2.2` studs.
+- **Visual Requirements**: Chunky yellow and charcoal industrial housing, clearly visible rotating blue output hub, sturdy mounting base, oversized bolts, small cyan control socket and indicator, friendly toy-industrial proportions, worn painted metal, no text.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized compact servo actuator module for a playful family
+  robotics engineering game. Chunky yellow and charcoal industrial
+  housing, clearly visible rotating blue output hub, sturdy mounting
+  base, oversized bolts, small cyan control socket and indicator,
+  friendly toy-industrial proportions, worn painted metal,
+  no text, isolated on white background.
+
+  Roblox-friendly low-poly PBR game asset.
+  Strong silhouette.
+  No cables.
+  No environment.
+  ```
+
+---
+
+### P4-02 Linear Piston Actuator [STATUS: QUEUED]
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Piston`
+- **Roblox Size**: `2.2 × 2.2 × 3.6` studs housing with extending plunger.
+- **Visual Requirements**: Chunky yellow and charcoal housing, large visible sliding steel plunger, broad padded push plate, sturdy mounting base, cyan control socket and indicator, oversized bolts, worn toy-industrial workshop styling, no text.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized electric linear actuator / piston module for a playful
+  family engineering game. Chunky yellow and charcoal housing,
+  large visible sliding steel plunger, broad padded push plate,
+  sturdy mounting base, cyan control socket and indicator,
+  oversized bolts, worn toy-industrial workshop styling,
+  no text, isolated on white background.
+
+  Roblox-friendly low-poly PBR game asset.
+  Strong readable extension direction.
+  No cables.
+  No environment.
+  ```
+
 
