@@ -177,6 +177,13 @@ local definitions: { [string]: ConstructionTypes.ComponentDefinition } = {
 				Offset = CFrame.new(1.2, 0, 0),
 			},
 		},
+		SignalPorts = {
+			{
+				Name = "Control",
+				Direction = "Input",
+				Offset = CFrame.new(0, 1.0, 0) * CFrame.Angles(0, 0, QUARTER_TURN),
+			},
+		},
 	},
 
 	Fan = {
@@ -270,6 +277,304 @@ local definitions: { [string]: ConstructionTypes.ComponentDefinition } = {
 				Offset = CFrame.new(0, 0, -1.2) * CFrame.Angles(0, QUARTER_TURN, 0),
 			},
 		},
+		SignalPorts = {
+			{
+				Name = "Control",
+				Direction = "Input",
+				Offset = CFrame.new(0, 1.0, 0) * CFrame.Angles(0, 0, QUARTER_TURN),
+			},
+		},
+	},
+
+	Switch = {
+		Type = "Switch",
+		DisplayName = "Switch",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(2.0, 1.6, 2.0),
+		Color = Color3.fromRGB(225, 175, 45),
+		Material = Enum.Material.SmoothPlastic,
+		Density = 0.8,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -0.8, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.0, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "Out",
+				Direction = "Output",
+				Offset = CFrame.new(1.0, 0, 0),
+			},
+		},
+	},
+
+	PressureSensor = {
+		Type = "PressureSensor",
+		DisplayName = "Pressure Sensor",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(3.0, 0.8, 3.0),
+		Color = Color3.fromRGB(50, 54, 64),
+		Material = Enum.Material.Metal,
+		Density = 1.0,
+		Friction = 0.6,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -0.4, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			{
+				Name = "Rigid_A",
+				Type = RIGID,
+				Offset = CFrame.new(1.5, 0, 0),
+			},
+			{
+				Name = "Rigid_B",
+				Type = RIGID,
+				Offset = CFrame.new(-1.5, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "Out",
+				Direction = "Output",
+				Offset = CFrame.new(0, 0, 1.5) * CFrame.Angles(0, MINUS_QUARTER_TURN, 0),
+			},
+		},
+	},
+
+	ProximitySensor = {
+		Type = "ProximitySensor",
+		DisplayName = "Proximity Sensor",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(2.0, 1.8, 2.0),
+		Color = Color3.fromRGB(225, 175, 45),
+		Material = Enum.Material.SmoothPlastic,
+		Density = 0.8,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -0.9, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.0, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "Out",
+				Direction = "Output",
+				Offset = CFrame.new(0, 0.9, 0) * CFrame.Angles(0, 0, QUARTER_TURN),
+			},
+		},
+	},
+
+	Timer = {
+		Type = "Timer",
+		DisplayName = "Timer",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(2.0, 2.0, 2.0),
+		Color = Color3.fromRGB(50, 54, 64),
+		Material = Enum.Material.Metal,
+		Density = 0.9,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.0, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.0, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "In",
+				Direction = "Input",
+				Offset = CFrame.new(0, 0, -1.0) * CFrame.Angles(0, QUARTER_TURN, 0),
+			},
+			{
+				Name = "Out",
+				Direction = "Output",
+				Offset = CFrame.new(0, 0, 1.0) * CFrame.Angles(0, MINUS_QUARTER_TURN, 0),
+			},
+		},
+	},
+
+	AND = {
+		Type = "AND",
+		DisplayName = "AND Gate",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(2.4, 2.0, 2.0),
+		Color = Color3.fromRGB(225, 175, 45),
+		Material = Enum.Material.SmoothPlastic,
+		Density = 0.8,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.0, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.2, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "A",
+				Direction = "Input",
+				Offset = CFrame.new(-0.6, 0, -1.0) * CFrame.Angles(0, QUARTER_TURN, 0),
+			},
+			{
+				Name = "B",
+				Direction = "Input",
+				Offset = CFrame.new(0.6, 0, -1.0) * CFrame.Angles(0, QUARTER_TURN, 0),
+			},
+			{
+				Name = "Out",
+				Direction = "Output",
+				Offset = CFrame.new(1.2, 0, 0),
+			},
+		},
+	},
+
+	OR = {
+		Type = "OR",
+		DisplayName = "OR Gate",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(2.4, 2.0, 2.0),
+		Color = Color3.fromRGB(225, 175, 45),
+		Material = Enum.Material.SmoothPlastic,
+		Density = 0.8,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.0, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.2, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "A",
+				Direction = "Input",
+				Offset = CFrame.new(-0.6, 0, -1.0) * CFrame.Angles(0, QUARTER_TURN, 0),
+			},
+			{
+				Name = "B",
+				Direction = "Input",
+				Offset = CFrame.new(0.6, 0, -1.0) * CFrame.Angles(0, QUARTER_TURN, 0),
+			},
+			{
+				Name = "Out",
+				Direction = "Output",
+				Offset = CFrame.new(1.2, 0, 0),
+			},
+		},
+	},
+
+	NOT = {
+		Type = "NOT",
+		DisplayName = "NOT Gate",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(2.0, 2.0, 2.0),
+		Color = Color3.fromRGB(225, 175, 45),
+		Material = Enum.Material.SmoothPlastic,
+		Density = 0.8,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.0, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.0, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "In",
+				Direction = "Input",
+				Offset = CFrame.new(0, 0, -1.0) * CFrame.Angles(0, QUARTER_TURN, 0),
+			},
+			{
+				Name = "Out",
+				Direction = "Output",
+				Offset = CFrame.new(1.0, 0, 0),
+			},
+		},
+	},
+
+	SignalLamp = {
+		Type = "SignalLamp",
+		DisplayName = "Signal Lamp",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(1.8, 1.8, 1.8),
+		Color = Color3.fromRGB(50, 54, 64),
+		Material = Enum.Material.Metal,
+		Density = 0.8,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -0.9, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-0.9, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "In",
+				Direction = "Input",
+				Offset = CFrame.new(0.9, 0, 0),
+			},
+		},
 	},
 }
 
@@ -286,6 +591,12 @@ for _, definition in definitions do
 	end
 
 	table.freeze(definition.Connectors)
+	if definition.SignalPorts ~= nil then
+		for _, port in definition.SignalPorts do
+			table.freeze(port)
+		end
+		table.freeze(definition.SignalPorts)
+	end
 	table.freeze(definition)
 end
 

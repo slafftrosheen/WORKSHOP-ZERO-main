@@ -221,6 +221,183 @@ local function createSignalSocketMarker(attachment: Attachment, direction: "Inpu
 	holeWeld.Parent = hole
 end
 
+local function buildAutomationVisuals(
+	model: Model,
+	definition: ConstructionTypes.ComponentDefinition,
+	root: BasePart
+)
+	local cType = definition.Type
+
+	if cType == "Switch" then
+		model:SetAttribute("WZ_SwitchState", false)
+
+		-- Indicator light
+		local indicator = Instance.new("Part")
+		indicator.Name = "WZ_SwitchIndicator"
+		indicator.Shape = Enum.PartType.Cylinder
+		indicator.Size = Vector3.new(0.12, 0.4, 0.4)
+		indicator.CFrame = root.CFrame
+			* CFrame.new(-0.5, 0.81, 0)
+			* CFrame.Angles(0, 0, math.rad(90))
+		indicator.Color = Color3.fromRGB(50, 55, 65)
+		indicator.Material = Enum.Material.SmoothPlastic
+		indicator.Anchored = false
+		indicator.CanCollide = false
+		indicator.CanQuery = false
+		indicator.CanTouch = false
+		indicator.Massless = true
+		indicator.Parent = model
+
+		local indWeld = Instance.new("WeldConstraint")
+		indWeld.Name = "WZ_SwitchIndWeld"
+		indWeld.Part0 = root
+		indWeld.Part1 = indicator
+		indWeld.Parent = indicator
+
+		-- Toggle lever
+		local lever = Instance.new("Part")
+		lever.Name = "WZ_SwitchLever"
+		lever.Size = Vector3.new(0.2, 0.7, 0.2)
+		lever.Color = Color3.fromRGB(200, 205, 215)
+		lever.Material = Enum.Material.Metal
+		lever.Anchored = false
+		lever.CanCollide = false
+		lever.CanQuery = true
+		lever.CanTouch = false
+		lever.Massless = true
+		lever.CFrame = root.CFrame * CFrame.new(0.2, 0.95, 0) * CFrame.Angles(0, 0, math.rad(-20))
+		lever.Parent = model
+
+		local leverWeld = Instance.new("WeldConstraint")
+		leverWeld.Name = "WZ_SwitchLeverWeld"
+		leverWeld.Part0 = root
+		leverWeld.Part1 = lever
+		leverWeld.Parent = lever
+
+		-- ProximityPrompt for player interaction
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.Name = "TogglePrompt"
+		prompt.ActionText = "Flip"
+		prompt.ObjectText = "Switch"
+		prompt.RequiresLineOfSight = false
+		prompt.MaxActivationDistance = 12
+		prompt.HoldDuration = 0
+		prompt.Parent = lever
+
+		prompt.Triggered:Connect(function()
+			local current = model:GetAttribute("WZ_SwitchState") == true
+			local newState = not current
+			model:SetAttribute("WZ_SwitchState", newState)
+
+			indicator.Material = if newState
+				then Enum.Material.Neon
+				else Enum.Material.SmoothPlastic
+			indicator.Color = if newState
+				then Color3.fromRGB(80, 240, 120)
+				else Color3.fromRGB(50, 55, 65)
+
+			local angle = if newState then math.rad(20) else math.rad(-20)
+			lever.CFrame = root.CFrame * CFrame.new(0.2, 0.95, 0) * CFrame.Angles(0, 0, angle)
+		end)
+	elseif cType == "PressureSensor" then
+		-- Movable / visual pressure pad on top
+		local pad = Instance.new("Part")
+		pad.Name = "Pad"
+		pad.Size = Vector3.new(2.6, 0.25, 2.6)
+		pad.CFrame = root.CFrame * CFrame.new(0, 0.45, 0)
+		pad.Color = Color3.fromRGB(45, 120, 230)
+		pad.Material = Enum.Material.SmoothPlastic
+		pad.Anchored = false
+		pad.CanCollide = true
+		pad.CanTouch = true
+		pad.Massless = true
+		pad.Parent = model
+
+		local padWeld = Instance.new("WeldConstraint")
+		padWeld.Name = "WZ_PadWeld"
+		padWeld.Part0 = root
+		padWeld.Part1 = pad
+		padWeld.Parent = pad
+
+		local indicator = Instance.new("Part")
+		indicator.Name = "WZ_SensorIndicator"
+		indicator.Shape = Enum.PartType.Cylinder
+		indicator.Size = Vector3.new(0.08, 0.4, 0.4)
+		indicator.CFrame = root.CFrame * CFrame.new(0, 0.58, 0) * CFrame.Angles(0, 0, math.rad(90))
+		indicator.Color = Color3.fromRGB(40, 50, 70)
+		indicator.Material = Enum.Material.SmoothPlastic
+		indicator.Anchored = false
+		indicator.CanCollide = false
+		indicator.CanTouch = false
+		indicator.Massless = true
+		indicator.Parent = model
+
+		local indWeld = Instance.new("WeldConstraint")
+		indWeld.Name = "WZ_IndWeld"
+		indWeld.Part0 = root
+		indWeld.Part1 = indicator
+		indWeld.Parent = indicator
+	elseif cType == "ProximitySensor" then
+		-- Front sensor lens window (+X direction)
+		local lens = Instance.new("Part")
+		lens.Name = "WZ_SensorLens"
+		lens.Size = Vector3.new(0.2, 1.2, 1.2)
+		lens.CFrame = root.CFrame * CFrame.new(0.95, 0, 0)
+		lens.Color = Color3.fromRGB(40, 60, 90)
+		lens.Material = Enum.Material.SmoothPlastic
+		lens.Anchored = false
+		lens.CanCollide = false
+		lens.CanTouch = false
+		lens.Massless = true
+		lens.Parent = model
+
+		local lensWeld = Instance.new("WeldConstraint")
+		lensWeld.Name = "WZ_LensWeld"
+		lensWeld.Part0 = root
+		lensWeld.Part1 = lens
+		lensWeld.Parent = lens
+	elseif cType == "SignalLamp" then
+		-- Translucent / glowing dome lamp bulb on top
+		local bulb = Instance.new("Part")
+		bulb.Name = "WZ_LampBulb"
+		bulb.Shape = Enum.PartType.Ball
+		bulb.Size = Vector3.new(1.1, 1.1, 1.1)
+		bulb.CFrame = root.CFrame * CFrame.new(0, 0.65, 0)
+		bulb.Color = Color3.fromRGB(20, 50, 30)
+		bulb.Material = Enum.Material.SmoothPlastic
+		bulb.Anchored = false
+		bulb.CanCollide = false
+		bulb.CanTouch = false
+		bulb.Massless = true
+		bulb.Parent = model
+
+		local bulbWeld = Instance.new("WeldConstraint")
+		bulbWeld.Name = "WZ_BulbWeld"
+		bulbWeld.Part0 = root
+		bulbWeld.Part1 = bulb
+		bulbWeld.Parent = bulb
+	elseif cType == "AND" or cType == "OR" or cType == "NOT" or cType == "Timer" then
+		-- Large readable typography SurfaceGui on top face (+Y)
+		local gui = Instance.new("SurfaceGui")
+		gui.Name = "LabelGui"
+		gui.Face = Enum.NormalId.Top
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		gui.PixelsPerStud = 50
+		gui.Adornee = root
+		gui.Parent = model
+
+		local label = Instance.new("TextLabel")
+		label.Name = "GateName"
+		label.Size = UDim2.fromScale(1, 1)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamBlack
+		label.TextSize = 36
+		label.TextColor3 = Color3.fromRGB(40, 44, 52)
+		label.Text = cType
+		label.Parent = gui
+	end
+end
+
 local function ensureFolder(parent: Instance, name: string): Instance
 	local existing = parent:FindFirstChild(name)
 	if existing ~= nil then
@@ -661,6 +838,8 @@ function ComponentFactory.Create(
 		weld.Part1 = indicator
 		weld.Parent = indicator
 	end
+
+	buildAutomationVisuals(model, definition, root)
 
 	model:PivotTo(pivot)
 	model.Parent = componentsContainer
