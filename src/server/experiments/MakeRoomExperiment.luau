@@ -1,15 +1,15 @@
 --!strict
 
 --[[
-	OpenSesameExperiment
+	MakeRoomExperiment
 
-	Experiment 008: Open Sesame.
-	Objective: "Get the duck through the gate."
+	Experiment 009: Make Room.
+	Objective: "Get the duck past the obstacle."
 
 	Key game concepts:
-		* Sensors: Proximity sensor detects duck or cart approaching.
-		* Servos: Rotary servo moves to target angle (90 deg) instead of spinning continuously.
-		* Feedback & Automation: Sensor triggers servo to swing gate open.
+		* Linear actuators: Piston turns control into straight-line movement.
+		* Sensors & Automation: Sensor or Switch triggers piston to push obstacle sideways.
+		* Obstacle interaction: Heavy crate must be cleared from the track.
 		* Open solution: Any machine that gets the duck into the goal button wins.
 ]]
 
@@ -23,22 +23,22 @@ local ExperimentDefinitions = require(Shared.experiments.ExperimentDefinitions)
 local ExperimentTypes = require(Shared.experiments.ExperimentTypes)
 
 local FlavourObserver = require(script.Parent.FlavourObserver)
-local OpenSesameLevel = require(script.Parent.OpenSesameLevel)
+local MakeRoomLevel = require(script.Parent.MakeRoomLevel)
 
 local Config = ConstructionConfig
 local BUTTON_SOUND = "rbxasset://sounds/electronicpingshort.wav"
 
-local OpenSesameExperiment = {}
+local MakeRoomExperiment = {}
 
-local definition: ExperimentTypes.ExperimentDefinition = ExperimentDefinitions.Get("open_sesame")
+local definition: ExperimentTypes.ExperimentDefinition = ExperimentDefinitions.Get("make_room")
 	or ExperimentDefinitions.GetDefault()
 
-type HandlesWithPosts = ExperimentTypes.LevelHandles & {
-	GatePostLeft: BasePart,
-	GatePostRight: BasePart,
+type HandlesWithObstacle = ExperimentTypes.LevelHandles & {
+	Obstacle: BasePart,
+	ObstacleStartCFrame: CFrame,
 }
 
-local handles: HandlesWithPosts? = nil
+local handles: HandlesWithObstacle? = nil
 local report: ExperimentTypes.ExperimentReport? = nil
 local capRestPosition: Vector3 = Vector3.zero
 local capRestColor: Color3 = Color3.new()
@@ -52,7 +52,7 @@ local goalConnection: RBXScriptConnection? = nil
 
 local function log(message: string)
 	if RunService:IsStudio() then
-		print(string.format("[WZ 008] %s", message))
+		print(string.format("[WZ 009] %s", message))
 	end
 end
 
@@ -103,6 +103,29 @@ local function zeroPayloadVelocity()
 		part.AssemblyLinearVelocity = Vector3.zero
 		part.AssemblyAngularVelocity = Vector3.zero
 	end
+end
+
+-- Obstacle helpers ------------------------------------------------------------
+
+local function setObstacleAnchored(anchored: boolean)
+	local level = handles
+	if level == nil then
+		return
+	end
+
+	level.Obstacle.Anchored = anchored
+end
+
+local function resetObstacle()
+	local level = handles
+	if level == nil then
+		return
+	end
+
+	level.Obstacle.AssemblyLinearVelocity = Vector3.zero
+	level.Obstacle.AssemblyAngularVelocity = Vector3.zero
+	level.Obstacle.CFrame = level.ObstacleStartCFrame
+	level.Obstacle.Anchored = true
 end
 
 -- Goal Animation --------------------------------------------------------------
@@ -156,7 +179,7 @@ local function startMonitors()
 	end
 
 	local thresholds = definition.Thresholds
-	local timeStuckNearGate = 0
+	local timeStuckNearObstacle = 0
 	attemptStartTime = os.clock()
 
 	sampler = RunService.Heartbeat:Connect(function(dt: number)
@@ -190,21 +213,23 @@ local function startMonitors()
 			notify("SpaceProgram")
 		end
 
-		-- 2. Gate stall detection (duck is in front of the gate Z between -12 and 0, stopped)
+		-- 2. Obstacle blockage detection
+		-- Duck is stopped in front of obstacle (Z: -14 to -1) while obstacle hasn't moved much
+		local obstacleDist = (level.Obstacle.Position - level.ObstacleStartCFrame.Position).Magnitude
 		if elapsed > 2.5 and pos.Z > -14 and pos.Z < 0 and math.abs(pos.X) < 7 then
-			if speed < 0.5 then
-				timeStuckNearGate += dt
-				if timeStuckNearGate > 2.0 then
-					notify("GateClosed")
+			if speed < 0.5 and obstacleDist < 1.5 then
+				timeStuckNearObstacle += dt
+				if timeStuckNearObstacle > 2.0 then
+					notify("ObstacleUnmoved")
+				end
+			elseif speed < 0.5 and obstacleDist >= 1.5 and obstacleDist < 4.0 then
+				timeStuckNearObstacle += dt
+				if timeStuckNearObstacle > 3.0 then
+					notify("PushHarder")
 				end
 			else
-				timeStuckNearGate = 0
+				timeStuckNearObstacle = 0
 			end
-		end
-
-		-- 3. Automation delay detection (duck waiting near start or moving slowly for > 6s)
-		if elapsed > 6.0 and pos.Z < -5 and speed < 1.0 then
-			notify("AutomationThinking")
 		end
 	end)
 end
@@ -242,14 +267,14 @@ end
 
 -- Lifecycle -------------------------------------------------------------------
 
-function OpenSesameExperiment.Load(
+function MakeRoomExperiment.Load(
 	reportCallback: ExperimentTypes.ExperimentReport
 ): ExperimentTypes.LoadedExperiment?
-	local currentDef = ExperimentDefinitions.Get("open_sesame") or definition
+	local currentDef = ExperimentDefinitions.Get("make_room") or definition
 	definition = currentDef
 	report = reportCallback
 
-	local built = OpenSesameLevel.Build(definition)
+	local built = MakeRoomLevel.Build(definition)
 	handles = built.Handles
 
 	local duck = built.Handles.Duck
@@ -269,18 +294,19 @@ function OpenSesameExperiment.Load(
 	}
 end
 
-function OpenSesameExperiment.StartAttempt(attemptNumber: number)
+function MakeRoomExperiment.StartAttempt(attemptNumber: number)
 	currentAttempt = attemptNumber
 	live = true
 	succeeded = false
 	flavour.Clear()
 
 	setPayloadAnchored(false)
+	setObstacleAnchored(false)
 	startMonitors()
 	log(string.format("Attempt %d started", currentAttempt))
 end
 
-function OpenSesameExperiment.RestoreToBuild()
+function MakeRoomExperiment.RestoreToBuild()
 	live = false
 	succeeded = false
 	stopMonitors()
@@ -290,13 +316,14 @@ function OpenSesameExperiment.RestoreToBuild()
 		setPayloadAnchored(true)
 		zeroPayloadVelocity()
 		level.Duck:PivotTo(level.DuckSpawn)
+		resetObstacle()
 		resetGoalButton(level.GoalCap)
 	end
 
 	log(string.format("Attempt %d restored to Build", currentAttempt))
 end
 
-function OpenSesameExperiment.Restart()
+function MakeRoomExperiment.Restart()
 	currentAttempt = 0
 	live = false
 	succeeded = false
@@ -308,13 +335,14 @@ function OpenSesameExperiment.Restart()
 		setPayloadAnchored(true)
 		zeroPayloadVelocity()
 		level.Duck:PivotTo(level.DuckSpawn)
+		resetObstacle()
 		resetGoalButton(level.GoalCap)
 	end
 
 	log("Experiment restarted")
 end
 
-function OpenSesameExperiment.Unload()
+function MakeRoomExperiment.Unload()
 	live = false
 	succeeded = false
 	stopMonitors()
@@ -329,8 +357,8 @@ function OpenSesameExperiment.Unload()
 	log("Unloaded")
 end
 
-function OpenSesameExperiment.GetHandles(): ExperimentTypes.LevelHandles?
+function MakeRoomExperiment.GetHandles(): ExperimentTypes.LevelHandles?
 	return handles
 end
 
-return table.freeze(OpenSesameExperiment)
+return table.freeze(MakeRoomExperiment)

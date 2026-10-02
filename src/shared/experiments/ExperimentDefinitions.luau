@@ -812,6 +812,116 @@ local OPEN_SESAME: ExperimentTypes.ExperimentDefinition = {
 
 ExperimentDefinitions.OpenSesame = OPEN_SESAME
 
+local MAKE_ROOM: ExperimentTypes.ExperimentDefinition = {
+	Id = "make_room",
+	Number = 9,
+	Name = "MAKE ROOM",
+	Objective = "Get the duck past the obstacle.",
+
+	IntroTitle = "EXPERIMENT 009",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "THE WAY IS CLEAR.",
+	RestartButton = "TRY AGAIN",
+
+	DiscoveryTitle = "LINEAR MOTION",
+	DiscoveryBody = "A piston turns control into straight-line movement.",
+
+	Inventory = {
+		{ ComponentType = "Plank", Count = 2 },
+		{ ComponentType = "Block", Count = 4 },
+		{ ComponentType = "Wheel", Count = 4 },
+		{ ComponentType = "Motor", Count = 1 },
+		{ ComponentType = "Piston", Count = 2 },
+		{ ComponentType = "ProximitySensor", Count = 1 },
+		{ ComponentType = "PressureSensor", Count = 2 },
+		{ ComponentType = "Switch", Count = 2 },
+		{ ComponentType = "Timer", Count = 1 },
+		{ ComponentType = "SignalLamp", Count = 1 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.6,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		StartPadSize = Vector3.new(24, 0.6, 16),
+		StartPadCenter = Vector3.new(0, 0.3, -20),
+
+		GoalPadSize = Vector3.new(20, 0.6, 16),
+		GoalPadCenter = Vector3.new(0, 0.3, 16),
+
+		DuckSpawn = Vector3.new(0, 1.5, -20),
+		ButtonPosition = Vector3.new(0, 0.6, 16),
+
+		BackWallSize = Vector3.new(120, 30, 2),
+		BackWallCenter = Vector3.new(0, 15, -42),
+
+		PlayerSpawn = Vector3.new(-14, 0.5, -20),
+
+		BuildBoundsSize = Vector3.new(64, 30, 72),
+		BuildBoundsCenter = Vector3.new(0, 8, 0),
+
+		StagingRows = { -28, -25.5, -23, -20.5, -18, -15.5, -13, -10.5, -8, -5.5 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		PitY = 0,
+		AwayDistance = 75,
+		FastSpeed = 45,
+		HighY = 32,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 60,
+	},
+
+	FailureMessages = {
+		ObstacleUnmoved = {
+			"OBSTACLE REMAINS OBSTACLY.",
+			"THE BOX HAS DECLINED TO MOVE.",
+		},
+		BoxDeclined = {
+			"THE BOX HAS DECLINED TO MOVE.",
+			"OBSTACLE REMAINS OBSTACLY.",
+		},
+		PushHarder = {
+			"PUSH HARDER.\nOR SMARTER.",
+			"STRAIGHT-LINE PROGRESS.",
+		},
+		StraightLineProgress = {
+			"STRAIGHT-LINE PROGRESS.",
+			"PUSH HARDER.\nOR SMARTER.",
+		},
+		DuckDown = {
+			"DUCK DOWN.",
+			"GRAVITY REMAINS EMPLOYED.",
+		},
+		DuckDeparture = {
+			"UNSCHEDULED DUCK DEPARTURE.",
+		},
+		BallisticDuck = {
+			"BALLISTIC DUCK.",
+		},
+		SpaceProgram = {
+			"SPACE PROGRAM STARTED.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+		},
+	},
+}
+
+ExperimentDefinitions.MakeRoom = MAKE_ROOM
+
 --[[
 	Open Workshop: free build. It is deliberately NOT one of the numbered
 	experiments:
@@ -943,6 +1053,7 @@ local orderedList: { ExperimentTypes.ExperimentDefinition } = {
 	DONT_HIT_THE_WALL,
 	TWO_TO_GO,
 	OPEN_SESAME,
+	MAKE_ROOM,
 }
 
 local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
@@ -954,6 +1065,7 @@ local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
 	[DONT_HIT_THE_WALL.Id] = DONT_HIT_THE_WALL,
 	[TWO_TO_GO.Id] = TWO_TO_GO,
 	[OPEN_SESAME.Id] = OPEN_SESAME,
+	[MAKE_ROOM.Id] = MAKE_ROOM,
 	-- In the catalogue so both sides can resolve the id, but never in
 	-- orderedList, so it stays outside the numbered sequence.
 	[OPEN_WORKSHOP.Id] = OPEN_WORKSHOP,
