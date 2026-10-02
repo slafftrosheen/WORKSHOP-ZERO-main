@@ -138,6 +138,13 @@ local ConstructionConfig = {
 	MotorMaxTorque = 12000,
 	MotorAngularResponsiveness = 20,
 
+	-- Servo tunables ----------------------------------------------------------
+	ServoRestAngle = 0,
+	ServoActiveAngle = 90,
+	ServoAngularSpeed = 4,
+	ServoMaxTorque = 15000,
+	ServoAngularResponsiveness = 20,
+
 	-- Rope & Winch tunables ---------------------------------------------------
 
 	RopeThickness = 0.18,

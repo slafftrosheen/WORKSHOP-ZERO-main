@@ -839,6 +839,33 @@ function ComponentFactory.Create(
 		weld.Parent = indicator
 	end
 
+	-- Indicator for Servo components so angular position/active status is readable in TEST.
+	if definition.Type == "Servo" then
+		local indicator = Instance.new("Part")
+		indicator.Name = "WZ_ServoIndicator"
+		indicator.Shape = Enum.PartType.Cylinder
+		indicator.Size = Vector3.new(0.18, 0.6, 0.6)
+		indicator.CFrame = root.CFrame
+			* CFrame.new(0.5, 1.11, 0)
+			* CFrame.Angles(0, 0, math.rad(90))
+		indicator.Color = Color3.fromRGB(30, 45, 65)
+		indicator.Material = Enum.Material.SmoothPlastic
+		indicator.Anchored = false
+		indicator.CanCollide = false
+		indicator.CanQuery = false
+		indicator.CanTouch = false
+		indicator.CastShadow = false
+		indicator.Massless = true
+		indicator.CollisionGroup = Config.CollisionGroupComponents
+		indicator.Parent = model
+
+		local weld = Instance.new("WeldConstraint")
+		weld.Name = "WZ_IndicatorWeld"
+		weld.Part0 = root
+		weld.Part1 = indicator
+		weld.Parent = indicator
+	end
+
 	buildAutomationVisuals(model, definition, root)
 
 	model:PivotTo(pivot)

@@ -86,6 +86,13 @@ local Manifest: AssetManifestData = {
 			ExpectedBounds = Vector3.new(2.0, 2.0, 2.0),
 			Description = "Motorized rope tension winch.",
 		},
+		Servo = {
+			Category = "Components",
+			Name = "Servo",
+			Aliases = { "servo_actuator_01", "RotaryServo" },
+			ExpectedBounds = Vector3.new(2.2, 2.2, 2.2),
+			Description = "Angular position rotary servo actuator.",
+		},
 		Switch = {
 			Category = "Components",
 			Name = "Switch",

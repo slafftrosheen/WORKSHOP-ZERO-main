@@ -186,6 +186,46 @@ local definitions: { [string]: ConstructionTypes.ComponentDefinition } = {
 		},
 	},
 
+	Servo = {
+		Type = "Servo",
+		DisplayName = "SERVO",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(2.2, 2.2, 2.2),
+		Color = Color3.fromRGB(220, 155, 45),
+		Material = Enum.Material.Metal,
+		Density = 1,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			-- Rigid mounting face on the bottom (-Y).
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.1, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			-- Rigid mounting face on the back (-X).
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.1, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+			-- Controlled axle output connector on the front (+X).
+			{
+				Name = "Axle_Output",
+				Type = AXLE,
+				Offset = CFrame.new(1.3, 0, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "Control",
+				Direction = "Input",
+				Offset = CFrame.new(0, 1.1, 0) * CFrame.Angles(0, 0, QUARTER_TURN),
+			},
+		},
+	},
+
 	Fan = {
 		Type = "Fan",
 		DisplayName = "Fan",

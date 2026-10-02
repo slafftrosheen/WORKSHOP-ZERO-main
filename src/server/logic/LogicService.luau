@@ -339,7 +339,15 @@ local function stepLogic(dt: number)
 	for _, model in ComponentFactory.GetComponents() do
 		local componentId = ComponentFactory.GetComponentId(model)
 		local componentType = ComponentFactory.GetComponentType(model)
-		if componentId == nil or (componentType ~= "Motor" and componentType ~= "Winch") then
+		if
+			componentId == nil
+			or (
+				componentType ~= "Motor"
+				and componentType ~= "Winch"
+				and componentType ~= "Servo"
+				and componentType ~= "Piston"
+			)
+		then
 			continue
 		end
 

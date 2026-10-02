@@ -299,9 +299,16 @@ function ConnectorService.Snap(
 	if connectorType == "Axle" then
 		local typeA = ComponentFactory.GetComponentType(targetModel)
 		local typeB = ComponentFactory.GetComponentType(movingModel)
-		if typeA == "Motor" then
+		local isMotorA = typeA == "Motor"
+		local isMotorB = typeB == "Motor"
+		local isServoA = typeA == "Servo"
+		local isServoB = typeB == "Servo"
+
+		if (isMotorA and isServoB) or (isServoA and isMotorB) then
+			warn("[WZ Actuator] unsupported actuator pair Motor <-> Servo")
+		elseif isMotorA or isServoA then
 			poweredBy = componentA
-		elseif typeB == "Motor" then
+		elseif isMotorB or isServoB then
 			poweredBy = componentB
 		end
 	elseif connectorType == "Rope" then

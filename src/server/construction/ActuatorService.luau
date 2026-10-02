@@ -62,15 +62,29 @@ export type RopeWinchEntry = {
 	OtherConnector: Attachment,
 }
 
-export type ActuatorEntry = RotaryMotorEntry | RopeWinchEntry
+export type RotaryServoEntry = {
+	Kind: "RotaryServo",
+	ConnectionId: string,
+	ServoComponentId: string,
+	OtherComponentId: string,
+	Hinge: HingeConstraint,
+	ServoConnector: Attachment,
+	OtherConnector: Attachment,
+}
+
+export type ActuatorEntry = RotaryMotorEntry | RopeWinchEntry | RotaryServoEntry
 
 export type ControlProvider = (componentId: string) -> (boolean, boolean)
 
 local actuators: { [string]: ActuatorEntry } = {}
 local controlProvider: ControlProvider? = nil
+local isActuating: boolean = false
 
 local INDICATOR_OFF_COLOR = Color3.fromRGB(50, 55, 65)
 local INDICATOR_ON_COLOR = Color3.fromRGB(80, 240, 120)
+
+local SERVO_OFF_COLOR = Color3.fromRGB(30, 45, 65)
+local SERVO_ON_COLOR = Color3.fromRGB(40, 220, 255)
 
 local function log(message: string)
 	if RunService:IsStudio() then
@@ -89,6 +103,19 @@ local function setIndicatorPowered(componentId: string, powered: boolean)
 	if indicator ~= nil and indicator:IsA("BasePart") then
 		indicator.Material = if powered then Enum.Material.Neon else Enum.Material.SmoothPlastic
 		indicator.Color = if powered then INDICATOR_ON_COLOR else INDICATOR_OFF_COLOR
+	end
+end
+
+local function setServoIndicator(componentId: string, active: boolean)
+	local model = ComponentFactory.FindComponentById(componentId)
+	if model == nil then
+		return
+	end
+
+	local indicator = model:FindFirstChild("WZ_ServoIndicator", true)
+	if indicator ~= nil and indicator:IsA("BasePart") then
+		indicator.Material = if active then Enum.Material.Neon else Enum.Material.SmoothPlastic
+		indicator.Color = if active then SERVO_ON_COLOR else SERVO_OFF_COLOR
 	end
 end
 
@@ -115,6 +142,10 @@ function ActuatorService.GetActuatorForComponent(componentId: string): ActuatorE
 			end
 		elseif entry.Kind == "RopeWinch" then
 			if entry.OtherComponentId == componentId or entry.WinchComponentId == componentId then
+				return entry
+			end
+		elseif entry.Kind == "RotaryServo" then
+			if entry.OtherComponentId == componentId or entry.ServoComponentId == componentId then
 				return entry
 			end
 		end
@@ -297,9 +328,108 @@ local function registerWinch(record: ConstructionTypes.ConnectionRecord): boolea
 	return true
 end
 
+local function registerServo(record: ConstructionTypes.ConnectionRecord): boolean
+	if not record.Constraint:IsA("HingeConstraint") then
+		return false
+	end
+
+	local hinge = record.Constraint :: HingeConstraint
+
+	local modelA = ComponentFactory.FindComponentById(record.ComponentA)
+	local modelB = ComponentFactory.FindComponentById(record.ComponentB)
+	if modelA == nil or modelB == nil then
+		return false
+	end
+
+	local typeA = ComponentFactory.GetComponentType(modelA)
+	local typeB = ComponentFactory.GetComponentType(modelB)
+
+	local isServoA = typeA == "Servo"
+	local isServoB = typeB == "Servo"
+
+	if not isServoA and not isServoB then
+		return false
+	end
+
+	local servoId: string
+	local otherId: string
+	local servoConnectorName: string
+	local otherConnectorName: string
+	local servoModel: Model
+	local otherModel: Model
+
+	if isServoA then
+		servoId = record.ComponentA
+		otherId = record.ComponentB
+		servoConnectorName = record.ConnectorA
+		otherConnectorName = record.ConnectorB
+		servoModel = modelA
+		otherModel = modelB
+	else
+		servoId = record.ComponentB
+		otherId = record.ComponentA
+		servoConnectorName = record.ConnectorB
+		otherConnectorName = record.ConnectorA
+		servoModel = modelB
+		otherModel = modelA
+	end
+
+	local servoConnector = ComponentFactory.GetConnector(servoModel, servoConnectorName)
+	local otherConnector = ComponentFactory.GetConnector(otherModel, otherConnectorName)
+
+	if servoConnector == nil or otherConnector == nil then
+		return false
+	end
+
+	-- Crucial invariant: Attachment0 is ALWAYS the Servo connector.
+	hinge.Attachment0 = servoConnector
+	hinge.Attachment1 = otherConnector
+	hinge.ActuatorType = Enum.ActuatorType.None
+	hinge.LimitsEnabled = true
+	hinge.LowerAngle = math.min(Config.ServoRestAngle, Config.ServoActiveAngle)
+	hinge.UpperAngle = math.max(Config.ServoRestAngle, Config.ServoActiveAngle)
+	hinge.TargetAngle = Config.ServoRestAngle
+	hinge.AngularSpeed = Config.ServoAngularSpeed
+	hinge.ServoMaxTorque = Config.ServoMaxTorque
+	hinge.AngularResponsiveness = Config.ServoAngularResponsiveness
+	hinge:SetAttribute(Config.AttributePowered, true)
+
+	local entry: RotaryServoEntry = {
+		Kind = "RotaryServo",
+		ConnectionId = record.Id,
+		ServoComponentId = servoId,
+		OtherComponentId = otherId,
+		Hinge = hinge,
+		ServoConnector = servoConnector,
+		OtherConnector = otherConnector,
+	}
+
+	actuators[record.Id] = entry
+	setServoIndicator(servoId, false)
+
+	log(
+		string.format(
+			"registered Servo %s -> connection %s",
+			string.sub(servoId, 1, 6),
+			string.sub(record.Id, 1, 6)
+		)
+	)
+
+	return true
+end
+
 function ActuatorService.Register(record: ConstructionTypes.ConnectionRecord): boolean
 	if record.Type == "Axle" then
-		return registerMotor(record)
+		local modelA = ComponentFactory.FindComponentById(record.ComponentA)
+		local modelB = ComponentFactory.FindComponentById(record.ComponentB)
+		local typeA = if modelA ~= nil then ComponentFactory.GetComponentType(modelA) else nil
+		local typeB = if modelB ~= nil then ComponentFactory.GetComponentType(modelB) else nil
+
+		if typeA == "Motor" or typeB == "Motor" then
+			return registerMotor(record)
+		elseif typeA == "Servo" or typeB == "Servo" then
+			return registerServo(record)
+		end
 	elseif record.Type == "Rope" then
 		return registerWinch(record)
 	end
@@ -328,6 +458,13 @@ function ActuatorService.Unregister(connectionId: string): boolean
 			entry.Rope:SetAttribute(Config.AttributePowered, false)
 		end
 		setIndicatorPowered(entry.WinchComponentId, false)
+	elseif entry.Kind == "RotaryServo" then
+		if entry.Hinge.Parent ~= nil then
+			entry.Hinge.ActuatorType = Enum.ActuatorType.None
+			entry.Hinge.TargetAngle = Config.ServoRestAngle
+			entry.Hinge:SetAttribute(Config.AttributePowered, false)
+		end
+		setServoIndicator(entry.ServoComponentId, false)
 	end
 
 	actuators[connectionId] = nil
@@ -355,25 +492,35 @@ function ActuatorService.SetActuatorSignal(componentId: string, enabled: boolean
 
 	if entry.Kind == "RotaryMotor" then
 		if entry.Hinge.Parent ~= nil then
-			if enabled then
-				local sign = computeMotorSign(entry, nil)
-				local targetSpeed = Config.MotorAngularVelocity * sign
-				entry.Hinge.ActuatorType = Enum.ActuatorType.Motor
-				entry.Hinge.AngularVelocity = targetSpeed
-				entry.Hinge.MotorMaxTorque = Config.MotorMaxTorque
-				entry.Hinge.AngularResponsiveness = Config.MotorAngularResponsiveness
-			else
-				entry.Hinge.ActuatorType = Enum.ActuatorType.None
-				entry.Hinge.AngularVelocity = 0
-				entry.Hinge.MotorMaxTorque = 0
+			if isActuating then
+				if enabled then
+					local sign = computeMotorSign(entry, nil)
+					local targetSpeed = Config.MotorAngularVelocity * sign
+					entry.Hinge.ActuatorType = Enum.ActuatorType.Motor
+					entry.Hinge.AngularVelocity = targetSpeed
+					entry.Hinge.MotorMaxTorque = Config.MotorMaxTorque
+					entry.Hinge.AngularResponsiveness = Config.MotorAngularResponsiveness
+				else
+					entry.Hinge.ActuatorType = Enum.ActuatorType.None
+					entry.Hinge.AngularVelocity = 0
+					entry.Hinge.MotorMaxTorque = 0
+				end
 			end
 		end
 		setIndicatorPowered(entry.MotorComponentId, enabled)
 	elseif entry.Kind == "RopeWinch" then
-		if entry.Rope.Parent ~= nil then
+		if entry.Rope.Parent ~= nil and isActuating then
 			entry.Rope.WinchEnabled = enabled
 		end
 		setIndicatorPowered(entry.WinchComponentId, enabled)
+	elseif entry.Kind == "RotaryServo" then
+		if entry.Hinge.Parent ~= nil and isActuating then
+			entry.Hinge.ActuatorType = Enum.ActuatorType.Servo
+			entry.Hinge.TargetAngle = if enabled
+				then Config.ServoActiveAngle
+				else Config.ServoRestAngle
+		end
+		setServoIndicator(entry.ServoComponentId, enabled)
 	end
 end
 
@@ -386,12 +533,17 @@ end
 function ActuatorService.EnableActuators(): number
 	local motorEntries: { RotaryMotorEntry } = {}
 	local winchEntries: { RopeWinchEntry } = {}
+	local servoEntries: { RotaryServoEntry } = {}
+
+	isActuating = true
 
 	for _, entry in actuators do
 		if entry.Kind == "RotaryMotor" and entry.Hinge.Parent ~= nil then
 			table.insert(motorEntries, entry)
 		elseif entry.Kind == "RopeWinch" and entry.Rope.Parent ~= nil then
 			table.insert(winchEntries, entry)
+		elseif entry.Kind == "RotaryServo" and entry.Hinge.Parent ~= nil then
+			table.insert(servoEntries, entry)
 		end
 	end
 
@@ -462,13 +614,46 @@ function ActuatorService.EnableActuators(): number
 		end
 	end
 
+	-- 3. Enable rotary servos
+	for _, entry in servoEntries do
+		local isControlled = false
+		local signal = false
+		if controlProvider ~= nil then
+			isControlled, signal = controlProvider(entry.ServoComponentId)
+		end
+
+		entry.Hinge.LimitsEnabled = true
+		entry.Hinge.LowerAngle = math.min(Config.ServoRestAngle, Config.ServoActiveAngle)
+		entry.Hinge.UpperAngle = math.max(Config.ServoRestAngle, Config.ServoActiveAngle)
+		entry.Hinge.AngularSpeed = Config.ServoAngularSpeed
+		entry.Hinge.ServoMaxTorque = Config.ServoMaxTorque
+		entry.Hinge.AngularResponsiveness = Config.ServoAngularResponsiveness
+
+		entry.Hinge.ActuatorType = Enum.ActuatorType.Servo
+
+		if isControlled then
+			entry.Hinge.TargetAngle = if signal
+				then Config.ServoActiveAngle
+				else Config.ServoRestAngle
+			setServoIndicator(entry.ServoComponentId, signal)
+			if signal then
+				enabledCount += 1
+			end
+		else
+			-- Control wire absent: hold REST angle
+			entry.Hinge.TargetAngle = Config.ServoRestAngle
+			setServoIndicator(entry.ServoComponentId, false)
+		end
+	end
+
 	if enabledCount > 0 then
 		log(
 			string.format(
-				"%d actuator(s) enabled (%d motors, %d winches)",
+				"%d actuator(s) enabled (%d motors, %d winches, %d servos)",
 				enabledCount,
 				#motorEntries,
-				#winchEntries
+				#winchEntries,
+				#servoEntries
 			)
 		)
 	end
@@ -483,6 +668,7 @@ end
 	For Winches: restores original rope length to eliminate progressive shortening!
 ]]
 function ActuatorService.DisableActuators(): number
+	isActuating = false
 	local count = 0
 	for _, entry in actuators do
 		if entry.Kind == "RotaryMotor" then
@@ -499,6 +685,12 @@ function ActuatorService.DisableActuators(): number
 				entry.Rope.WinchTarget = entry.InitialLength
 			end
 			setIndicatorPowered(entry.WinchComponentId, false)
+		elseif entry.Kind == "RotaryServo" then
+			if entry.Hinge.Parent ~= nil then
+				entry.Hinge.ActuatorType = Enum.ActuatorType.None
+				entry.Hinge.TargetAngle = Config.ServoRestAngle
+			end
+			setServoIndicator(entry.ServoComponentId, false)
 		end
 		count += 1
 	end
@@ -514,6 +706,7 @@ end
 	Cleans all actuator state on experiment restart or level switch.
 ]]
 function ActuatorService.Clear()
+	isActuating = false
 	for connectionId, entry in actuators do
 		if entry.Kind == "RotaryMotor" then
 			if entry.Hinge.Parent ~= nil then
@@ -530,6 +723,13 @@ function ActuatorService.Clear()
 				entry.Rope:SetAttribute(Config.AttributePowered, false)
 			end
 			setIndicatorPowered(entry.WinchComponentId, false)
+		elseif entry.Kind == "RotaryServo" then
+			if entry.Hinge.Parent ~= nil then
+				entry.Hinge.ActuatorType = Enum.ActuatorType.None
+				entry.Hinge.TargetAngle = Config.ServoRestAngle
+				entry.Hinge:SetAttribute(Config.AttributePowered, false)
+			end
+			setServoIndicator(entry.ServoComponentId, false)
 		end
 		actuators[connectionId] = nil
 	end
