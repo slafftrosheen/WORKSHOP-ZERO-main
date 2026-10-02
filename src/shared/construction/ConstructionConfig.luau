@@ -82,6 +82,7 @@ local ConstructionConfig = {
 	AttemptValueName = "ExperimentAttempt",
 	PartsUsedValueName = "ExperimentPartsUsed",
 	UnlockedExperimentValueName = "UnlockedExperimentIndex",
+	OpenWorkshopUnlockAfterExperiment = 5,
 
 	-- Automation layer: control wire requests (client -> server, semantic IDs only).
 	RemoteWireConnect = "RequestWireConnect",
@@ -144,6 +145,12 @@ local ConstructionConfig = {
 	ServoAngularSpeed = 4,
 	ServoMaxTorque = 15000,
 	ServoAngularResponsiveness = 20,
+
+	-- Piston tunables ---------------------------------------------------------
+	PistonStroke = 3.5,
+	PistonSpeed = 5,
+	PistonServoMaxForce = 15000,
+	PistonLinearResponsiveness = 20,
 
 	-- Rope & Winch tunables ---------------------------------------------------
 

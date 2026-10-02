@@ -226,6 +226,40 @@ local definitions: { [string]: ConstructionTypes.ComponentDefinition } = {
 		},
 	},
 
+	Piston = {
+		Type = "Piston",
+		DisplayName = "PISTON",
+		Shape = Enum.PartType.Block,
+		Size = Vector3.new(3.0, 2.0, 2.0),
+		Color = Color3.fromRGB(75, 80, 92),
+		Material = Enum.Material.Metal,
+		Density = 1.0,
+		Friction = 0.5,
+		Elasticity = 0.1,
+		Spawnable = true,
+		Connectors = {
+			-- Rigid mounting face on the bottom (-Y).
+			{
+				Name = "Rigid_Base",
+				Type = RIGID,
+				Offset = CFrame.new(0, -1.0, 0) * CFrame.Angles(0, 0, MINUS_QUARTER_TURN),
+			},
+			-- Rigid mounting face on the back (-X).
+			{
+				Name = "Rigid_Back",
+				Type = RIGID,
+				Offset = CFrame.new(-1.5, 0, 0) * CFrame.Angles(0, HALF_TURN, 0),
+			},
+		},
+		SignalPorts = {
+			{
+				Name = "Control",
+				Direction = "Input",
+				Offset = CFrame.new(0, 1.0, 0) * CFrame.Angles(0, 0, QUARTER_TURN),
+			},
+		},
+	},
+
 	Fan = {
 		Type = "Fan",
 		DisplayName = "Fan",

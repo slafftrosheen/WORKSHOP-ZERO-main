@@ -31,6 +31,7 @@ export type ComponentType =
 	| "Winch"
 	-- Robotics layer components.
 	| "Servo"
+	| "Piston"
 	-- Automation layer components.
 	| "Switch"
 	| "PressureSensor"
@@ -171,7 +172,7 @@ function ConstructionTypes.ToComponentType(value: unknown): ComponentType?
 		return value
 	end
 
-	if value == "Hook" or value == "Winch" or value == "Servo" then
+	if value == "Hook" or value == "Winch" or value == "Servo" or value == "Piston" then
 		return value
 	end
 

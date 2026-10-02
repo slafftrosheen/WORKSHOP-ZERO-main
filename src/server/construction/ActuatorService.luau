@@ -72,7 +72,13 @@ export type RotaryServoEntry = {
 	OtherConnector: Attachment,
 }
 
-export type ActuatorEntry = RotaryMotorEntry | RopeWinchEntry | RotaryServoEntry
+export type LinearPistonEntry = {
+	Kind: "LinearPiston",
+	ComponentId: string,
+	Constraint: PrismaticConstraint,
+}
+
+export type ActuatorEntry = RotaryMotorEntry | RopeWinchEntry | RotaryServoEntry | LinearPistonEntry
 
 export type ControlProvider = (componentId: string) -> (boolean, boolean)
 
@@ -119,6 +125,19 @@ local function setServoIndicator(componentId: string, active: boolean)
 	end
 end
 
+local function setPistonIndicator(componentId: string, active: boolean)
+	local model = ComponentFactory.FindComponentById(componentId)
+	if model == nil then
+		return
+	end
+
+	local indicator = model:FindFirstChild("WZ_PistonIndicator", true)
+	if indicator ~= nil and indicator:IsA("BasePart") then
+		indicator.Material = if active then Enum.Material.Neon else Enum.Material.SmoothPlastic
+		indicator.Color = if active then SERVO_ON_COLOR else SERVO_OFF_COLOR
+	end
+end
+
 -- Reads ----------------------------------------------------------------------
 
 function ActuatorService.GetCount(): number
@@ -146,6 +165,10 @@ function ActuatorService.GetActuatorForComponent(componentId: string): ActuatorE
 			end
 		elseif entry.Kind == "RotaryServo" then
 			if entry.OtherComponentId == componentId or entry.ServoComponentId == componentId then
+				return entry
+			end
+		elseif entry.Kind == "LinearPiston" then
+			if entry.ComponentId == componentId then
 				return entry
 			end
 		end
@@ -521,6 +544,12 @@ function ActuatorService.SetActuatorSignal(componentId: string, enabled: boolean
 				else Config.ServoRestAngle
 		end
 		setServoIndicator(entry.ServoComponentId, enabled)
+	elseif entry.Kind == "LinearPiston" then
+		if entry.Constraint.Parent ~= nil and isActuating then
+			entry.Constraint.ActuatorType = Enum.ActuatorType.Servo
+			entry.Constraint.TargetPosition = if enabled then Config.PistonStroke else 0
+		end
+		setPistonIndicator(entry.ComponentId, enabled)
 	end
 end
 
@@ -531,9 +560,29 @@ end
 	Unconnected actuators retain automatic legacy behaviour.
 ]]
 function ActuatorService.EnableActuators(): number
+	-- Discover self-contained actuators (Piston)
+	for _, model in ComponentFactory.GetComponents() do
+		local compType = ComponentFactory.GetComponentType(model)
+		if compType == "Piston" then
+			local compId = ComponentFactory.GetComponentId(model)
+			if compId ~= nil and actuators[compId] == nil then
+				local prismatic = model:FindFirstChild("WZ_PistonConstraint", true)
+				if prismatic ~= nil and prismatic:IsA("PrismaticConstraint") then
+					local entry: LinearPistonEntry = {
+						Kind = "LinearPiston",
+						ComponentId = compId,
+						Constraint = prismatic,
+					}
+					actuators[compId] = entry
+				end
+			end
+		end
+	end
+
 	local motorEntries: { RotaryMotorEntry } = {}
 	local winchEntries: { RopeWinchEntry } = {}
 	local servoEntries: { RotaryServoEntry } = {}
+	local pistonEntries: { LinearPistonEntry } = {}
 
 	isActuating = true
 
@@ -544,6 +593,8 @@ function ActuatorService.EnableActuators(): number
 			table.insert(winchEntries, entry)
 		elseif entry.Kind == "RotaryServo" and entry.Hinge.Parent ~= nil then
 			table.insert(servoEntries, entry)
+		elseif entry.Kind == "LinearPiston" and entry.Constraint.Parent ~= nil then
+			table.insert(pistonEntries, entry)
 		end
 	end
 
@@ -646,14 +697,45 @@ function ActuatorService.EnableActuators(): number
 		end
 	end
 
+	-- 4. Enable linear pistons
+	for _, entry in pistonEntries do
+		local isControlled = false
+		local signal = false
+		if controlProvider ~= nil then
+			isControlled, signal = controlProvider(entry.ComponentId)
+		end
+
+		entry.Constraint.LimitsEnabled = true
+		entry.Constraint.LowerLimit = 0
+		entry.Constraint.UpperLimit = Config.PistonStroke
+		entry.Constraint.Speed = Config.PistonSpeed
+		entry.Constraint.ServoMaxForce = Config.PistonServoMaxForce
+		entry.Constraint.LinearResponsiveness = Config.PistonLinearResponsiveness
+
+		entry.Constraint.ActuatorType = Enum.ActuatorType.Servo
+
+		if isControlled then
+			entry.Constraint.TargetPosition = if signal then Config.PistonStroke else 0
+			setPistonIndicator(entry.ComponentId, signal)
+			if signal then
+				enabledCount += 1
+			end
+		else
+			-- Unwired: hold retracted (0)
+			entry.Constraint.TargetPosition = 0
+			setPistonIndicator(entry.ComponentId, false)
+		end
+	end
+
 	if enabledCount > 0 then
 		log(
 			string.format(
-				"%d actuator(s) enabled (%d motors, %d winches, %d servos)",
+				"%d actuator(s) enabled (%d motors, %d winches, %d servos, %d pistons)",
 				enabledCount,
 				#motorEntries,
 				#winchEntries,
-				#servoEntries
+				#servoEntries,
+				#pistonEntries
 			)
 		)
 	end
@@ -691,6 +773,12 @@ function ActuatorService.DisableActuators(): number
 				entry.Hinge.TargetAngle = Config.ServoRestAngle
 			end
 			setServoIndicator(entry.ServoComponentId, false)
+		elseif entry.Kind == "LinearPiston" then
+			if entry.Constraint.Parent ~= nil then
+				entry.Constraint.ActuatorType = Enum.ActuatorType.None
+				entry.Constraint.TargetPosition = 0
+			end
+			setPistonIndicator(entry.ComponentId, false)
 		end
 		count += 1
 	end
@@ -730,6 +818,12 @@ function ActuatorService.Clear()
 				entry.Hinge:SetAttribute(Config.AttributePowered, false)
 			end
 			setServoIndicator(entry.ServoComponentId, false)
+		elseif entry.Kind == "LinearPiston" then
+			if entry.Constraint.Parent ~= nil then
+				entry.Constraint.ActuatorType = Enum.ActuatorType.None
+				entry.Constraint.TargetPosition = 0
+			end
+			setPistonIndicator(entry.ComponentId, false)
 		end
 		actuators[connectionId] = nil
 	end

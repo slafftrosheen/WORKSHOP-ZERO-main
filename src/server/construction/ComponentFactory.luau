@@ -40,6 +40,7 @@ local ConstructionTypes = require(Shared.construction.ConstructionTypes)
 local AssetProvider = require(script.Parent.Parent.assets.AssetProvider)
 local SpringBuilder = require(script.Parent.builders.SpringBuilder)
 local FanBuilder = require(script.Parent.builders.FanBuilder)
+local PistonBuilder = require(script.Parent.builders.PistonBuilder)
 local LogicConfig = require(Shared.logic.LogicConfig)
 
 local Config = ConstructionConfig
@@ -631,6 +632,8 @@ function ComponentFactory.Create(
 		root = SpringBuilder.Build(model, componentId, definition)
 	elseif definition.Type == "Fan" then
 		root = FanBuilder.Build(model, componentId, definition)
+	elseif definition.Type == "Piston" then
+		root = PistonBuilder.Build(model, componentId, definition)
 	else
 		local part = Instance.new("Part")
 		part.Name = Config.RootPartName
@@ -914,6 +917,8 @@ function ComponentFactory.SetComponentsAnchored(anchored: boolean)
 		local compType = model:GetAttribute(Config.AttributeComponentType)
 		if compType == "Spring" then
 			SpringBuilder.SetAnchored(model, anchored)
+		elseif compType == "Piston" then
+			PistonBuilder.SetAnchored(model, anchored)
 		else
 			for _, descendant in model:GetDescendants() do
 				if descendant:IsA("BasePart") then
@@ -930,6 +935,8 @@ function ComponentFactory.ResetInternalState(model: Model)
 	local compType = model:GetAttribute(Config.AttributeComponentType)
 	if compType == "Spring" then
 		SpringBuilder.ResetInternalState(model)
+	elseif compType == "Piston" then
+		PistonBuilder.ResetInternalState(model)
 	end
 end
 
