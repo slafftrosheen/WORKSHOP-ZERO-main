@@ -9,12 +9,15 @@ Workshop Zero is a Roblox physics/building game. Players solve ridiculous
 problems by building ridiculous machines, testing them, watching them fail,
 changing one thing and testing again.
 
-**Experiments 001 through 005** form the active 5-experiment playable suite:
+**Experiments 001 through 007** form the active 7-experiment playable suite:
 - **Experiment 001 - Save the Duck** (passive construction, structures, gravity)
 - **Experiment 002 - Uphill Delivery** (motors, wheels, torque, traction)
 - **Experiment 003 - Over the Wall** (stored energy, spring launcher, compression)
 - **Experiment 004 - Windy Business** (motors + fans, directional force, non-contact)
 - **Experiment 005 - Lift Off** (tension, lifting force, load, rope, hook, winch)
+- **Experiment 006 - Don't Hit the Wall** (sensors, feedback, logic inversion)
+- **Experiment 007 - Two to Go** (logic AND, dual conditions, automation)
+- **Open Workshop** (free sandbox, full mechanical and automation catalogue)
 
 ## Hard rules
 
@@ -103,6 +106,17 @@ Do not break these without an explicit decision:
   must still be judged by the **server**, from its own view of the duck and the
   machine. Never from a client touch, a client-owned assembly, or a client
   claim.
+
+## Automation & Logic invariants (WZ-LR3)
+
+- Mechanical topology and signal topology are separate systems (`ConnectorService` vs `WiringService`).
+- Signal wires never create physical constraints. They are massless, collisionless Beams representing information flow.
+- Connector kinds (`Rigid`, `Axle`, `Rope`) belong to mechanics. Signal port directions (`Input`, `Output`) belong to logic.
+- An unconnected actuator retains legacy automatic TEST behaviour.
+- Connecting a control signal opts that actuator into automated control (`true` = ON, `false` = OFF).
+- Workshop Zero simulates control logic, not electrical power distribution (no short circuits, voltages, or battery limits).
+- Logic cycles must remain safe and deterministic (15 Hz tick evaluation, double-buffered state updates, non-recursive).
+- RESET restores logic state and zeros velocities, but preserves signal wires; RESTART / CLEAR removes wires and resets inventory to rack.
 
 ## Repository map
 

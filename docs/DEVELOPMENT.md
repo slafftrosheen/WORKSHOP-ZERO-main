@@ -115,12 +115,15 @@ kernel work: set `EnablePrototypeWorkshop = true` in
 | `R`          | Flip 90 degrees on the local X axis (desktop)   |
 | `X`          | Disconnect the selected component (desktop)     |
 | ↺ ↻ FLIP DISCONNECT | Touch buttons, shown while a component is selected on touch devices |
+| Click Output socket | Enter wiring mode: highlights compatible inputs, draws preview beam |
+| Click Input socket | Connect wire (or disconnect existing wire if already wired) |
+| `Escape` / empty click | Cancel wiring preview mode |
 | [ ☰ EXPERIMENTS ] | Top-left HUD button to open the Experiment Board selector |
 | TEST MACHINE | Unanchor everything - duck included - physics runs |
 | RESET button | Restore the exact build, duck back to its mark, BUILD MODE |
 | NEXT EXPERIMENT | Success panel: progress to the next experiment  |
 | TRY AGAIN    | Success panel only: full experiment restart     |
-| F8           | Studio-only debug overlay (states, attempt, speeds, powered axles, active fans) |
+| F8           | Studio-only debug overlay (states, attempt, speeds, axles, fans, logic nodes, wires, active signals, controlled actuators, tick rate) |
 
 While dragging, a green marker shows the connector pair that would be joined:
 a sphere sits on the target connector and the target component is outlined.

@@ -266,3 +266,101 @@ clean topology, low polygon count, no text, no logos, isolated single objects
 - **Purpose**: Wall-mounted tool and connector board on the back wall.
 - **Roblox Size**: `10.0 × 8.0 × 0.6` studs.
 - **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Props.ConnectorBoard`
+
+---
+
+## Priority 3 Asset Queue (Automation & Control Modules)
+
+### P3-01 Toggle Switch [STATUS: QUEUED]
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Switch`
+- **Roblox Size**: `1.6 × 1.2 × 1.6` studs.
+- **Visual Requirements**: Chunky industrial toggle switch module. Yellow and charcoal housing, oversized metal toggle lever, blue control-signal output socket, simple status indicator light, friendly toy-industrial proportions.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized chunky industrial toggle switch module for a playful family engineering game. Yellow and charcoal housing, oversized metal lever, blue control-signal output socket, simple indicator light, worn painted metal, friendly toy-industrial proportions, no text, isolated on white background.
+
+  Roblox-friendly low-poly PBR asset.
+  Strong silhouette.
+  No cables.
+  No environment.
+  ```
+
+---
+
+### P3-02 Pressure Sensor [STATUS: QUEUED]
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.PressureSensor`
+- **Roblox Size**: `2.4 × 0.6 × 2.4` studs.
+- **Visual Requirements**: Low rectangular yellow/charcoal base, broad blue pressure pad, visible compression gap, keyed control signal output socket, oversized corner bolts.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized industrial pressure plate sensor module for a playful engineering game. Low rectangular yellow/charcoal base, broad blue pressure pad, visible compression gap, one keyed control signal socket, oversized screws, worn maker-workshop styling, isolated on white.
+
+  Roblox-friendly low-poly PBR asset.
+  Strong silhouette.
+  No environment.
+  ```
+
+---
+
+### P3-03 Proximity Sensor [STATUS: QUEUED]
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.ProximitySensor`
+- **Roblox Size**: `1.6 × 1.2 × 2.0` studs.
+- **Visual Requirements**: Yellow and charcoal rectangular housing, forward-facing blue sensor lens/window, keyed control output socket, small status indicator LED.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized chunky proximity sensor module for a playful robotics game. Yellow and charcoal rectangular housing, obvious blue sensor lens/window facing forward, one control output socket, small indicator light, durable toy-industrial proportions, isolated on white.
+
+  Roblox-friendly low-poly PBR asset.
+  Strong silhouette.
+  No environment.
+  ```
+
+---
+
+### P3-04 Timer Module [STATUS: QUEUED]
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.Timer`
+- **Roblox Size**: `1.8 × 1.2 × 1.8` studs.
+- **Visual Requirements**: Yellow and charcoal housing, circular progress indicator ring or light bar, blue keyed input and output control sockets.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized industrial timer delay module for a playful family robotics game. Yellow and charcoal housing, circular LED progress indicator ring, blue keyed input and output control sockets, friendly toy-industrial proportions, isolated on white background.
+
+  Roblox-friendly low-poly PBR asset.
+  Strong silhouette.
+  No cables.
+  ```
+
+---
+
+### P3-05 Logic Gate Family (AND / OR / NOT) [STATUS: QUEUED]
+- **Target Folders**:
+  - `ReplicatedStorage.WorkshopZeroAssets.Components.AndGate`
+  - `ReplicatedStorage.WorkshopZeroAssets.Components.OrGate`
+  - `ReplicatedStorage.WorkshopZeroAssets.Components.NotGate`
+- **Roblox Size**: `1.8 × 1.0 × 1.8` studs.
+- **Visual Requirements**: Modular housing language across all three gates. Blue keyed sockets (2 inputs + 1 output for AND/OR; 1 input + 1 output for NOT), yellow/charcoal body, large embossed readable logic symbols (AND, OR, NOT).
+- **Hyper3D Prompt**:
+  ```text
+  Stylized industrial logic gate module for a playful engineering game. Modular yellow and charcoal housing, blue keyed control sockets, large clean symbol (AND / OR / NOT) embossed on top, oversized corner screws, friendly toy-industrial proportions, isolated on white background.
+
+  Roblox-friendly low-poly PBR asset.
+  Strong silhouette.
+  No cables.
+  No environment.
+  ```
+
+---
+
+### P3-06 Signal Lamp [STATUS: QUEUED]
+- **Target Folder**: `ReplicatedStorage.WorkshopZeroAssets.Components.SignalLamp`
+- **Roblox Size**: `1.4 × 1.6 × 1.4` studs.
+- **Visual Requirements**: Charcoal base with square mounting plate, large translucent domed indicator bulb, blue keyed signal input socket. Emits bright green light when active, dim when inactive.
+- **Hyper3D Prompt**:
+  ```text
+  Stylized industrial indicator lamp module for a playful engineering game. Charcoal base with mounting plate, large translucent domed indicator bulb, blue keyed signal input socket, clean toy-industrial styling, isolated on white background.
+
+  Roblox-friendly low-poly PBR asset.
+  Strong silhouette.
+  No cables.
+  ```
+

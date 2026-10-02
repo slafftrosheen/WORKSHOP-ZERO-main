@@ -2,11 +2,15 @@
 
 Status: **LONG-RUN-001**. This document is a compass, not a spec.
 
-The construction kernel (BUILD / TEST / RESET) serves four fully connected, playable experiments:
+The construction kernel (BUILD / TEST / RESET) serves seven fully connected, playable experiments plus Open Workshop:
 - **Experiment 001 - Save the Duck**: Structure, spans, gravity, cantilever beams.
 - **Experiment 002 - Uphill Delivery**: Powered motors, rotation, torque, and traction up an incline.
-- **Experiment 003 - Over the Wall**: Stored energy, compression physics, spring launcher over a 12-stud obstacle.
+- **Experiment 003 - Over the Wall**: Stored energy, compression physics, spring launcher over an obstacle.
 - **Experiment 004 - Windy Business**: Directional airflow, propeller thrust, non-contact glide track mechanics.
+- **Experiment 005 - Lift Off**: Tension, lifting, load, rope, hook, and powered winch mechanics.
+- **Experiment 006 - Don't Hit the Wall**: Sensors, feedback, logic inversion (NOT), and actuator control.
+- **Experiment 007 - Two to Go**: Logic AND, dual pressure sensing, and conditional winch hoisting.
+- **Open Workshop**: Free sandbox building with all 16 mechanical and automation components.
 
 ## Core fantasy
 
@@ -254,31 +258,84 @@ Get the duck onto the high platform.
 
 ---
 
+### Experiment 006: Don't Hit the Wall
+
+```text
+Get the duck into the target. Stop before the wall.
+2 planks, 3 blocks, 4 wheels, 2 motors, 2 proximity sensors, 2 NOT gates, 1 signal lamp, 1 switch.
+```
+
+#### Educational concept
+
+```text
+sensor detection
+  -> logic inversion (NOT)
+  -> feedback loop
+  -> automated motor stop
+```
+
+#### Discovery
+
+> **FEEDBACK**: A sensor can change what a machine does while it is running.
+
+---
+
+### Experiment 007: Two to Go
+
+```text
+Lift the duck to the high platform using dual pressure sensors and an AND gate.
+6 blocks, 3 planks, 2 hooks, 1 winch, 2 pressure sensors, 2 AND gates, 2 signal lamps, 2 switches.
+```
+
+#### Educational concept
+
+```text
+dual pressure triggers
+  -> logic conjunction (AND)
+  -> conditional winch actuation
+```
+
+#### Discovery
+
+> **AND**: An AND signal turns on only when all of its inputs are on.
+
+---
+
 ## Components
 
-| Component | State                                                  |
-| --------- | ------------------------------------------------------ |
-| Plank     | Active structural wooden beam                          |
-| Block     | Active modular structural cube                         |
-| Wheel     | Active heavy rubber wheel                              |
-| Motor     | Active powered rotary actuator (Exp 002+)              |
-| Spring    | Active stored-energy compression launcher (Exp 003)    |
-| Fan       | Active aerodynamic thrust propeller (Exp 004)          |
-| Hook      | Active structural rope anchor (Exp 005)                |
-| Winch     | Active powered rope tension spool (Exp 005)            |
+| Component | State |
+| --------- | ----- |
+| Plank     | Active structural wooden beam |
+| Block     | Active modular structural cube |
+| Wheel     | Active heavy rubber wheel |
+| Motor     | Active powered rotary actuator (Exp 002+) |
+| Spring    | Active stored-energy compression launcher (Exp 003) |
+| Fan       | Active aerodynamic thrust propeller (Exp 004) |
+| Hook      | Active structural rope anchor (Exp 005) |
+| Winch     | Active powered rope tension spool (Exp 005) |
+| Switch    | Active manual toggle signal source (Exp 006+) |
+| PressureSensor | Active physical contact / load sensor (Exp 007+) |
+| ProximitySensor | Active forward ray/box detection sensor (Exp 006+) |
+| Timer     | Active signal delay module (Open Workshop) |
+| AND       | Active dual-input logic AND gate (Exp 007+) |
+| OR        | Active dual-input logic OR gate (Open Workshop) |
+| NOT       | Active logic inverter gate (Exp 006+) |
+| SignalLamp| Active visual signal indicator (Exp 006+) |
 
 ## Interactions
 
-| Interaction | State in WZ-LR2                                   |
-| ----------- | ------------------------------------------------- |
+| Interaction | State in WZ-LR3 |
+| ----------- | --------------- |
 | Grab / Move | dragging a component, with its assembly following |
 | Rotate      | `Q` / `E` in 15 degree steps, `R` to flip 90; large touch buttons on mobile |
 | Connect     | automatic snap, with preview while dragging, tooltip label (MOUNT, AXLE, ROPE), and ghost connector emphasis |
 | Disconnect  | `X` on desktop, DISCONNECT button on touch; releases every joint on the selection |
 | Return to Rack | `Backspace`/`Delete` on desktop, RETURN button on touch; resets component to staging |
-| Test        | TEST MACHINE button: unanchor everything, duck included  |
-| Reset       | RESET button: restore the exact build, zero velocity |
-| Restart     | TRY AGAIN on the success panel: full experiment restart |
+| Wire Connect| Click/tap Output socket -> preview beam -> click/tap compatible Input socket |
+| Wire Disconnect| Click/tap connected Input socket -> removes wire |
+| Test        | TEST MACHINE button: unanchor everything, duck included |
+| Reset       | RESET button: restore the exact build, zero velocity, preserve wires |
+| Restart     | TRY AGAIN on the success panel: full experiment restart (clears wires) |
 
 ## Construction kernel (WZ-001)
 

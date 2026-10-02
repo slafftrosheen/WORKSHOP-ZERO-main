@@ -74,6 +74,18 @@ The system is strictly partitioned into single-responsibility boundaries:
    - Presentation may communicate construction state, but it must never own
      construction state.
 
+10. **`WiringService` — Signal Topology & Control Wires**
+    - Tracks logical connections between components (`Output` port -> `Input` port).
+    - Enforces 1-wire-per-input fan-in rule and max signal wire length (35 studs).
+    - Renders massless, collisionless `Beam` visuals between signal port attachments.
+    - Preserves wires across normal `RESET` cycles; destroys them on `RESTART` or part return.
+
+11. **`LogicService` — Centralized Logic & Sensor Evaluation**
+    - Runs a single centralized 15 Hz update loop during `Testing`.
+    - Evaluates logic gates (`AND`, `OR`, `NOT`), timers, sensors (`PressureSensor`, `ProximitySensor`), and switches.
+    - Double-buffered tick evaluation: reads previous tick values, writes next state, preventing recursion and safely oscillating feedback cycles.
+    - Communicates actuator control state to `ActuatorService`.
+
 ## The two phases
 
 Everything in this repository exists to serve one loop:
