@@ -21,6 +21,7 @@ local WindyBusinessExperiment = require(script.Parent.WindyBusinessExperiment)
 local LiftOffExperiment = require(script.Parent.LiftOffExperiment)
 local DontHitTheWallExperiment = require(script.Parent.DontHitTheWallExperiment)
 local TwoToGoExperiment = require(script.Parent.TwoToGoExperiment)
+local OpenSesameExperiment = require(script.Parent.OpenSesameExperiment)
 local OpenWorkshopExperiment = require(script.Parent.OpenWorkshopExperiment)
 
 local registry: { [string]: ExperimentTypes.ExperimentModule } = {
@@ -31,6 +32,7 @@ local registry: { [string]: ExperimentTypes.ExperimentModule } = {
 	lift_off = LiftOffExperiment,
 	dont_hit_the_wall = DontHitTheWallExperiment,
 	two_to_go = TwoToGoExperiment,
+	open_sesame = OpenSesameExperiment,
 	-- Free build. Registered here so it loads like any other mode, but never
 	-- listed in ExperimentDefinitions.GetOrdered(), so it stays out of the
 	-- numbered sequence.

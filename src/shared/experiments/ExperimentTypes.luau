@@ -56,8 +56,17 @@ export type FailureEventId =
 	| "WallImpact"
 	| "DuckTrajectory"
 	| "VerticalProgress"
-	| "NonTouchViolation"
 	| "OneOutOfTwo"
+	-- Experiment 008: Open Sesame
+	| "GateClosed"
+	| "AutomationThinking"
+	| "AccessDenied"
+	| "DoorOpening"
+	-- Experiment 009: Make Room
+	| "ObstacleUnmoved"
+	| "StraightLineProgress"
+	| "PushHarder"
+	| "BoxDeclined"
 
 export type FailureThresholds = {
 	-- Below this height the duck is in the pit.

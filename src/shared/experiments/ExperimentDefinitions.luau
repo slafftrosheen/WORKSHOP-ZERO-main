@@ -711,6 +711,107 @@ local TWO_TO_GO: ExperimentTypes.ExperimentDefinition = {
 
 ExperimentDefinitions.TwoToGo = TWO_TO_GO
 
+local OPEN_SESAME: ExperimentTypes.ExperimentDefinition = {
+	Id = "open_sesame",
+	Number = 8,
+	Name = "OPEN SESAME",
+	Objective = "Get the duck through the gate.",
+
+	IntroTitle = "EXPERIMENT 008",
+	IntroButton = "START BUILDING",
+	SuccessTitle = "SUCCESS!",
+	SuccessLine = "THE GATE IS OPEN.",
+	RestartButton = "TRY AGAIN",
+
+	DiscoveryTitle = "POSITION",
+	DiscoveryBody = "A servo moves to a target angle instead of spinning continuously.",
+
+	Inventory = {
+		{ ComponentType = "Plank", Count = 3 },
+		{ ComponentType = "Block", Count = 4 },
+		{ ComponentType = "Wheel", Count = 4 },
+		{ ComponentType = "Motor", Count = 2 },
+		{ ComponentType = "Servo", Count = 2 },
+		{ ComponentType = "ProximitySensor", Count = 2 },
+		{ ComponentType = "Switch", Count = 1 },
+		{ ComponentType = "SignalLamp", Count = 1 },
+		{ ComponentType = "NOT", Count = 1 },
+	},
+
+	Payload = {
+		Type = "Duck",
+		BodySize = Vector3.new(2.4, 1.8, 3),
+		Density = 0.35,
+		Friction = 0.6,
+		Elasticity = 0.05,
+	},
+
+	Geometry = {
+		FloorSize = Vector3.new(120, 2, 120),
+		FloorCenter = Vector3.new(0, -1, 0),
+		PitFloorTopY = -4,
+
+		StartPadSize = Vector3.new(24, 0.6, 16),
+		StartPadCenter = Vector3.new(0, 0.3, -20),
+
+		GoalPadSize = Vector3.new(20, 0.6, 16),
+		GoalPadCenter = Vector3.new(0, 0.3, 16),
+
+		DuckSpawn = Vector3.new(0, 1.5, -20),
+		ButtonPosition = Vector3.new(0, 0.6, 16),
+
+		BackWallSize = Vector3.new(120, 30, 2),
+		BackWallCenter = Vector3.new(0, 15, -42),
+
+		PlayerSpawn = Vector3.new(-14, 0.5, -20),
+
+		BuildBoundsSize = Vector3.new(64, 30, 72),
+		BuildBoundsCenter = Vector3.new(0, 8, 0),
+
+		StagingRows = { -28, -25.5, -23, -20.5, -18, -15.5, -13, -10.5, -8 },
+		StagingSpacing = 1,
+	},
+
+	Thresholds = {
+		PitY = 0,
+		AwayDistance = 75,
+		FastSpeed = 45,
+		HighY = 32,
+		CleanupY = -40,
+		StructuralPartCount = 3,
+		StructuralTiltDegrees = 60,
+	},
+
+	FailureMessages = {
+		GateClosed = {
+			"GATE: STILL VERY CLOSED.",
+			"ACCESS DENIED.\nBY PHYSICS.",
+		},
+		AutomationThinking = {
+			"AUTOMATION IS THINKING.",
+			"DOOR OPENING:\nEVENTUALLY.",
+		},
+		DuckDown = {
+			"DUCK DOWN.",
+			"GRAVITY REMAINS EMPLOYED.",
+		},
+		DuckDeparture = {
+			"UNSCHEDULED DUCK DEPARTURE.",
+		},
+		BallisticDuck = {
+			"BALLISTIC DUCK.",
+		},
+		SpaceProgram = {
+			"SPACE PROGRAM STARTED.",
+		},
+		StructuralOptimism = {
+			"STRUCTURAL OPTIMISM DETECTED.",
+		},
+	},
+}
+
+ExperimentDefinitions.OpenSesame = OPEN_SESAME
+
 --[[
 	Open Workshop: free build. It is deliberately NOT one of the numbered
 	experiments:
@@ -841,6 +942,7 @@ local orderedList: { ExperimentTypes.ExperimentDefinition } = {
 	LIFT_OFF,
 	DONT_HIT_THE_WALL,
 	TWO_TO_GO,
+	OPEN_SESAME,
 }
 
 local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
@@ -851,6 +953,7 @@ local byId: { [string]: ExperimentTypes.ExperimentDefinition } = {
 	[LIFT_OFF.Id] = LIFT_OFF,
 	[DONT_HIT_THE_WALL.Id] = DONT_HIT_THE_WALL,
 	[TWO_TO_GO.Id] = TWO_TO_GO,
+	[OPEN_SESAME.Id] = OPEN_SESAME,
 	-- In the catalogue so both sides can resolve the id, but never in
 	-- orderedList, so it stays outside the numbered sequence.
 	[OPEN_WORKSHOP.Id] = OPEN_WORKSHOP,
